@@ -1,0 +1,420 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		BEFD65551ACC072000ADE917 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65541ACC072000ADE917 /* AppDelegate.swift */; };
+		BEFD65571ACC072000ADE917 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65561ACC072000ADE917 /* ViewController.swift */; };
+		BEFD655A1ACC072000ADE917 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BEFD65581ACC072000ADE917 /* Main.storyboard */; };
+		BEFD655C1ACC072000ADE917 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BEFD655B1ACC072000ADE917 /* Images.xcassets */; };
+		BEFD655F1ACC072000ADE917 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = BEFD655D1ACC072000ADE917 /* LaunchScreen.xib */; };
+		BEFD656B1ACC072000ADE917 /* KDCalendarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD656A1ACC072000ADE917 /* KDCalendarTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		BEFD65651ACC072000ADE917 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BEFD65471ACC072000ADE917 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BEFD654E1ACC072000ADE917;
+			remoteInfo = KDCalendar;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		BEFD654F1ACC072000ADE917 /* KDCalendar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KDCalendar.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BEFD65531ACC072000ADE917 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BEFD65541ACC072000ADE917 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		BEFD65561ACC072000ADE917 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		BEFD65591ACC072000ADE917 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		BEFD655B1ACC072000ADE917 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		BEFD655E1ACC072000ADE917 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
+		BEFD65641ACC072000ADE917 /* KDCalendarTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KDCalendarTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BEFD65691ACC072000ADE917 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BEFD656A1ACC072000ADE917 /* KDCalendarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDCalendarTests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		BEFD654C1ACC072000ADE917 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BEFD65611ACC072000ADE917 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		BEFD65461ACC072000ADE917 = {
+			isa = PBXGroup;
+			children = (
+				BEFD65511ACC072000ADE917 /* KDCalendar */,
+				BEFD65671ACC072000ADE917 /* KDCalendarTests */,
+				BEFD65501ACC072000ADE917 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		BEFD65501ACC072000ADE917 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BEFD654F1ACC072000ADE917 /* KDCalendar.app */,
+				BEFD65641ACC072000ADE917 /* KDCalendarTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BEFD65511ACC072000ADE917 /* KDCalendar */ = {
+			isa = PBXGroup;
+			children = (
+				BEFD65541ACC072000ADE917 /* AppDelegate.swift */,
+				BEFD65561ACC072000ADE917 /* ViewController.swift */,
+				BEFD65581ACC072000ADE917 /* Main.storyboard */,
+				BEFD655B1ACC072000ADE917 /* Images.xcassets */,
+				BEFD655D1ACC072000ADE917 /* LaunchScreen.xib */,
+				BEFD65521ACC072000ADE917 /* Supporting Files */,
+			);
+			path = KDCalendar;
+			sourceTree = "<group>";
+		};
+		BEFD65521ACC072000ADE917 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				BEFD65531ACC072000ADE917 /* Info.plist */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		BEFD65671ACC072000ADE917 /* KDCalendarTests */ = {
+			isa = PBXGroup;
+			children = (
+				BEFD656A1ACC072000ADE917 /* KDCalendarTests.swift */,
+				BEFD65681ACC072000ADE917 /* Supporting Files */,
+			);
+			path = KDCalendarTests;
+			sourceTree = "<group>";
+		};
+		BEFD65681ACC072000ADE917 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				BEFD65691ACC072000ADE917 /* Info.plist */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		BEFD654E1ACC072000ADE917 /* KDCalendar */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BEFD656E1ACC072000ADE917 /* Build configuration list for PBXNativeTarget "KDCalendar" */;
+			buildPhases = (
+				BEFD654B1ACC072000ADE917 /* Sources */,
+				BEFD654C1ACC072000ADE917 /* Frameworks */,
+				BEFD654D1ACC072000ADE917 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KDCalendar;
+			productName = KDCalendar;
+			productReference = BEFD654F1ACC072000ADE917 /* KDCalendar.app */;
+			productType = "com.apple.product-type.application";
+		};
+		BEFD65631ACC072000ADE917 /* KDCalendarTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BEFD65711ACC072000ADE917 /* Build configuration list for PBXNativeTarget "KDCalendarTests" */;
+			buildPhases = (
+				BEFD65601ACC072000ADE917 /* Sources */,
+				BEFD65611ACC072000ADE917 /* Frameworks */,
+				BEFD65621ACC072000ADE917 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BEFD65661ACC072000ADE917 /* PBXTargetDependency */,
+			);
+			name = KDCalendarTests;
+			productName = KDCalendarTests;
+			productReference = BEFD65641ACC072000ADE917 /* KDCalendarTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		BEFD65471ACC072000ADE917 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0620;
+				ORGANIZATIONNAME = Karmadust;
+				TargetAttributes = {
+					BEFD654E1ACC072000ADE917 = {
+						CreatedOnToolsVersion = 6.2;
+					};
+					BEFD65631ACC072000ADE917 = {
+						CreatedOnToolsVersion = 6.2;
+						TestTargetID = BEFD654E1ACC072000ADE917;
+					};
+				};
+			};
+			buildConfigurationList = BEFD654A1ACC072000ADE917 /* Build configuration list for PBXProject "KDCalendar" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = BEFD65461ACC072000ADE917;
+			productRefGroup = BEFD65501ACC072000ADE917 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				BEFD654E1ACC072000ADE917 /* KDCalendar */,
+				BEFD65631ACC072000ADE917 /* KDCalendarTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		BEFD654D1ACC072000ADE917 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BEFD655A1ACC072000ADE917 /* Main.storyboard in Resources */,
+				BEFD655F1ACC072000ADE917 /* LaunchScreen.xib in Resources */,
+				BEFD655C1ACC072000ADE917 /* Images.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BEFD65621ACC072000ADE917 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		BEFD654B1ACC072000ADE917 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BEFD65571ACC072000ADE917 /* ViewController.swift in Sources */,
+				BEFD65551ACC072000ADE917 /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BEFD65601ACC072000ADE917 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BEFD656B1ACC072000ADE917 /* KDCalendarTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		BEFD65661ACC072000ADE917 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BEFD654E1ACC072000ADE917 /* KDCalendar */;
+			targetProxy = BEFD65651ACC072000ADE917 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		BEFD65581ACC072000ADE917 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				BEFD65591ACC072000ADE917 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		BEFD655D1ACC072000ADE917 /* LaunchScreen.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				BEFD655E1ACC072000ADE917 /* Base */,
+			);
+			name = LaunchScreen.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		BEFD656C1ACC072000ADE917 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.2;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		BEFD656D1ACC072000ADE917 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.2;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		BEFD656F1ACC072000ADE917 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_FILE = KDCalendar/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		BEFD65701ACC072000ADE917 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_FILE = KDCalendar/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		BEFD65721ACC072000ADE917 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(inherited)",
+				);
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = KDCalendarTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KDCalendar.app/KDCalendar";
+			};
+			name = Debug;
+		};
+		BEFD65731ACC072000ADE917 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = KDCalendarTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KDCalendar.app/KDCalendar";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		BEFD654A1ACC072000ADE917 /* Build configuration list for PBXProject "KDCalendar" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BEFD656C1ACC072000ADE917 /* Debug */,
+				BEFD656D1ACC072000ADE917 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BEFD656E1ACC072000ADE917 /* Build configuration list for PBXNativeTarget "KDCalendar" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BEFD656F1ACC072000ADE917 /* Debug */,
+				BEFD65701ACC072000ADE917 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		BEFD65711ACC072000ADE917 /* Build configuration list for PBXNativeTarget "KDCalendarTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BEFD65721ACC072000ADE917 /* Debug */,
+				BEFD65731ACC072000ADE917 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = BEFD65471ACC072000ADE917 /* Project object */;
+}
