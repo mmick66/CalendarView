@@ -30,9 +30,7 @@ class KDCalendarFlowLayout: UICollectionViewFlowLayout {
     }
     
     
-    
     func applyLayoutAttributes(attributes : UICollectionViewLayoutAttributes) {
-        
         
         if attributes.representedElementKind != nil {
             return

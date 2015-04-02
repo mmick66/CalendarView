@@ -56,6 +56,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         cv.backgroundColor = UIColor.clearColor()
         cv.showsHorizontalScrollIndicator = false
         cv.showsVerticalScrollIndicator = false
+        cv.clipsToBounds = true
         return cv
         
     }()
@@ -81,16 +82,16 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         self.initialSetup()
     }
     
+
+    
+    
     // MARK: Setup 
     
     func initialSetup() {
         
         self.collectionView.frame = self.bounds
         
-        // Set the collection view to the correct layout
-        let layout = self.collectionView.collectionViewLayout as UICollectionViewFlowLayout
-        layout.itemSize = CGSizeMake(self.bounds.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), self.bounds.size.height / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
-        self.collectionView.collectionViewLayout = layout
+        
         
         // Register Class
         self.collectionView.registerClass(KDCalendarDayCell.self, forCellWithReuseIdentifier: reuseIdentifier)
@@ -102,6 +103,10 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
         
+        // Set the collection view to the correct layout
+        let layout = self.collectionView.collectionViewLayout as UICollectionViewFlowLayout
+        layout.itemSize = CGSizeMake(self.bounds.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), self.bounds.size.height / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
+        self.collectionView.collectionViewLayout = layout
         
         if let dateSource = self.dataSource {
             
@@ -155,13 +160,17 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         monthOffsetComponents.month = section;
         
         if let correctMonthForSectionDate = NSCalendar.currentCalendar().dateByAddingComponents(monthOffsetComponents, toDate: startDateCache, options: NSCalendarOptions.allZeros) {
+            
+            
          
             let numberOfDaysInMonth = NSCalendar.currentCalendar().rangeOfUnit(NSCalendarUnit.CalendarUnitDay, inUnit: NSCalendarUnit.CalendarUnitMonth, forDate: correctMonthForSectionDate).length
             
-            let firstWeekdayOfMonthIndex = NSCalendar.currentCalendar().component(NSCalendarUnit.CalendarUnitDay, fromDate: correctMonthForSectionDate) - 1 // firstWeekdayOfMonthIndex should be 0-Indexed
+            let firstWeekdayOfMonthIndex = NSCalendar.currentCalendar().component(NSCalendarUnit.CalendarUnitWeekday, fromDate: correctMonthForSectionDate) - 1 // firstWeekdayOfMonthIndex should be 0-Indexed
             
             
             monthInfo[section] = [firstWeekdayOfMonthIndex,numberOfDaysInMonth]
+            
+            println("\(correctMonthForSectionDate) -> \(monthInfo[section])")
             
             return NUMBER_OF_DAYS_IN_WEEK * MAXIMUM_NUMBER_OF_ROWS
         }
