@@ -14,6 +14,7 @@
 		BEFD655F1ACC072000ADE917 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = BEFD655D1ACC072000ADE917 /* LaunchScreen.xib */; };
 		BEFD656B1ACC072000ADE917 /* KDCalendarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD656A1ACC072000ADE917 /* KDCalendarTests.swift */; };
 		BEFD65821ACD379C00ADE917 /* KDCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65811ACD379C00ADE917 /* KDCalendarView.swift */; };
+		BEFD65841ACD537F00ADE917 /* KDCalendarDayCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65831ACD537F00ADE917 /* KDCalendarDayCell.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,6 +39,7 @@
 		BEFD65691ACC072000ADE917 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BEFD656A1ACC072000ADE917 /* KDCalendarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDCalendarTests.swift; sourceTree = "<group>"; };
 		BEFD65811ACD379C00ADE917 /* KDCalendarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KDCalendarView.swift; sourceTree = "<group>"; };
+		BEFD65831ACD537F00ADE917 /* KDCalendarDayCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KDCalendarDayCell.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,6 +121,7 @@
 			isa = PBXGroup;
 			children = (
 				BEFD65811ACD379C00ADE917 /* KDCalendarView.swift */,
+				BEFD65831ACD537F00ADE917 /* KDCalendarDayCell.swift */,
 			);
 			name = KDCalendar;
 			sourceTree = "<group>";
@@ -224,6 +227,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BEFD65821ACD379C00ADE917 /* KDCalendarView.swift in Sources */,
+				BEFD65841ACD537F00ADE917 /* KDCalendarDayCell.swift in Sources */,
 				BEFD65571ACC072000ADE917 /* ViewController.swift in Sources */,
 				BEFD65551ACC072000ADE917 /* AppDelegate.swift in Sources */,
 			);

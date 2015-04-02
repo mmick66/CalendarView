@@ -8,8 +8,15 @@
 
 import UIKit
 
-let reuseIdentifier = "KDMonthCell"
+let reuseIdentifier = "KDCalendarDayCell"
 
+let NUMBER_OF_DAYS_IN_WEEK = 7
+let MAXIMUM_NUMBER_OF_ROWS = 6
+
+let HEADER_DEFAULT_SIZE = 40.0
+
+let FIRST_DAY_INDEX = 0
+let NUMBER_OF_DAYS_INDEX = 1
 
 @objc protocol KDCalendarViewDataSource {
     
@@ -25,7 +32,9 @@ let reuseIdentifier = "KDMonthCell"
     func calendar(calendar : KDCalendarView, didSelectDate : NSDate)
 }
 
-class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate {
+class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+    
+    
     
     var dataSource : KDCalendarViewDataSource?
     var delegate : KDCalendarViewDelegate?
@@ -34,15 +43,32 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     var endDateCache : NSDate = NSDate()
     var startOfMonthCache : NSDate = NSDate()
     
+    var cellSize = CGSizeZero
+    
     lazy var collectionView : UICollectionView = {
      
         let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = UICollectionViewScrollDirection.Horizontal
+        layout.minimumInteritemSpacing = 0
+        layout.minimumLineSpacing = 0
+        
+        
         let cv = UICollectionView(frame: CGRectZero, collectionViewLayout: layout)
         cv.dataSource = self
         cv.delegate = self
+        cv.pagingEnabled = true
+        cv.backgroundColor = UIColor.clearColor()
         return cv
         
     }()
+    
+    
+    var monthInfo : [Int:[Int]] = [Int:[Int]]()
+    
+    override init() {
+        // just give a default size if the class is called without a frame
+        super.init(frame : CGRectMake(0.0, 0.0, 200.0, 200.0))
+    }
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -57,6 +83,8 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         self.initialSetup()
     }
     
+    
+    
     // MARK: Setup 
     
     func initialSetup() {
@@ -64,7 +92,12 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         
         self.collectionView.frame = self.bounds
         
-        self.collectionView.registerClass(UICollectionViewCell.self, forCellWithReuseIdentifier: reuseIdentifier)
+        cellSize.width = self.bounds.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK)
+        cellSize.height = self.bounds.size.height / CGFloat(MAXIMUM_NUMBER_OF_ROWS)
+        
+        self.collectionView.registerClass(KDCalendarDayCell.self, forCellWithReuseIdentifier: reuseIdentifier)
+        
+        self.addSubview(self.collectionView)
     }
     
     // MARK: UICollectionViewDataSource
@@ -119,18 +152,54 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         
+        let monthOffsetComponents = NSDateComponents()
         
+        // offset by the number of months
+        monthOffsetComponents.month = section;
+        
+        if let correctMonthForSectionDate = NSCalendar.currentCalendar().dateByAddingComponents(monthOffsetComponents, toDate: startDateCache, options: NSCalendarOptions.allZeros) {
+         
+            let numberOfDaysInMonth = NSCalendar.currentCalendar().rangeOfUnit(NSCalendarUnit.CalendarUnitDay, inUnit: NSCalendarUnit.CalendarUnitMonth, forDate: correctMonthForSectionDate).length
+            
+            let firstWeekdayOfMonthIndex = NSCalendar.currentCalendar().component(NSCalendarUnit.CalendarUnitDay, fromDate: correctMonthForSectionDate) - 1 // firstWeekdayOfMonthIndex should be 0-Indexed
+            
+            
+            monthInfo[section] = [firstWeekdayOfMonthIndex,numberOfDaysInMonth]
+            
+            return NUMBER_OF_DAYS_IN_WEEK * MAXIMUM_NUMBER_OF_ROWS
+        }
         
         return 0
+        
     }
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         
-        let cell = collectionView.dequeueReusableCellWithReuseIdentifier(reuseIdentifier, forIndexPath: indexPath) as UICollectionViewCell
+        let dayCell = collectionView.dequeueReusableCellWithReuseIdentifier(reuseIdentifier, forIndexPath: indexPath) as KDCalendarDayCell
+     
+        let currentMonthInfo : [Int] = monthInfo[indexPath.section]!
         
-        // Configure the cell
+        if indexPath.item >= currentMonthInfo[FIRST_DAY_INDEX] && indexPath.item < currentMonthInfo[FIRST_DAY_INDEX] + currentMonthInfo[NUMBER_OF_DAYS_INDEX] {
+            
+            dayCell.textLabel.text = String(indexPath.item - currentMonthInfo[FIRST_DAY_INDEX])
+            
+            dayCell.backgroundColor = UIColor.grayColor()
+            
+        }
+        else {
+            
+            dayCell.textLabel.text = ""
+            
+        }
         
-        return cell
+        
+        return dayCell
+    }
+    
+    // MARK: UICollectionViewDelegateFlowLayout
+    
+    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
+        return cellSize
     }
 
 }

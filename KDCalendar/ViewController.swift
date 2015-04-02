@@ -11,12 +11,14 @@ import UIKit
 class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarViewDelegate {
 
     
+    @IBOutlet weak var calendarView: KDCalendarView!
     
     override func viewDidLoad() {
         
         super.viewDidLoad()
         
-        
+        calendarView.dataSource = self
+        calendarView.delegate = self
         
     }
 
