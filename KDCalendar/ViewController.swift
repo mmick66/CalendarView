@@ -8,18 +8,58 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarViewDelegate {
 
+    
+    
     override func viewDidLoad() {
+        
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        
+        
+        
     }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    // MARK : KDCalendarDataSource
+    
+    func startDate() -> NSDate? {
+        
+        
+        
+        let dateComponents = NSDateComponents()
+        dateComponents.month = -3
+        
+        let today = NSDate()
+        
+        let threeMonthsAgo = NSCalendar.currentCalendar().dateByAddingComponents(dateComponents, toDate: today, options: NSCalendarOptions.allZeros)
+        
+        return threeMonthsAgo
     }
-
+    
+    func endDate() -> NSDate? {
+        
+        let dateComponents = NSDateComponents()
+      
+        dateComponents.year = 2;
+        dateComponents.month = 3;
+        let today = NSDate()
+        
+        let threeMonthsAgo = NSCalendar.currentCalendar().dateByAddingComponents(dateComponents, toDate: today, options: NSCalendarOptions.allZeros)
+        
+        return threeMonthsAgo
+  
+    }
+    
+    
+    // MARK : KDCalendarDelegate
+   
+    func calendar(calendar: KDCalendarView, didSelectDate: NSDate) {
+        
+    }
+    
+    func calendar(calendar: KDCalendarView, didScrollToMonth: NSDate) {
+        
+    }
 
 }
 
