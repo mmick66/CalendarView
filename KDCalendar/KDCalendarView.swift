@@ -56,7 +56,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         cv.backgroundColor = UIColor.clearColor()
         cv.showsHorizontalScrollIndicator = false
         cv.showsVerticalScrollIndicator = false
-        cv.clipsToBounds = true
+        
         return cv
         
     }()
@@ -82,8 +82,6 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         self.initialSetup()
     }
     
-
-    
     
     // MARK: Setup 
     
@@ -91,7 +89,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         
         self.collectionView.frame = self.bounds
         
-        
+        self.clipsToBounds = true
         
         // Register Class
         self.collectionView.registerClass(KDCalendarDayCell.self, forCellWithReuseIdentifier: reuseIdentifier)
@@ -120,14 +118,12 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
                     
                     // check if the dates are in correct order
                     if NSCalendar.currentCalendar().compareDate(startDate, toDate: endDate, toUnitGranularity: NSCalendarUnit.CalendarUnitNanosecond) != NSComparisonResult.OrderedAscending {
-                        
                         return 0
-                        
                     }
                     
-                    let dayOneComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.CalendarUnitDay, fromDate: startDateCache)
-                    dayOneComponents.day = 1
-                    
+                    // discart day and minutes so that they round off to the first of the month
+                    let dayOneComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.MonthCalendarUnit | NSCalendarUnit.YearCalendarUnit | NSCalendarUnit.EraCalendarUnit, fromDate: startDateCache)
+                
                     if let dateFromDayOneComponents = NSCalendar.currentCalendar().dateFromComponents(dayOneComponents) {
                         
                         startOfMonthCache = dateFromDayOneComponents
@@ -159,7 +155,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         // offset by the number of months
         monthOffsetComponents.month = section;
         
-        if let correctMonthForSectionDate = NSCalendar.currentCalendar().dateByAddingComponents(monthOffsetComponents, toDate: startDateCache, options: NSCalendarOptions.allZeros) {
+        if let correctMonthForSectionDate = NSCalendar.currentCalendar().dateByAddingComponents(monthOffsetComponents, toDate: startOfMonthCache, options: NSCalendarOptions.allZeros) {
             
             
          
@@ -170,7 +166,6 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             
             monthInfo[section] = [firstWeekdayOfMonthIndex,numberOfDaysInMonth]
             
-            println("\(correctMonthForSectionDate) -> \(monthInfo[section])")
             
             return NUMBER_OF_DAYS_IN_WEEK * MAXIMUM_NUMBER_OF_ROWS
         }
