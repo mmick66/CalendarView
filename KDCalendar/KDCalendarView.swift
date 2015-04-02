@@ -34,8 +34,6 @@ let NUMBER_OF_DAYS_INDEX = 1
 
 class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
-    
-    
     var dataSource : KDCalendarViewDataSource?
     var delegate : KDCalendarViewDelegate?
     
@@ -43,11 +41,9 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     var endDateCache : NSDate = NSDate()
     var startOfMonthCache : NSDate = NSDate()
     
-    var cellSize = CGSizeZero
-    
     lazy var collectionView : UICollectionView = {
      
-        let layout = UICollectionViewFlowLayout()
+        let layout = KDCalendarFlowLayout()
         layout.scrollDirection = UICollectionViewScrollDirection.Horizontal
         layout.minimumInteritemSpacing = 0
         layout.minimumLineSpacing = 0
@@ -58,6 +54,8 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         cv.delegate = self
         cv.pagingEnabled = true
         cv.backgroundColor = UIColor.clearColor()
+        cv.showsHorizontalScrollIndicator = false
+        cv.showsVerticalScrollIndicator = false
         return cv
         
     }()
@@ -83,18 +81,18 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         self.initialSetup()
     }
     
-    
-    
     // MARK: Setup 
     
     func initialSetup() {
         
-        
         self.collectionView.frame = self.bounds
         
-        cellSize.width = self.bounds.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK)
-        cellSize.height = self.bounds.size.height / CGFloat(MAXIMUM_NUMBER_OF_ROWS)
+        // Set the collection view to the correct layout
+        let layout = self.collectionView.collectionViewLayout as UICollectionViewFlowLayout
+        layout.itemSize = CGSizeMake(self.bounds.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), self.bounds.size.height / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
+        self.collectionView.collectionViewLayout = layout
         
+        // Register Class
         self.collectionView.registerClass(KDCalendarDayCell.self, forCellWithReuseIdentifier: reuseIdentifier)
         
         self.addSubview(self.collectionView)
@@ -145,7 +143,6 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             
         }
         
-        
         return 0
     }
     
@@ -181,14 +178,16 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         
         if indexPath.item >= currentMonthInfo[FIRST_DAY_INDEX] && indexPath.item < currentMonthInfo[FIRST_DAY_INDEX] + currentMonthInfo[NUMBER_OF_DAYS_INDEX] {
             
-            dayCell.textLabel.text = String(indexPath.item - currentMonthInfo[FIRST_DAY_INDEX])
+            dayCell.textLabel.text = String(indexPath.item - currentMonthInfo[FIRST_DAY_INDEX] + 1)
             
-            dayCell.backgroundColor = UIColor.grayColor()
+            dayCell.backgroundColor = UIColor.lightGrayColor()
             
         }
         else {
             
             dayCell.textLabel.text = ""
+            
+            dayCell.backgroundColor = UIColor.clearColor()
             
         }
         
@@ -198,8 +197,6 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     
     // MARK: UICollectionViewDelegateFlowLayout
     
-    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
-        return cellSize
-    }
+    
 
 }

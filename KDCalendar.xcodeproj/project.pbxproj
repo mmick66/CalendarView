@@ -15,6 +15,7 @@
 		BEFD656B1ACC072000ADE917 /* KDCalendarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD656A1ACC072000ADE917 /* KDCalendarTests.swift */; };
 		BEFD65821ACD379C00ADE917 /* KDCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65811ACD379C00ADE917 /* KDCalendarView.swift */; };
 		BEFD65841ACD537F00ADE917 /* KDCalendarDayCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65831ACD537F00ADE917 /* KDCalendarDayCell.swift */; };
+		BEFD65861ACD81C100ADE917 /* KDCalendarFlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65851ACD81C100ADE917 /* KDCalendarFlowLayout.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,6 +41,7 @@
 		BEFD656A1ACC072000ADE917 /* KDCalendarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDCalendarTests.swift; sourceTree = "<group>"; };
 		BEFD65811ACD379C00ADE917 /* KDCalendarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KDCalendarView.swift; sourceTree = "<group>"; };
 		BEFD65831ACD537F00ADE917 /* KDCalendarDayCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KDCalendarDayCell.swift; sourceTree = "<group>"; };
+		BEFD65851ACD81C100ADE917 /* KDCalendarFlowLayout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KDCalendarFlowLayout.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -122,6 +124,7 @@
 			children = (
 				BEFD65811ACD379C00ADE917 /* KDCalendarView.swift */,
 				BEFD65831ACD537F00ADE917 /* KDCalendarDayCell.swift */,
+				BEFD65851ACD81C100ADE917 /* KDCalendarFlowLayout.swift */,
 			);
 			name = KDCalendar;
 			sourceTree = "<group>";
@@ -226,6 +229,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BEFD65861ACD81C100ADE917 /* KDCalendarFlowLayout.swift in Sources */,
 				BEFD65821ACD379C00ADE917 /* KDCalendarView.swift in Sources */,
 				BEFD65841ACD537F00ADE917 /* KDCalendarDayCell.swift in Sources */,
 				BEFD65571ACC072000ADE917 /* ViewController.swift in Sources */,

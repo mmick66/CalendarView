@@ -10,18 +10,22 @@ import UIKit
 
 class KDCalendarDayCell: UICollectionViewCell {
     
-    var textLabel : UILabel {
+    lazy var textLabel : UILabel = {
        
         let lbl = UILabel()
         lbl.textAlignment = NSTextAlignment.Center
+        lbl.textColor = UIColor.darkGrayColor()
+        
         return lbl
         
-    }
+    }()
     
 
     override init(frame: CGRect) {
         
         super.init(frame: frame)
+        
+        self.backgroundColor = UIColor.clearColor()
         
         self.textLabel.frame = self.bounds
         self.addSubview(self.textLabel)
