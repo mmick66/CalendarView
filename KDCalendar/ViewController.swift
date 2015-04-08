@@ -52,6 +52,17 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
   
     }
     
+    override func viewDidLayoutSubviews() {
+        
+        super.viewDidLayoutSubviews()
+        
+        let width = self.view.frame.size.width - 16.0 * 2
+        
+        self.calendarView.frame = CGRect(x: 16.0, y: 32.0, width: width, height: width)
+        
+        
+    }
+    
     
     // MARK : KDCalendarDelegate
    

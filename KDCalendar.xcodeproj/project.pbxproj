@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BE9331CD1AD43562000FD862 /* KDCalendarHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE9331CC1AD43562000FD862 /* KDCalendarHeaderView.swift */; };
 		BEFD65551ACC072000ADE917 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65541ACC072000ADE917 /* AppDelegate.swift */; };
 		BEFD65571ACC072000ADE917 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65561ACC072000ADE917 /* ViewController.swift */; };
 		BEFD655A1ACC072000ADE917 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BEFD65581ACC072000ADE917 /* Main.storyboard */; };
@@ -29,6 +30,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		BE9331CC1AD43562000FD862 /* KDCalendarHeaderView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KDCalendarHeaderView.swift; sourceTree = "<group>"; };
 		BEFD654F1ACC072000ADE917 /* KDCalendar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KDCalendar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BEFD65531ACC072000ADE917 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BEFD65541ACC072000ADE917 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -125,6 +127,7 @@
 				BEFD65811ACD379C00ADE917 /* KDCalendarView.swift */,
 				BEFD65831ACD537F00ADE917 /* KDCalendarDayCell.swift */,
 				BEFD65851ACD81C100ADE917 /* KDCalendarFlowLayout.swift */,
+				BE9331CC1AD43562000FD862 /* KDCalendarHeaderView.swift */,
 			);
 			name = KDCalendar;
 			sourceTree = "<group>";
@@ -229,6 +232,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BE9331CD1AD43562000FD862 /* KDCalendarHeaderView.swift in Sources */,
 				BEFD65861ACD81C100ADE917 /* KDCalendarFlowLayout.swift in Sources */,
 				BEFD65821ACD379C00ADE917 /* KDCalendarView.swift in Sources */,
 				BEFD65841ACD537F00ADE917 /* KDCalendarDayCell.swift in Sources */,

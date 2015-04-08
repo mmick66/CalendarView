@@ -10,6 +10,23 @@ import UIKit
 
 class KDCalendarDayCell: UICollectionViewCell {
     
+    
+    
+     lazy var pBackgroundView : UIView = {
+        
+        var vFrame = CGRectInset(self.frame, 6.0, 6.0)
+        
+        let view = UIView(frame: vFrame)
+        
+        view.layer.cornerRadius = 4.0
+        
+        view.center = CGPoint(x: self.bounds.size.width * 0.5, y: self.bounds.size.height * 0.5)
+        
+        self.addSubview(view)
+        
+        return view
+    }()
+    
     lazy var textLabel : UILabel = {
        
         let lbl = UILabel()
@@ -20,12 +37,13 @@ class KDCalendarDayCell: UICollectionViewCell {
         
     }()
     
+    func setBackgroundColor(color : UIColor) -> Void {
+        self.pBackgroundView.backgroundColor = color
+    }
 
     override init(frame: CGRect) {
         
         super.init(frame: frame)
-        
-        self.backgroundColor = UIColor.clearColor()
         
         self.textLabel.frame = self.bounds
         self.addSubview(self.textLabel)

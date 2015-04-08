@@ -8,7 +8,8 @@
 
 import UIKit
 
-let reuseIdentifier = "KDCalendarDayCell"
+let cellReuseIdentifier = "KDCalendarDayCell"
+let headerReuseIdentifier = "KDCalendarHeaderView"
 
 let NUMBER_OF_DAYS_IN_WEEK = 7
 let MAXIMUM_NUMBER_OF_ROWS = 6
@@ -37,6 +38,8 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     var dataSource : KDCalendarViewDataSource?
     var delegate : KDCalendarViewDelegate?
     
+    let formatter = NSDateFormatter()
+    
     var startDateCache : NSDate = NSDate()
     var endDateCache : NSDate = NSDate()
     var startOfMonthCache : NSDate = NSDate()
@@ -48,7 +51,6 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         layout.minimumInteritemSpacing = 0
         layout.minimumLineSpacing = 0
         
-        
         let cv = UICollectionView(frame: CGRectZero, collectionViewLayout: layout)
         cv.dataSource = self
         cv.delegate = self
@@ -57,10 +59,24 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         cv.showsHorizontalScrollIndicator = false
         cv.showsVerticalScrollIndicator = false
         
+        
         return cv
         
     }()
     
+    override var frame: CGRect {
+        didSet {
+            self.collectionView.frame = self.bounds
+            
+            let layout = self.collectionView.collectionViewLayout as KDCalendarFlowLayout
+            
+            //layout.headerReferenceSize = CGSize(width: self.bounds.size.width, height: 0.0)
+            
+            
+            self.collectionView.collectionViewLayout = layout
+            
+        }
+    }
     
     var monthInfo : [Int:[Int]] = [Int:[Int]]()
     
@@ -92,10 +108,15 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         self.clipsToBounds = true
         
         // Register Class
-        self.collectionView.registerClass(KDCalendarDayCell.self, forCellWithReuseIdentifier: reuseIdentifier)
+        self.collectionView.registerClass(KDCalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
+        
+        // Register Header
+        //self.collectionView.registerClass(KDCalendarHeaderView.self, forSupplementaryViewOfKind:UICollectionElementKindSectionHeader, withReuseIdentifier: headerReuseIdentifier)
         
         self.addSubview(self.collectionView)
     }
+    
+    
     
     // MARK: UICollectionViewDataSource
     
@@ -103,7 +124,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         
         // Set the collection view to the correct layout
         let layout = self.collectionView.collectionViewLayout as UICollectionViewFlowLayout
-        layout.itemSize = CGSizeMake(self.bounds.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), self.bounds.size.height / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
+        layout.itemSize = CGSizeMake(self.bounds.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), (self.bounds.size.height - layout.headerReferenceSize.height) / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
         self.collectionView.collectionViewLayout = layout
         
         if let dateSource = self.dataSource {
@@ -147,6 +168,19 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         return 0
     }
     
+    func collectionView(collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, atIndexPath indexPath: NSIndexPath) -> UICollectionReusableView {
+        
+        let header = self.collectionView.dequeueReusableSupplementaryViewOfKind(kind, withReuseIdentifier: headerReuseIdentifier, forIndexPath: indexPath) as KDCalendarHeaderView
+        
+        
+        let monthString : String = formatter.monthSymbols[indexPath.section % 12] as String
+        header.monthLabel.text = monthString
+        
+        
+        return header
+        
+    }
+    
     
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         
@@ -167,7 +201,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             monthInfo[section] = [firstWeekdayOfMonthIndex,numberOfDaysInMonth]
             
             
-            return NUMBER_OF_DAYS_IN_WEEK * MAXIMUM_NUMBER_OF_ROWS
+            return NUMBER_OF_DAYS_IN_WEEK * MAXIMUM_NUMBER_OF_ROWS // 7 x 6 = 42
         }
         
         return 0
@@ -176,27 +210,45 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         
-        let dayCell = collectionView.dequeueReusableCellWithReuseIdentifier(reuseIdentifier, forIndexPath: indexPath) as KDCalendarDayCell
+        let dayCell = collectionView.dequeueReusableCellWithReuseIdentifier(cellReuseIdentifier, forIndexPath: indexPath) as KDCalendarDayCell
      
         let currentMonthInfo : [Int] = monthInfo[indexPath.section]!
+        
+        
         
         if indexPath.item >= currentMonthInfo[FIRST_DAY_INDEX] && indexPath.item < currentMonthInfo[FIRST_DAY_INDEX] + currentMonthInfo[NUMBER_OF_DAYS_INDEX] {
             
             dayCell.textLabel.text = String(indexPath.item - currentMonthInfo[FIRST_DAY_INDEX] + 1)
             
-            dayCell.backgroundColor = UIColor.lightGrayColor()
+            dayCell.setBackgroundColor( UIColor(white: 0.0, alpha: 0.1) )
             
         }
         else {
             
             dayCell.textLabel.text = ""
             
-            dayCell.backgroundColor = UIColor.clearColor()
+            dayCell.setBackgroundColor( UIColor.clearColor() )
             
         }
         
+        //dayCell.textLabel.text = String(indexPath.section) + ":" + String(indexPath.item)
         
         return dayCell
+    }
+    
+    // MARK: UIScrollViewDelegate
+    
+    func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
+        
+        
+        self.collectionView.collectionViewLayout.layoutAttributesForElementsInRect(self.collectionView.bounds)
+        
+        if let delegate = self.delegate {
+            
+           
+            
+        }
+        
     }
     
     // MARK: UICollectionViewDelegateFlowLayout
