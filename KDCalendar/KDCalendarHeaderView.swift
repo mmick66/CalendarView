@@ -10,14 +10,19 @@ import UIKit
 
 class KDCalendarHeaderView: UIView {
     
-    var monthLabel : UILabel {
+    lazy var monthLabel : UILabel = {
+        
         let lbl = UILabel()
         lbl.textAlignment = NSTextAlignment.Center
+        lbl.font = UIFont(name: "Helvetica", size: 20.0)
         lbl.textColor = UIColor.grayColor()
+        
         self.addSubview(lbl)
+        
         return lbl
-    }
-    var dayLabelContainerView : UIView {
+    }()
+    
+    lazy var dayLabelContainerView : UIView = {
         
         let v = UIView()
         
@@ -28,6 +33,8 @@ class KDCalendarHeaderView: UIView {
             let day : NSString = formatter.weekdaySymbols[index % 7] as NSString
             
             let weekdayLabel = UILabel()
+            
+            weekdayLabel.font = UIFont(name: "Helvetica", size: 14.0)
             
             weekdayLabel.text = day.substringToIndex(2).uppercaseString
             weekdayLabel.textColor = UIColor.grayColor()
@@ -40,7 +47,7 @@ class KDCalendarHeaderView: UIView {
         
         return v
         
-    }
+    }()
     
     
     override init(frame: CGRect) {
@@ -59,6 +66,7 @@ class KDCalendarHeaderView: UIView {
         var frm = self.bounds
         frm.size.height /= 2.0
         self.monthLabel.frame = frm
+        
         
         var labelFrame = CGRect(x: 0.0, y: self.bounds.size.height / 2.0, width: self.bounds.size.width / 7.0, height: self.bounds.size.height / 2.0)
         

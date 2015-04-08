@@ -110,6 +110,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     }
     
     
+    
     // MARK: Setup 
     
     func initialSetup() {
@@ -135,6 +136,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         let layout = self.collectionView.collectionViewLayout as UICollectionViewFlowLayout
         layout.itemSize = CGSizeMake(self.collectionView.frame.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), (self.collectionView.frame.size.height - layout.headerReferenceSize.height) / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
         self.collectionView.collectionViewLayout = layout
+        
         
         if let dateSource = self.dataSource {
             
@@ -162,6 +164,8 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
                         return 0
                     }
                     
+                    
+                    
                     let differenceComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.CalendarUnitMonth, fromDate: startDateCache, toDate: endDateCache, options: NSCalendarOptions.allZeros)
                     
                     return differenceComponents.month + 1 // if we are for example on the same month and the difference is 0 we still need 1 to display it
@@ -170,6 +174,8 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             }
             
         }
+        
+        
         
         return 0
     }
@@ -195,6 +201,8 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             monthInfo[section] = [firstWeekdayOfMonthIndex,numberOfDaysInMonth]
             
             
+            
+            
             return NUMBER_OF_DAYS_IN_WEEK * MAXIMUM_NUMBER_OF_ROWS // 7 x 6 = 42
         }
         
@@ -207,8 +215,6 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         let dayCell = collectionView.dequeueReusableCellWithReuseIdentifier(cellReuseIdentifier, forIndexPath: indexPath) as KDCalendarDayCell
      
         let currentMonthInfo : [Int] = monthInfo[indexPath.section]!
-        
-        
         
         if indexPath.item >= currentMonthInfo[FIRST_DAY_INDEX] && indexPath.item < currentMonthInfo[FIRST_DAY_INDEX] + currentMonthInfo[NUMBER_OF_DAYS_INDEX] {
             
@@ -225,22 +231,35 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             
         }
         
+        if indexPath.section == 0 && indexPath.item == 0 {
+            self.scrollViewDidEndDecelerating(collectionView)
+        }
+        
+
         
         return dayCell
     }
     
     // MARK: UIScrollViewDelegate
     
+    
+    
     func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
         
         
-        self.collectionView.collectionViewLayout.layoutAttributesForElementsInRect(self.collectionView.bounds)
+        let cvbounds = self.collectionView.bounds
         
-        self.headerView.monthLabel.text = "Michael"
+        let page : Int = Int(floor(self.collectionView.contentOffset.x / cvbounds.size.width))
+        
+        self.collectionView.collectionViewLayout.layoutAttributesForElementsInRect(cvbounds)
+        
+        if let monthName = formatter.monthSymbols[page] as? String {
+            self.headerView.monthLabel.text = monthName
+        }
         
         if let delegate = self.delegate {
             
-           
+           // inform the delegate
             
         }
         
