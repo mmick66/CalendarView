@@ -14,7 +14,7 @@ class KDCalendarDayCell: UICollectionViewCell {
     
      lazy var pBackgroundView : UIView = {
         
-        var vFrame = CGRectInset(self.frame, 6.0, 6.0)
+        var vFrame = CGRectInset(self.frame, 3.0, 3.0)
         
         let view = UIView(frame: vFrame)
         

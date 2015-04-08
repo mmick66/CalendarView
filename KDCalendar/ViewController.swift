@@ -13,6 +13,7 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
     
     @IBOutlet weak var calendarView: KDCalendarView!
     
+    
     override func viewDidLoad() {
         
         super.viewDidLoad()
@@ -25,8 +26,6 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
     // MARK : KDCalendarDataSource
     
     func startDate() -> NSDate? {
-        
-        
         
         let dateComponents = NSDateComponents()
         dateComponents.month = -3
@@ -57,8 +56,8 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
         super.viewDidLayoutSubviews()
         
         let width = self.view.frame.size.width - 16.0 * 2
-        
-        self.calendarView.frame = CGRect(x: 16.0, y: 32.0, width: width, height: width)
+        let height = width + 20.0
+        self.calendarView.frame = CGRect(x: 16.0, y: 32.0, width: width, height: height)
         
         
     }

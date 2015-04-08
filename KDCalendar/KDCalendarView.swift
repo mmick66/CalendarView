@@ -9,7 +9,6 @@
 import UIKit
 
 let cellReuseIdentifier = "KDCalendarDayCell"
-let headerReuseIdentifier = "KDCalendarHeaderView"
 
 let NUMBER_OF_DAYS_IN_WEEK = 7
 let MAXIMUM_NUMBER_OF_ROWS = 6
@@ -44,6 +43,14 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     var endDateCache : NSDate = NSDate()
     var startOfMonthCache : NSDate = NSDate()
     
+    lazy var headerView : KDCalendarHeaderView = {
+       
+        let hv = KDCalendarHeaderView(frame:CGRectZero)
+        
+        return hv
+        
+    }()
+    
     lazy var collectionView : UICollectionView = {
      
         let layout = KDCalendarFlowLayout()
@@ -59,26 +66,30 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         cv.showsHorizontalScrollIndicator = false
         cv.showsVerticalScrollIndicator = false
         
-        
         return cv
         
     }()
     
     override var frame: CGRect {
         didSet {
-            self.collectionView.frame = self.bounds
+            
+            var elementFrame = CGRect(x:0.0, y:0.0, width: self.frame.size.width, height:80.0)
+            
+            self.headerView.frame = elementFrame
+            
+            elementFrame.origin.y += elementFrame.size.height
+            elementFrame.size.height = self.frame.size.height - elementFrame.size.height
+            
+            self.collectionView.frame = CGRect(x:0.0, y:80.0, width: self.frame.size.width, height:self.frame.size.height - 80.0)
             
             let layout = self.collectionView.collectionViewLayout as KDCalendarFlowLayout
-            
-            //layout.headerReferenceSize = CGSize(width: self.bounds.size.width, height: 0.0)
-            
             
             self.collectionView.collectionViewLayout = layout
             
         }
     }
     
-    var monthInfo : [Int:[Int]] = [Int:[Int]]()
+    
     
     override init() {
         // just give a default size if the class is called without a frame
@@ -103,16 +114,14 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     
     func initialSetup() {
         
-        self.collectionView.frame = self.bounds
         
         self.clipsToBounds = true
         
         // Register Class
         self.collectionView.registerClass(KDCalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
         
-        // Register Header
-        //self.collectionView.registerClass(KDCalendarHeaderView.self, forSupplementaryViewOfKind:UICollectionElementKindSectionHeader, withReuseIdentifier: headerReuseIdentifier)
         
+        self.addSubview(self.headerView)
         self.addSubview(self.collectionView)
     }
     
@@ -124,7 +133,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         
         // Set the collection view to the correct layout
         let layout = self.collectionView.collectionViewLayout as UICollectionViewFlowLayout
-        layout.itemSize = CGSizeMake(self.bounds.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), (self.bounds.size.height - layout.headerReferenceSize.height) / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
+        layout.itemSize = CGSizeMake(self.collectionView.frame.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), (self.collectionView.frame.size.height - layout.headerReferenceSize.height) / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
         self.collectionView.collectionViewLayout = layout
         
         if let dateSource = self.dataSource {
@@ -150,11 +159,8 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
                         startOfMonthCache = dateFromDayOneComponents
                     }
                     else {
-                        
                         return 0
-                        
                     }
-                    
                     
                     let differenceComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.CalendarUnitMonth, fromDate: startDateCache, toDate: endDateCache, options: NSCalendarOptions.allZeros)
                     
@@ -168,19 +174,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         return 0
     }
     
-    func collectionView(collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, atIndexPath indexPath: NSIndexPath) -> UICollectionReusableView {
-        
-        let header = self.collectionView.dequeueReusableSupplementaryViewOfKind(kind, withReuseIdentifier: headerReuseIdentifier, forIndexPath: indexPath) as KDCalendarHeaderView
-        
-        
-        let monthString : String = formatter.monthSymbols[indexPath.section % 12] as String
-        header.monthLabel.text = monthString
-        
-        
-        return header
-        
-    }
-    
+    var monthInfo : [Int:[Int]] = [Int:[Int]]()
     
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         
@@ -231,7 +225,6 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             
         }
         
-        //dayCell.textLabel.text = String(indexPath.section) + ":" + String(indexPath.item)
         
         return dayCell
     }
@@ -242,6 +235,8 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         
         
         self.collectionView.collectionViewLayout.layoutAttributesForElementsInRect(self.collectionView.bounds)
+        
+        self.headerView.monthLabel.text = "Michael"
         
         if let delegate = self.delegate {
             

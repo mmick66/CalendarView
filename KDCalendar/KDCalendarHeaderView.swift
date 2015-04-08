@@ -8,44 +8,68 @@
 
 import UIKit
 
-class KDCalendarHeaderView: UICollectionReusableView {
+class KDCalendarHeaderView: UIView {
     
-    var monthLabel : UILabel = UILabel()
-    
-    override init(frame: CGRect) {
+    var monthLabel : UILabel {
+        let lbl = UILabel()
+        lbl.textAlignment = NSTextAlignment.Center
+        lbl.textColor = UIColor.grayColor()
+        self.addSubview(lbl)
+        return lbl
+    }
+    var dayLabelContainerView : UIView {
         
-        super.init(frame: frame)
+        let v = UIView()
         
-        var frm = self.bounds
-        frm.size.height /= 2.0
-        monthLabel.frame = frm
+        let formatter : NSDateFormatter = NSDateFormatter()
         
-        monthLabel.textAlignment = NSTextAlignment.Center
-        
-        self.addSubview(monthLabel)
-        
-        
-        let formatter = NSDateFormatter()
-        
-        
-        var labelFrame = CGRect(x: 0.0, y: self.bounds.size.height / 2.0, width: self.bounds.size.width / 7.0, height: self.bounds.size.height / 2.0)
-        
-        for symbol in formatter.weekdaySymbols as [NSString] {
+        for index in 1...7 {
             
-            let weekdayLabel = UILabel(frame: labelFrame)
+            let day : NSString = formatter.weekdaySymbols[index % 7] as NSString
             
-            weekdayLabel.text = symbol.substringToIndex(2).uppercaseString
-            weekdayLabel.textColor = UIColor.whiteColor()
+            let weekdayLabel = UILabel()
+            
+            weekdayLabel.text = day.substringToIndex(2).uppercaseString
+            weekdayLabel.textColor = UIColor.grayColor()
             weekdayLabel.textAlignment = NSTextAlignment.Center
-            self.addSubview(weekdayLabel)
             
-            labelFrame.origin.x += labelFrame.size.width
+            v.addSubview(weekdayLabel)
         }
         
+        self.addSubview(v)
+        
+        return v
+        
+    }
+    
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
     }
 
     required init(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
+    
+    
+    override func layoutSubviews() {
         
+        super.layoutSubviews()
+        
+        var frm = self.bounds
+        frm.size.height /= 2.0
+        self.monthLabel.frame = frm
+        
+        var labelFrame = CGRect(x: 0.0, y: self.bounds.size.height / 2.0, width: self.bounds.size.width / 7.0, height: self.bounds.size.height / 2.0)
+        
+        for lbl in self.dayLabelContainerView.subviews as [UIView] {
+            
+            lbl.frame = labelFrame
+            labelFrame.origin.x += labelFrame.size.width
+        }
+        
+        
+        
+    }
+    
 }
