@@ -64,7 +64,9 @@ class KDCalendarHeaderView: UIView {
         super.layoutSubviews()
         
         var frm = self.bounds
-        frm.size.height /= 2.0
+        frm.origin.y += 5.0
+        frm.size.height = 40.0
+        
         self.monthLabel.frame = frm
         
         

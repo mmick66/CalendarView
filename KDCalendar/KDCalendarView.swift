@@ -194,11 +194,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             firstWeekdayOfMonthIndex = firstWeekdayOfMonthIndex - 1 // firstWeekdayOfMonthIndex should be 0-Indexed
             firstWeekdayOfMonthIndex = (firstWeekdayOfMonthIndex + 6) % 7 // push it modularly so that we take it back one day so that the first day is Monday instead of Sunday which is the default
      
-            
             monthInfo[section] = [firstWeekdayOfMonthIndex,numberOfDaysInMonth]
-            
-            
-            
             
             return NUMBER_OF_DAYS_IN_WEEK * MAXIMUM_NUMBER_OF_ROWS // 7 x 6 = 42
         }
@@ -240,22 +236,30 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     // MARK: UIScrollViewDelegate
     
     
-    
     func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
-        
         
         let cvbounds = self.collectionView.bounds
         
         var page : Int = Int(floor(self.collectionView.contentOffset.x / cvbounds.size.width))
+
+        page = page > 0 ? page : 0
         
-        if page < 0 {
-            page = 0
-        }
         
         self.collectionView.collectionViewLayout.layoutAttributesForElementsInRect(cvbounds)
         
         if let monthName = formatter.monthSymbols[page % 12] as? String {
-            self.headerView.monthLabel.text = monthName
+            
+            var monthsOffsetComponents = NSDateComponents()
+            monthsOffsetComponents.month = page
+            
+            if let yearDate = NSCalendar.currentCalendar().dateByAddingComponents(monthsOffsetComponents, toDate: startDateCache, options: NSCalendarOptions.allZeros) {
+                
+                let year = NSCalendar.currentCalendar().component(NSCalendarUnit.CalendarUnitYear, fromDate: yearDate)
+                
+                self.headerView.monthLabel.text = monthName + " " + String(year)
+                
+            }
+            
         }
         
         if let delegate = self.delegate {
