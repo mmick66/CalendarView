@@ -30,7 +30,7 @@ class KDCalendarHeaderView: UIView {
         
         for index in 1...7 {
             
-            let day : NSString = formatter.weekdaySymbols[index % 7] as NSString
+            let day : NSString = formatter.weekdaySymbols[index % 7] as! NSString
             
             let weekdayLabel = UILabel()
             
@@ -70,7 +70,7 @@ class KDCalendarHeaderView: UIView {
         
         var labelFrame = CGRect(x: 0.0, y: self.bounds.size.height / 2.0, width: self.bounds.size.width / 7.0, height: self.bounds.size.height / 2.0)
         
-        for lbl in self.dayLabelContainerView.subviews as [UIView] {
+        for lbl in self.dayLabelContainerView.subviews as! [UIView] {
             
             lbl.frame = labelFrame
             labelFrame.origin.x += labelFrame.size.width

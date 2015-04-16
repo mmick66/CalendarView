@@ -13,7 +13,7 @@ class KDCalendarFlowLayout: UICollectionViewFlowLayout {
     
     override func layoutAttributesForElementsInRect(rect: CGRect) -> [AnyObject]? {
         
-        return (super.layoutAttributesForElementsInRect(rect) as [UICollectionViewLayoutAttributes]).map {
+        return (super.layoutAttributesForElementsInRect(rect) as! [UICollectionViewLayoutAttributes]).map {
             attrs in
             self.applyLayoutAttributes(attrs)
             return attrs

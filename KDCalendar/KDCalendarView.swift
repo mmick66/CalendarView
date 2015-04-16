@@ -82,7 +82,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             
             self.collectionView.frame = CGRect(x:0.0, y:80.0, width: self.frame.size.width, height:self.frame.size.height - 80.0)
             
-            let layout = self.collectionView.collectionViewLayout as KDCalendarFlowLayout
+            let layout = self.collectionView.collectionViewLayout as! KDCalendarFlowLayout
             
             self.collectionView.collectionViewLayout = layout
             
@@ -90,14 +90,9 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     }
     
     
-    
-    override init() {
-        // just give a default size if the class is called without a frame
-        super.init(frame : CGRectMake(0.0, 0.0, 200.0, 200.0))
-    }
 
     override init(frame: CGRect) {
-        super.init(frame: frame)
+        super.init(frame : CGRectMake(0.0, 0.0, 200.0, 200.0))
         self.initialSetup()
     }
 
@@ -133,7 +128,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
         
         // Set the collection view to the correct layout
-        let layout = self.collectionView.collectionViewLayout as UICollectionViewFlowLayout
+        let layout = self.collectionView.collectionViewLayout as! UICollectionViewFlowLayout
         layout.itemSize = CGSizeMake(self.collectionView.frame.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), (self.collectionView.frame.size.height - layout.headerReferenceSize.height) / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
         self.collectionView.collectionViewLayout = layout
         
@@ -154,7 +149,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
                     }
                     
                     // discart day and minutes so that they round off to the first of the month
-                    let dayOneComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.MonthCalendarUnit | NSCalendarUnit.YearCalendarUnit | NSCalendarUnit.EraCalendarUnit, fromDate: startDateCache)
+                    let dayOneComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.CalendarUnitMonth | NSCalendarUnit.CalendarUnitYear | NSCalendarUnit.CalendarUnitEra, fromDate: startDateCache)
                 
                     if let dateFromDayOneComponents = NSCalendar.currentCalendar().dateFromComponents(dayOneComponents) {
                         
@@ -212,7 +207,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         
-        let dayCell = collectionView.dequeueReusableCellWithReuseIdentifier(cellReuseIdentifier, forIndexPath: indexPath) as KDCalendarDayCell
+        let dayCell = collectionView.dequeueReusableCellWithReuseIdentifier(cellReuseIdentifier, forIndexPath: indexPath) as! KDCalendarDayCell
      
         let currentMonthInfo : [Int] = monthInfo[indexPath.section]!
         
@@ -220,14 +215,14 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             
             dayCell.textLabel.text = String(indexPath.item - currentMonthInfo[FIRST_DAY_INDEX] + 1)
             
-            dayCell.setBackgroundColor( UIColor(white: 0.0, alpha: 0.1) )
+            dayCell.setColor( UIColor(white: 0.0, alpha: 0.1) )
             
         }
         else {
             
             dayCell.textLabel.text = ""
             
-            dayCell.setBackgroundColor( UIColor.clearColor() )
+            dayCell.setColor( UIColor.clearColor() )
             
         }
         

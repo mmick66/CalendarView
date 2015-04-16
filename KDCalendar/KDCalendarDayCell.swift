@@ -37,7 +37,7 @@ class KDCalendarDayCell: UICollectionViewCell {
         
     }()
     
-    func setBackgroundColor(color : UIColor) -> Void {
+    func setColor(color : UIColor) -> Void {
         self.pBackgroundView.backgroundColor = color
     }
 
