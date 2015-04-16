@@ -48,6 +48,7 @@ class KDCalendarDayCell: UICollectionViewCell {
         self.textLabel.frame = self.bounds
         self.addSubview(self.textLabel)
         
+        
     }
 
     required init(coder aDecoder: NSCoder) {

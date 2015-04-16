@@ -42,7 +42,7 @@ class KDCalendarFlowLayout: UICollectionViewFlowLayout {
             
             var xCellOffset : CGFloat = xPageOffset + (CGFloat(attributes.indexPath.item % 7) * self.itemSize.width)
             
-            var yCellOffset : CGFloat = self.headerReferenceSize.height + (CGFloat(attributes.indexPath.item / 7) * self.itemSize.width)
+            var yCellOffset : CGFloat = CGFloat(attributes.indexPath.item / 7) * self.itemSize.height
             
             attributes.frame = CGRectMake(xCellOffset, yCellOffset, self.itemSize.width, self.itemSize.height)
         }

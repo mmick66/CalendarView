@@ -66,6 +66,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         cv.showsHorizontalScrollIndicator = false
         cv.showsVerticalScrollIndicator = false
         
+        
         return cv
         
     }()
@@ -130,6 +131,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         // Set the collection view to the correct layout
         let layout = self.collectionView.collectionViewLayout as! UICollectionViewFlowLayout
         layout.itemSize = CGSizeMake(self.collectionView.frame.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), (self.collectionView.frame.size.height - layout.headerReferenceSize.height) / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
+     
         self.collectionView.collectionViewLayout = layout
         
         
@@ -244,7 +246,11 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         
         let cvbounds = self.collectionView.bounds
         
-        let page : Int = Int(floor(self.collectionView.contentOffset.x / cvbounds.size.width))
+        var page : Int = Int(floor(self.collectionView.contentOffset.x / cvbounds.size.width))
+        
+        if page < 0 {
+            page = 0
+        }
         
         self.collectionView.collectionViewLayout.layoutAttributesForElementsInRect(cvbounds)
         
