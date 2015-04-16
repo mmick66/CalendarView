@@ -254,7 +254,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         
         self.collectionView.collectionViewLayout.layoutAttributesForElementsInRect(cvbounds)
         
-        if let monthName = formatter.monthSymbols[page] as? String {
+        if let monthName = formatter.monthSymbols[page % 12] as? String {
             self.headerView.monthLabel.text = monthName
         }
         
