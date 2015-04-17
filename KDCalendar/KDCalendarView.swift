@@ -51,7 +51,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         
     }()
     
-    lazy var collectionView : UICollectionView = {
+    lazy var calendarView : UICollectionView = {
      
         let layout = KDCalendarFlowLayout()
         layout.scrollDirection = UICollectionViewScrollDirection.Horizontal
@@ -81,11 +81,11 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             elementFrame.origin.y += elementFrame.size.height
             elementFrame.size.height = self.frame.size.height - elementFrame.size.height
             
-            self.collectionView.frame = CGRect(x:0.0, y:80.0, width: self.frame.size.width, height:self.frame.size.height - 80.0)
+            self.calendarView.frame = CGRect(x:0.0, y:80.0, width: self.frame.size.width, height:self.frame.size.height - 80.0)
             
-            let layout = self.collectionView.collectionViewLayout as! KDCalendarFlowLayout
+            let layout = self.calendarView.collectionViewLayout as! KDCalendarFlowLayout
             
-            self.collectionView.collectionViewLayout = layout
+            self.calendarView.collectionViewLayout = layout
             
         }
     }
@@ -115,11 +115,11 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         self.clipsToBounds = true
         
         // Register Class
-        self.collectionView.registerClass(KDCalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
+        self.calendarView.registerClass(KDCalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
         
         
         self.addSubview(self.headerView)
-        self.addSubview(self.collectionView)
+        self.addSubview(self.calendarView)
     }
     
     
@@ -129,10 +129,10 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
         
         // Set the collection view to the correct layout
-        let layout = self.collectionView.collectionViewLayout as! UICollectionViewFlowLayout
-        layout.itemSize = CGSizeMake(self.collectionView.frame.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), (self.collectionView.frame.size.height - layout.headerReferenceSize.height) / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
+        let layout = self.calendarView.collectionViewLayout as! UICollectionViewFlowLayout
+        layout.itemSize = CGSizeMake(self.calendarView.frame.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), (self.calendarView.frame.size.height - layout.headerReferenceSize.height) / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
      
-        self.collectionView.collectionViewLayout = layout
+        self.calendarView.collectionViewLayout = layout
         
         
         if let dateSource = self.dataSource {
@@ -238,14 +238,14 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     
     func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
         
-        let cvbounds = self.collectionView.bounds
+        let cvbounds = self.calendarView.bounds
         
-        var page : Int = Int(floor(self.collectionView.contentOffset.x / cvbounds.size.width))
+        var page : Int = Int(floor(self.calendarView.contentOffset.x / cvbounds.size.width))
 
         page = page > 0 ? page : 0
         
         
-        self.collectionView.collectionViewLayout.layoutAttributesForElementsInRect(cvbounds)
+        self.calendarView.collectionViewLayout.layoutAttributesForElementsInRect(cvbounds)
         
         if let monthName = formatter.monthSymbols[page % 12] as? String {
             
