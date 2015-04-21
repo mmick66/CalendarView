@@ -68,6 +68,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         cv.backgroundColor = UIColor.clearColor()
         cv.showsHorizontalScrollIndicator = false
         cv.showsVerticalScrollIndicator = false
+        cv.allowsMultipleSelection = true
         
         
         return cv
@@ -302,41 +303,36 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     }
     
     func collectionView(collectionView: UICollectionView, didDeselectItemAtIndexPath indexPath: NSIndexPath) {
-        println("DESELECTING")
+        
+        if let
+            delegate = self.delegate,
+            index = find(selectedIndexPaths, indexPath),
+            dateSelectedByUser = dateBeingSelectedByUser {
+                
+                delegate.calendar?(self, didDeselectDate: dateSelectedByUser)
+                
+                selectedIndexPaths.removeAtIndex(index)
+                
+                
+        }
+        
     }
     
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         
         if let
             delegate = self.delegate,
-            cell = self.calendarView.cellForItemAtIndexPath(indexPath) as? KDCalendarDayCell {
+            dateSelectedByUser = dateBeingSelectedByUser {
                 
-                if contains(selectedIndexPaths, indexPath) { // deselect action
-                    
-                    println("Deselecting")
-                    
-                    delegate.calendar?(self, didDeselectDate: dateBeingSelectedByUser!)
-                    
-                    cell.selected = false
-                    
-                    if let index = find(selectedIndexPaths, indexPath) {
-                        selectedIndexPaths.removeAtIndex(index)
-                    }
-                    
-                }
-                else { // select action
-                    
-                    println("Selecting")
-                    
-                    delegate.calendar(self, didSelectDate: dateBeingSelectedByUser!)
-                    
-                    cell.selected = true
-                    
-                    selectedIndexPaths.append(indexPath)
-                    
-                }
+                delegate.calendar(self, didSelectDate: dateSelectedByUser)
+                
+                // Update model
+                selectedIndexPaths.append(indexPath)
+                selectedDates.append(dateSelectedByUser)
                 
         }
+        
+        println("\(selectedIndexPaths)")
         
         
     }
