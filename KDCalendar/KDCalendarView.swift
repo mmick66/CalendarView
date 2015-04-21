@@ -17,6 +17,7 @@ let HEADER_DEFAULT_SIZE = 40.0
 
 let FIRST_DAY_INDEX = 0
 let NUMBER_OF_DAYS_INDEX = 1
+let DATE_SELECTED_INDEX = 2
 
 @objc protocol KDCalendarViewDataSource {
     
@@ -27,21 +28,23 @@ let NUMBER_OF_DAYS_INDEX = 1
 
 @objc protocol KDCalendarViewDelegate {
     
-    optional func calendar(calendar : KDCalendarView, canSelectDate : NSDate)
-    func calendar(calendar : KDCalendarView, didScrollToMonth : NSDate)
-    func calendar(calendar : KDCalendarView, didSelectDate : NSDate)
+    optional func calendar(calendar : KDCalendarView, canSelectDate date : NSDate) -> Bool
+    func calendar(calendar : KDCalendarView, didScrollToMonth date : NSDate) -> Void
+    func calendar(calendar : KDCalendarView, didSelectDate date : NSDate) -> Void
+    optional func calendar(calendar : KDCalendarView, didDeselectDate date : NSDate) -> Void
 }
 
-class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate {
     
     var dataSource : KDCalendarViewDataSource?
     var delegate : KDCalendarViewDelegate?
     
-    let formatter = NSDateFormatter()
+    private var startDateCache : NSDate = NSDate()
+    private var endDateCache : NSDate = NSDate()
+    private var startOfMonthCache : NSDate = NSDate()
     
-    var startDateCache : NSDate = NSDate()
-    var endDateCache : NSDate = NSDate()
-    var startOfMonthCache : NSDate = NSDate()
+    private(set) var selectedIndexPaths : [NSIndexPath] = [NSIndexPath]()
+    private(set) var selectedDates : [NSDate] = [NSDate]()
     
     lazy var headerView : KDCalendarHeaderView = {
        
@@ -207,28 +210,32 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         
         let dayCell = collectionView.dequeueReusableCellWithReuseIdentifier(cellReuseIdentifier, forIndexPath: indexPath) as! KDCalendarDayCell
      
-        let currentMonthInfo : [Int] = monthInfo[indexPath.section]!
+        let currentMonthInfo : [Int] = monthInfo[indexPath.section]! // we are guaranteed an array by the fact that we reached this line (so unwrap)
         
-        if indexPath.item >= currentMonthInfo[FIRST_DAY_INDEX] && indexPath.item < currentMonthInfo[FIRST_DAY_INDEX] + currentMonthInfo[NUMBER_OF_DAYS_INDEX] {
+        let fdIndex = currentMonthInfo[FIRST_DAY_INDEX]
+        let nDays = currentMonthInfo[NUMBER_OF_DAYS_INDEX]
+        
+        if indexPath.item >= fdIndex &&
+            indexPath.item < fdIndex + nDays {
             
-            dayCell.textLabel.text = String(indexPath.item - currentMonthInfo[FIRST_DAY_INDEX] + 1)
+            dayCell.textLabel.text = String(indexPath.item - fdIndex + 1)
             
-            dayCell.setColor( UIColor(white: 0.0, alpha: 0.1) )
+            dayCell.hidden = false
             
         }
         else {
             
             dayCell.textLabel.text = ""
             
-            dayCell.setColor( UIColor.clearColor() )
+            dayCell.hidden = true
             
         }
+        
+        dayCell.selected = contains(selectedIndexPaths, indexPath)
         
         if indexPath.section == 0 && indexPath.item == 0 {
             self.scrollViewDidEndDecelerating(collectionView)
         }
-        
-
         
         return dayCell
     }
@@ -244,34 +251,94 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
 
         page = page > 0 ? page : 0
         
+        var monthsOffsetComponents = NSDateComponents()
+        monthsOffsetComponents.month = page
         
-        self.calendarView.collectionViewLayout.layoutAttributesForElementsInRect(cvbounds)
         
-        if let monthName = formatter.monthSymbols[page % 12] as? String {
+        if let yearDate = NSCalendar.currentCalendar().dateByAddingComponents(monthsOffsetComponents, toDate: self.startOfMonthCache, options: NSCalendarOptions.allZeros),
+            monthName = NSDateFormatter().monthSymbols[page % 12] as? String {
             
-            var monthsOffsetComponents = NSDateComponents()
-            monthsOffsetComponents.month = page
+            let year = NSCalendar.currentCalendar().component(NSCalendarUnit.CalendarUnitYear, fromDate: yearDate)
+                
+            self.headerView.monthLabel.text = monthName + " " + String(year)
+                
+            if let delegate = self.delegate {
+                delegate.calendar(self, didScrollToMonth: yearDate)
+            }
+                
+        }
+    }
+    
+    
+    
+    // MARK: UICollectionViewDelegate
+    
+    private var dateBeingSelectedByUser : NSDate?
+    func collectionView(collectionView: UICollectionView, shouldSelectItemAtIndexPath indexPath: NSIndexPath) -> Bool {
+        
+        let currentMonthInfo : [Int] = monthInfo[indexPath.section]!
+        let firstDayInMonth = currentMonthInfo[0]
+        
+        var offsetComponents = NSDateComponents()
+        offsetComponents.month = indexPath.section
+        offsetComponents.day = indexPath.item - firstDayInMonth
+        
+        if let dateUserSelected = NSCalendar.currentCalendar().dateByAddingComponents(offsetComponents, toDate: self.startOfMonthCache, options: NSCalendarOptions.allZeros) {
             
-            if let yearDate = NSCalendar.currentCalendar().dateByAddingComponents(monthsOffsetComponents, toDate: startDateCache, options: NSCalendarOptions.allZeros) {
-                
-                let year = NSCalendar.currentCalendar().component(NSCalendarUnit.CalendarUnitYear, fromDate: yearDate)
-                
-                self.headerView.monthLabel.text = monthName + " " + String(year)
+            dateBeingSelectedByUser = dateUserSelected
+            
+            // Optional protocol method
+            if let canSelectFromDelegate = delegate?.calendar?(self, canSelectDate: dateUserSelected) {
+                return canSelectFromDelegate
                 
             }
             
+            return true // it can select any date by default
+            
         }
         
-        if let delegate = self.delegate {
-            
-           // inform the delegate
-            
-        }
+        return false // if date is out of scope
         
     }
     
-    // MARK: UICollectionViewDelegateFlowLayout
+    func collectionView(collectionView: UICollectionView, didDeselectItemAtIndexPath indexPath: NSIndexPath) {
+        println("DESELECTING")
+    }
     
-    
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        
+        if let
+            delegate = self.delegate,
+            cell = self.calendarView.cellForItemAtIndexPath(indexPath) as? KDCalendarDayCell {
+                
+                if contains(selectedIndexPaths, indexPath) { // deselect action
+                    
+                    println("Deselecting")
+                    
+                    delegate.calendar?(self, didDeselectDate: dateBeingSelectedByUser!)
+                    
+                    cell.selected = false
+                    
+                    if let index = find(selectedIndexPaths, indexPath) {
+                        selectedIndexPaths.removeAtIndex(index)
+                    }
+                    
+                }
+                else { // select action
+                    
+                    println("Selecting")
+                    
+                    delegate.calendar(self, didSelectDate: dateBeingSelectedByUser!)
+                    
+                    cell.selected = true
+                    
+                    selectedIndexPaths.append(indexPath)
+                    
+                }
+                
+        }
+        
+        
+    }
 
 }

@@ -65,12 +65,12 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
     
     // MARK : KDCalendarDelegate
    
-    func calendar(calendar: KDCalendarView, didSelectDate: NSDate) {
-        
+    func calendar(calendar: KDCalendarView, didSelectDate date : NSDate) {
+        println("\(date)")
     }
     
-    func calendar(calendar: KDCalendarView, didScrollToMonth: NSDate) {
-        
+    func calendar(calendar: KDCalendarView, didScrollToMonth date : NSDate) {
+        println("\(date)")
     }
 
 }
