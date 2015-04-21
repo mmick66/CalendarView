@@ -220,16 +220,12 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             indexPath.item < fdIndex + nDays {
             
             dayCell.textLabel.text = String(indexPath.item - fdIndex + 1)
-            
             dayCell.hidden = false
             
         }
         else {
-            
             dayCell.textLabel.text = ""
-            
             dayCell.hidden = true
-            
         }
         
         dayCell.selected = contains(selectedIndexPaths, indexPath)
@@ -312,7 +308,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
                 delegate.calendar?(self, didDeselectDate: dateSelectedByUser)
                 
                 selectedIndexPaths.removeAtIndex(index)
-                
+                selectedDates.removeAtIndex(index)
                 
         }
         
@@ -331,10 +327,6 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
                 selectedDates.append(dateSelectedByUser)
                 
         }
-        
-        println("\(selectedIndexPaths)")
-        
-        
     }
 
 }
