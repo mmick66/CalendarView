@@ -8,16 +8,30 @@
 
 import UIKit
 
-let cellColor = UIColor(white: 0.0, alpha: 0.1)
+let cellColorDefault = UIColor(white: 0.0, alpha: 0.1)
+let cellColorToday = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.3)
 
 class KDCalendarDayCell: UICollectionViewCell {
+    
+    var isToday : Bool = false {
+        
+        didSet {
+           
+            if isToday == true {
+                self.pBackgroundView.backgroundColor = cellColorToday
+            }
+            else {
+                self.pBackgroundView.backgroundColor = cellColorDefault
+            }
+        }
+    }
     
     override var selected : Bool {
         
         didSet {
             
             if selected == true {
-                self.pBackgroundView.layer.borderWidth = 1.0
+                self.pBackgroundView.layer.borderWidth = 2.0
                 
             }
             else {
@@ -35,13 +49,12 @@ class KDCalendarDayCell: UICollectionViewCell {
         
         view.layer.cornerRadius = 4.0
         
-        view.layer.borderColor = UIColor.redColor().CGColor
+        view.layer.borderColor = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8).CGColor
         view.layer.borderWidth = 0.0
         
         view.center = CGPoint(x: self.bounds.size.width * 0.5, y: self.bounds.size.height * 0.5)
         
-        
-        view.backgroundColor = cellColor
+        view.backgroundColor = cellColorDefault
         
         
         return view
@@ -67,6 +80,9 @@ class KDCalendarDayCell: UICollectionViewCell {
         self.addSubview(self.textLabel)
         
         self.addSubview(self.pBackgroundView)
+        
+        
+        
     }
 
     required init(coder aDecoder: NSCoder) {
