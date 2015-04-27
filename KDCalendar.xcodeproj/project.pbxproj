@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		BE9331CD1AD43562000FD862 /* KDCalendarHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE9331CC1AD43562000FD862 /* KDCalendarHeaderView.swift */; };
+		BEF6665F1AEA50140012EC2E /* EventKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BEF6665E1AEA50140012EC2E /* EventKit.framework */; };
 		BEFD65551ACC072000ADE917 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65541ACC072000ADE917 /* AppDelegate.swift */; };
 		BEFD65571ACC072000ADE917 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65561ACC072000ADE917 /* ViewController.swift */; };
 		BEFD655A1ACC072000ADE917 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BEFD65581ACC072000ADE917 /* Main.storyboard */; };
@@ -31,6 +32,7 @@
 
 /* Begin PBXFileReference section */
 		BE9331CC1AD43562000FD862 /* KDCalendarHeaderView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KDCalendarHeaderView.swift; sourceTree = "<group>"; };
+		BEF6665E1AEA50140012EC2E /* EventKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = EventKit.framework; path = System/Library/Frameworks/EventKit.framework; sourceTree = SDKROOT; };
 		BEFD654F1ACC072000ADE917 /* KDCalendar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KDCalendar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BEFD65531ACC072000ADE917 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BEFD65541ACC072000ADE917 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -51,6 +53,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BEF6665F1AEA50140012EC2E /* EventKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -67,6 +70,7 @@
 		BEFD65461ACC072000ADE917 = {
 			isa = PBXGroup;
 			children = (
+				BEF6665E1AEA50140012EC2E /* EventKit.framework */,
 				BEFD65511ACC072000ADE917 /* KDCalendar */,
 				BEFD65671ACC072000ADE917 /* KDCalendarTests */,
 				BEFD65501ACC072000ADE917 /* Products */,

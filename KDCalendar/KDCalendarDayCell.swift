@@ -10,8 +10,29 @@ import UIKit
 
 let cellColorDefault = UIColor(white: 0.0, alpha: 0.1)
 let cellColorToday = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.3)
+let borderColor = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8)
 
 class KDCalendarDayCell: UICollectionViewCell {
+    
+    var eventsCount = 0 {
+        didSet {
+            for sview in self.dotsView.subviews as! [UIView] {
+                sview.removeFromSuperview()
+            }
+            
+            let stride = self.dotsView.frame.size.width / CGFloat(eventsCount+1)
+            let viewHeight = self.dotsView.frame.size.height
+            let halfViewHeight = viewHeight / 2.0
+            
+            for var i = 0 ; i < eventsCount ; i++ {
+                let frm = CGRect(x: (stride+1.0) - halfViewHeight, y: 0.0, width: viewHeight, height: viewHeight)
+                let circle = UIView(frame: frm)
+                circle.layer.cornerRadius = halfViewHeight
+                circle.backgroundColor = borderColor
+                self.dotsView.addSubview(circle)
+            }
+        }
+    }
     
     var isToday : Bool = false {
         
@@ -49,7 +70,7 @@ class KDCalendarDayCell: UICollectionViewCell {
         
         view.layer.cornerRadius = 4.0
         
-        view.layer.borderColor = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8).CGColor
+        view.layer.borderColor = borderColor.CGColor
         view.layer.borderWidth = 0.0
         
         view.center = CGPoint(x: self.bounds.size.width * 0.5, y: self.bounds.size.height * 0.5)
@@ -70,19 +91,27 @@ class KDCalendarDayCell: UICollectionViewCell {
         
     }()
     
-    
+    lazy var dotsView : UIView = {
+        
+        let frm = CGRect(x: 8.0, y: self.frame.size.width - 10.0 - 4.0, width: self.frame.size.width - 16.0, height: 8.0)
+        let dv = UIView(frame: frm)
+        
+        
+        return dv
+        
+    }()
 
     override init(frame: CGRect) {
         
         super.init(frame: frame)
         
-        self.textLabel.frame = self.bounds
-        self.addSubview(self.textLabel)
         
         self.addSubview(self.pBackgroundView)
         
+        self.textLabel.frame = self.bounds
+        self.addSubview(self.textLabel)
         
-        
+        self.addSubview(dotsView)
     }
 
     required init(coder aDecoder: NSCoder) {

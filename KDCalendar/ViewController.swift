@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import EventKit
 
 class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarViewDelegate {
 
@@ -21,6 +22,12 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
         calendarView.dataSource = self
         calendarView.delegate = self
         
+    }
+    
+    override func viewDidAppear(animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        self.loadEventsInCalendar()
     }
 
     // MARK : KDCalendarDataSource
@@ -73,5 +80,49 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
         println("\(date)")
     }
 
+    // MARK : Events
+    
+    func loadEventsInCalendar() {
+        
+        if let startDate = self.startDate(), endDate = self.endDate() {
+            
+            let store = EKEventStore()
+            
+            let fetchEvents = { () -> Void in
+                
+                let predicate = store.predicateForEventsWithStartDate(startDate, endDate:endDate, calendars: nil)
+                
+                // if can return nil for no events between these dates
+                if let eventsBetweenDates = store.eventsMatchingPredicate(predicate) as? [EKEvent] {
+                    
+                    self.calendarView.events = eventsBetweenDates
+                    
+                }
+                
+            }
+            
+            let q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0)
+            
+            if EKEventStore.authorizationStatusForEntityType(EKEntityTypeEvent) != EKAuthorizationStatus.Authorized {
+                
+                store.requestAccessToEntityType(EKEntityTypeEvent, completion: {(granted : Bool, error : NSError!) -> Void in
+                    if granted {
+                        fetchEvents()
+                    }
+                })
+                
+            }
+            else
+            {
+                fetchEvents()
+            }
+            
+        }
+        
+    }
+    
 }
+
+
+
 

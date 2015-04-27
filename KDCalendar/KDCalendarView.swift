@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import EventKit
 
 let cellReuseIdentifier = "KDCalendarDayCell"
 
@@ -46,6 +47,51 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     
     private(set) var selectedIndexPaths : [NSIndexPath] = [NSIndexPath]()
     private(set) var selectedDates : [NSDate] = [NSDate]()
+    
+    
+    private var eventsByIndexPath : [NSIndexPath:[EKEvent]]?
+    var events : [EKEvent]? {
+        
+        didSet {
+            
+            if let events = events {
+                
+                eventsByIndexPath = [NSIndexPath:[EKEvent]]()
+            
+                for event in events {
+                    
+                    let flags = NSCalendarUnit.CalendarUnitMonth | NSCalendarUnit.CalendarUnitDay
+                    
+                    let diffFromStartComponent = NSCalendar.currentCalendar().components(
+                        flags, fromDate:startOfMonthCache, toDate: event.startDate, options: NSCalendarOptions.allZeros
+                    )
+                    
+                    let indexPath = NSIndexPath(forItem: diffFromStartComponent.day, inSection: diffFromStartComponent.month)
+                    
+                    if var eventsList : [EKEvent] = eventsByIndexPath![indexPath] {
+                        
+                        eventsList.append(event)
+                    }
+                    else {
+                        
+                        eventsByIndexPath![indexPath] = [event]
+                      
+                    }
+                    
+                } // for
+                
+                
+                self.calendarView.reloadData()
+                
+            } // if let events ...
+            else {
+                
+                eventsByIndexPath = nil
+                
+            }
+            
+        } // didSet
+    }
     
     lazy var headerView : KDCalendarHeaderView = {
        
@@ -139,53 +185,45 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
      
         self.calendarView.collectionViewLayout = layout
         
-        
-        if let dateSource = self.dataSource {
+       
+        if let  startDate = self.dataSource?.startDate(),
+                endDate = self.dataSource?.endDate() {
             
-            if let startDate = dateSource.startDate() {
-                
-                startDateCache = startDate
-                
-                if let endDate = dateSource.endDate() {
-                    
-                    endDateCache = endDate
-                    
-                    // check if the dates are in correct order
-                    if NSCalendar.currentCalendar().compareDate(startDate, toDate: endDate, toUnitGranularity: NSCalendarUnit.CalendarUnitNanosecond) != NSComparisonResult.OrderedAscending {
-                        return 0
-                    }
-                    
-                    // discart day and minutes so that they round off to the first of the month
-                    let dayOneComponents = NSCalendar.currentCalendar().components( NSCalendarUnit.CalendarUnitYear | NSCalendarUnit.CalendarUnitEra, fromDate: startDateCache)
-                
-                    if let dateFromDayOneComponents = NSCalendar.currentCalendar().dateFromComponents(dayOneComponents) {
-                        
-                        startOfMonthCache = dateFromDayOneComponents
-                    }
-                    else {
-                        return 0
-                    }
-                    
-                    let today = NSDate()
-                    
-                    if  startOfMonthCache.compare(today) == NSComparisonResult.OrderedAscending &&
-                        endDateCache.compare(today) == NSComparisonResult.OrderedDescending {
-                        
-                            let differenceFromTodayComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.CalendarUnitMonth | NSCalendarUnit.CalendarUnitDay, fromDate: startOfMonthCache, toDate: NSDate(), options: NSCalendarOptions.allZeros)
-                            
-                            
-                            self.todayIndexPath = NSIndexPath(forItem: differenceFromTodayComponents.day, inSection: differenceFromTodayComponents.month)
-                    }
-                    
-                    
-                    
-                    let differenceComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.CalendarUnitMonth, fromDate: startDateCache, toDate: endDateCache, options: NSCalendarOptions.allZeros)
-                    
-                    return differenceComponents.month + 1 // if we are for example on the same month and the difference is 0 we still need 1 to display it
-                    
-                }
+            startDateCache = startDate
+            endDateCache = endDate
+            
+            // check if the dates are in correct order
+            if NSCalendar.currentCalendar().compareDate(startDate, toDate: endDate, toUnitGranularity: NSCalendarUnit.CalendarUnitNanosecond) != NSComparisonResult.OrderedAscending {
+                return 0
             }
             
+            // discart day and minutes so that they round off to the first of the month
+            let dayOneComponents = NSCalendar.currentCalendar().components( NSCalendarUnit.CalendarUnitYear | NSCalendarUnit.CalendarUnitEra, fromDate: startDateCache)
+            
+            if let dateFromDayOneComponents = NSCalendar.currentCalendar().dateFromComponents(dayOneComponents) {
+                
+                startOfMonthCache = dateFromDayOneComponents
+            }
+            else {
+                return 0
+            }
+            
+            let today = NSDate()
+            
+            if  startOfMonthCache.compare(today) == NSComparisonResult.OrderedAscending &&
+                endDateCache.compare(today) == NSComparisonResult.OrderedDescending {
+                    
+                    let differenceFromTodayComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.CalendarUnitMonth | NSCalendarUnit.CalendarUnitDay, fromDate: startOfMonthCache, toDate: NSDate(), options: NSCalendarOptions.allZeros)
+                    
+                    
+                    self.todayIndexPath = NSIndexPath(forItem: differenceFromTodayComponents.day, inSection: differenceFromTodayComponents.month)
+            }
+            
+            
+            
+            let differenceComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.CalendarUnitMonth, fromDate: startDateCache, toDate: endDateCache, options: NSCalendarOptions.allZeros)
+            
+            return differenceComponents.month + 1 // if we are for example on the same month and the difference is 0 we still need 1 to display it
         }
         
         
@@ -250,6 +288,11 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             dayCell.isToday = (idx.section == indexPath.section && idx.item + fdIndex == indexPath.item)
         }
         
+        if let eventsForDay = self.eventsByIndexPath?[indexPath] {
+            
+            dayCell.eventsCount = eventsForDay.count
+            
+        }
         
         
         return dayCell
@@ -345,6 +388,11 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
                 selectedDates.append(dateSelectedByUser)
                 
         }
+    }
+    
+    
+    func reloadData() {
+        self.calendarView.reloadData()
     }
 
 }
