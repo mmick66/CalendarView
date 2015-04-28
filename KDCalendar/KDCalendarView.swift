@@ -35,6 +35,7 @@ let DATE_SELECTED_INDEX = 2
     optional func calendar(calendar : KDCalendarView, didDeselectDate date : NSDate) -> Void
 }
 
+
 class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate {
     
     var dataSource : KDCalendarViewDataSource?
@@ -199,34 +200,39 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             
             // discart day and minutes so that they round off to the first of the month
             let dayOneComponents = NSCalendar.currentCalendar().components( NSCalendarUnit.CalendarUnitEra | NSCalendarUnit.CalendarUnitYear | NSCalendarUnit.CalendarUnitMonth, fromDate: startDateCache)
-            
-            if let dateFromDayOneComponents = NSCalendar.currentCalendar().dateFromComponents(dayOneComponents) {
-                
-                startOfMonthCache = dateFromDayOneComponents
-            }
-            else {
-                return 0
-            }
-            
-            let today = NSDate()
-            
-            if  startOfMonthCache.compare(today) == NSComparisonResult.OrderedAscending &&
-                endDateCache.compare(today) == NSComparisonResult.OrderedDescending {
                     
-                    let differenceFromTodayComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.CalendarUnitMonth | NSCalendarUnit.CalendarUnitDay, fromDate: startOfMonthCache, toDate: NSDate(), options: NSCalendarOptions.allZeros)
-                    
-                    
-                    self.todayIndexPath = NSIndexPath(forItem: differenceFromTodayComponents.day, inSection: differenceFromTodayComponents.month)
+            // create a GMT set calendar so that the
+            if let  gmtCalendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierGregorian),
+                    gmtTimeZone = NSTimeZone(abbreviation: "GMT") {
+                        
+                    gmtCalendar.timeZone = gmtTimeZone
+                        
+                    if let dateFromDayOneComponents = gmtCalendar.dateFromComponents(dayOneComponents) {
+                            
+                        startOfMonthCache = dateFromDayOneComponents
+                        
+                        let today = NSDate()
+                        
+                        if  startOfMonthCache.compare(today) == NSComparisonResult.OrderedAscending &&
+                            endDateCache.compare(today) == NSComparisonResult.OrderedDescending {
+                                
+                                let differenceFromTodayComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.CalendarUnitMonth | NSCalendarUnit.CalendarUnitDay, fromDate: startOfMonthCache, toDate: NSDate(), options: NSCalendarOptions.allZeros)
+                                
+                                self.todayIndexPath = NSIndexPath(forItem: differenceFromTodayComponents.day, inSection: differenceFromTodayComponents.month)
+                        
+                        }
+                        
+                        
+                        
+                        let differenceComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.CalendarUnitMonth, fromDate: startDateCache, toDate: endDateCache, options: NSCalendarOptions.allZeros)
+                        
+                       
+                        return differenceComponents.month + 1 // if we are for example on the same month and the difference is 0 we still need 1 to display it
+                    }
+                        
             }
-            
-            
-            
-            let differenceComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.CalendarUnitMonth, fromDate: startDateCache, toDate: endDateCache, options: NSCalendarOptions.allZeros)
-            
-            return differenceComponents.month + 1 // if we are for example on the same month and the difference is 0 we still need 1 to display it
+              
         }
-        
-        
         
         return 0
     }
