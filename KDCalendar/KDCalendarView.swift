@@ -198,7 +198,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             }
             
             // discart day and minutes so that they round off to the first of the month
-            let dayOneComponents = NSCalendar.currentCalendar().components( NSCalendarUnit.CalendarUnitYear | NSCalendarUnit.CalendarUnitEra, fromDate: startDateCache)
+            let dayOneComponents = NSCalendar.currentCalendar().components( NSCalendarUnit.CalendarUnitEra | NSCalendarUnit.CalendarUnitYear | NSCalendarUnit.CalendarUnitMonth, fromDate: startDateCache)
             
             if let dateFromDayOneComponents = NSCalendar.currentCalendar().dateFromComponents(dayOneComponents) {
                 
