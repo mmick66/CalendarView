@@ -73,18 +73,19 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
     // MARK : KDCalendarDelegate
    
     func calendar(calendar: KDCalendarView, didSelectDate date : NSDate) {
-        println("\(date)")
+        // println("Did Select: \(date)")
     }
     
     func calendar(calendar: KDCalendarView, didScrollToMonth date : NSDate) {
-        println("\(date)")
+        // println("Did Scroll to: \(date)")
     }
 
     // MARK : Events
     
     func loadEventsInCalendar() {
         
-        if let startDate = self.startDate(), endDate = self.endDate() {
+        if let  startDate = self.startDate(),
+                endDate = self.endDate() {
             
             let store = EKEventStore()
             
@@ -112,8 +113,7 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
                 })
                 
             }
-            else
-            {
+            else {
                 fetchEvents()
             }
             

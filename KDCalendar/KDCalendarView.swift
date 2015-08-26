@@ -55,36 +55,36 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         
         didSet {
             
-            if let events = events {
+            if let events = events { // If events are not null
                 
-                eventsByIndexPath = [NSIndexPath:[EKEvent]]()
+                eventsByIndexPath = [NSIndexPath:[EKEvent]]() // Map IndexPath to Event Array
             
                 for event in events {
                     
                     let flags = NSCalendarUnit.CalendarUnitMonth | NSCalendarUnit.CalendarUnitDay
                     
-                    let diffFromStartComponent = NSCalendar.currentCalendar().components(
+                    let distanceFromStartComponent = NSCalendar.currentCalendar().components( // Get the distance of the event from the start
                         flags, fromDate:startOfMonthCache, toDate: event.startDate, options: NSCalendarOptions.allZeros
                     )
                     
-                    let indexPath = NSIndexPath(forItem: diffFromStartComponent.day, inSection: diffFromStartComponent.month)
+                    let indexPath = NSIndexPath(forItem: distanceFromStartComponent.day, inSection: distanceFromStartComponent.month)
                     
-                    if var eventsList : [EKEvent] = eventsByIndexPath![indexPath] {
+                    if var eventsList : [EKEvent] = eventsByIndexPath?[indexPath] { // If we have initialized a list for this IndexPath
                         
-                        eventsList.append(event)
+                        eventsList.append(event) // Simply append
                     }
                     else {
                         
-                        eventsByIndexPath![indexPath] = [event]
+                        eventsByIndexPath?[indexPath] = [event] // Otherwise create the list with the first element
                       
                     }
                     
-                } // for
-                
-                
+                } // [for event in events ...]
+            
                 self.calendarView.reloadData()
                 
-            } // if let events ...
+            } // [if let events ...]
+                
             else {
                 
                 eventsByIndexPath = nil
@@ -298,6 +298,8 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             
             dayCell.eventsCount = eventsForDay.count
             
+        } else {
+            dayCell.eventsCount = 0
         }
         
         

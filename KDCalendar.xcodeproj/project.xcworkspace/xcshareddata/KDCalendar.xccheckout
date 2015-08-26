@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>895C261C-22DA-4A09-86F3-F3D8527C2244</string>
+	<key>IDESourceControlProjectName</key>
+	<string>KDCalendar</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>54451070F549D6C37EBBF650D9C974872E3B6C88</key>
+		<string>bitbucket.org:mmick66/kdcalendar.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>KDCalendar.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>54451070F549D6C37EBBF650D9C974872E3B6C88</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>bitbucket.org:mmick66/kdcalendar.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>54451070F549D6C37EBBF650D9C974872E3B6C88</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>54451070F549D6C37EBBF650D9C974872E3B6C88</string>
+			<key>IDESourceControlWCCName</key>
+			<string>kdcalendar</string>
+		</dict>
+	</array>
+</dict>
+</plist>
