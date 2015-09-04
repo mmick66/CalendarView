@@ -41,6 +41,15 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     var dataSource : KDCalendarViewDataSource?
     var delegate : KDCalendarViewDelegate?
     
+    var direction : UICollectionViewScrollDirection = .Horizontal {
+        didSet {
+            if let layout = self.calendarView.collectionViewLayout as? KDCalendarFlowLayout {
+                layout.scrollDirection = direction
+                self.calendarView.reloadData()
+            }
+        }
+    }
+    
     private var startDateCache : NSDate = NSDate()
     private var endDateCache : NSDate = NSDate()
     private var startOfMonthCache : NSDate = NSDate()
@@ -105,7 +114,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     lazy var calendarView : UICollectionView = {
      
         let layout = KDCalendarFlowLayout()
-        layout.scrollDirection = UICollectionViewScrollDirection.Horizontal
+        layout.scrollDirection = self.direction;
         layout.minimumInteritemSpacing = 0
         layout.minimumLineSpacing = 0
         

@@ -38,11 +38,19 @@ class KDCalendarFlowLayout: UICollectionViewFlowLayout {
         
         if let collectionView = self.collectionView {
             
-            let xPageOffset = CGFloat(attributes.indexPath.section) * collectionView.frame.size.width
+            let stride = (self.scrollDirection == .Horizontal) ? collectionView.frame.size.width : collectionView.frame.size.height
             
-            var xCellOffset : CGFloat = xPageOffset + (CGFloat(attributes.indexPath.item % 7) * self.itemSize.width)
+            let offset = CGFloat(attributes.indexPath.section) * stride
+            
+            var xCellOffset : CGFloat = CGFloat(attributes.indexPath.item % 7) * self.itemSize.width
             
             var yCellOffset : CGFloat = CGFloat(attributes.indexPath.item / 7) * self.itemSize.height
+            
+            if(self.scrollDirection == .Horizontal) {
+                xCellOffset += offset;
+            } else {
+                yCellOffset += offset
+            }
             
             attributes.frame = CGRectMake(xCellOffset, yCellOffset, self.itemSize.width, self.itemSize.height)
         }

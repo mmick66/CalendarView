@@ -22,6 +22,9 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
         calendarView.dataSource = self
         calendarView.delegate = self
         
+        // change the code to get a vertical calender.
+        calendarView.direction = .Horizontal
+        
     }
     
     override func viewDidAppear(animated: Bool) {
