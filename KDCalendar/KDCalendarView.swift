@@ -331,7 +331,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         
         
         if let yearDate = NSCalendar.currentCalendar().dateByAddingComponents(monthsOffsetComponents, toDate: self.startOfMonthCache, options: NSCalendarOptions()),
-            monthName = NSDateFormatter().monthSymbols[page % 12] as? String {
+            monthName = NSDateFormatter().monthSymbols[page % 12] as String? {
             
             let year = NSCalendar.currentCalendar().component(NSCalendarUnit.Year, fromDate: yearDate)
                 
