@@ -263,7 +263,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             firstWeekdayOfMonthIndex = firstWeekdayOfMonthIndex - 1 // firstWeekdayOfMonthIndex should be 0-Indexed
             firstWeekdayOfMonthIndex = (firstWeekdayOfMonthIndex + 6) % 7 // push it modularly so that we take it back one day so that the first day is Monday instead of Sunday which is the default
      
-            monthInfo[section] = [firstWeekdayOfMonthIndex,numberOfDaysInMonth]
+            monthInfo[section] = [firstWeekdayOfMonthIndex, numberOfDaysInMonth]
             
             return NUMBER_OF_DAYS_IN_WEEK * MAXIMUM_NUMBER_OF_ROWS // 7 x 6 = 42
         }
@@ -330,17 +330,24 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         monthsOffsetComponents.month = page
         
         
-        if let yearDate = NSCalendar.currentCalendar().dateByAddingComponents(monthsOffsetComponents, toDate: self.startOfMonthCache, options: NSCalendarOptions()),
-            monthName = NSDateFormatter().monthSymbols[page % 12] as String? {
+        if let yearDate = NSCalendar.currentCalendar().dateByAddingComponents(monthsOffsetComponents, toDate: self.startOfMonthCache, options: NSCalendarOptions()) {
             
-            let year = NSCalendar.currentCalendar().component(NSCalendarUnit.Year, fromDate: yearDate)
+            let month = NSCalendar.currentCalendar().component(NSCalendarUnit.Month, fromDate: yearDate)
+            
+            let monthName = NSDateFormatter().monthSymbols[(month-1) % 12] // 0 indexed array
+            
+                let year = NSCalendar.currentCalendar().component(NSCalendarUnit.Year, fromDate: yearDate)
                 
-            self.headerView.monthLabel.text = monthName + " " + String(year)
+            
+                self.headerView.monthLabel.text = monthName + " " + String(year)
                 
-            if let delegate = self.delegate {
-                delegate.calendar(self, didScrollToMonth: yearDate)
-            }
+            
+                if let delegate = self.delegate {
                 
+                    delegate.calendar(self, didScrollToMonth: yearDate)
+            
+                }
+            
         }
     }
     
