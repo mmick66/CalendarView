@@ -52,12 +52,11 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
         let dateComponents = NSDateComponents()
       
         dateComponents.year = 2;
-        dateComponents.month = 3;
         let today = NSDate()
         
-        let threeMonthsAgo = NSCalendar.currentCalendar().dateByAddingComponents(dateComponents, toDate: today, options: NSCalendarOptions())
+        let twoYearsFromNow = NSCalendar.currentCalendar().dateByAddingComponents(dateComponents, toDate: today, options: NSCalendarOptions())
         
-        return threeMonthsAgo
+        return twoYearsFromNow
   
     }
     
