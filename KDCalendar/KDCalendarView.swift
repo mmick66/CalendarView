@@ -70,10 +70,10 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             
                 for event in events {
                     
-                    let flags = NSCalendarUnit.CalendarUnitMonth | NSCalendarUnit.CalendarUnitDay
+                    let flags: NSCalendarUnit = [NSCalendarUnit.Month, NSCalendarUnit.Day]
                     
                     let distanceFromStartComponent = NSCalendar.currentCalendar().components( // Get the distance of the event from the start
-                        flags, fromDate:startOfMonthCache, toDate: event.startDate, options: NSCalendarOptions.allZeros
+                        flags, fromDate:startOfMonthCache, toDate: event.startDate, options: NSCalendarOptions()
                     )
                     
                     let indexPath = NSIndexPath(forItem: distanceFromStartComponent.day, inSection: distanceFromStartComponent.month)
@@ -158,7 +158,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         self.initialSetup()
     }
 
-    required init(coder aDecoder: NSCoder) {
+    required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
     
@@ -203,12 +203,12 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             endDateCache = endDate
             
             // check if the dates are in correct order
-            if NSCalendar.currentCalendar().compareDate(startDate, toDate: endDate, toUnitGranularity: NSCalendarUnit.CalendarUnitNanosecond) != NSComparisonResult.OrderedAscending {
+            if NSCalendar.currentCalendar().compareDate(startDate, toDate: endDate, toUnitGranularity: NSCalendarUnit.Nanosecond) != NSComparisonResult.OrderedAscending {
                 return 0
             }
             
             // discart day and minutes so that they round off to the first of the month
-            let dayOneComponents = NSCalendar.currentCalendar().components( NSCalendarUnit.CalendarUnitEra | NSCalendarUnit.CalendarUnitYear | NSCalendarUnit.CalendarUnitMonth, fromDate: startDateCache)
+            let dayOneComponents = NSCalendar.currentCalendar().components( [NSCalendarUnit.Era, NSCalendarUnit.Year, NSCalendarUnit.Month], fromDate: startDateCache)
                     
             // create a GMT set calendar so that the
             if let  gmtCalendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierGregorian),
@@ -225,7 +225,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
                         if  startOfMonthCache.compare(today) == NSComparisonResult.OrderedAscending &&
                             endDateCache.compare(today) == NSComparisonResult.OrderedDescending {
                                 
-                                let differenceFromTodayComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.CalendarUnitMonth | NSCalendarUnit.CalendarUnitDay, fromDate: startOfMonthCache, toDate: NSDate(), options: NSCalendarOptions.allZeros)
+                                let differenceFromTodayComponents = NSCalendar.currentCalendar().components([NSCalendarUnit.Month, NSCalendarUnit.Day], fromDate: startOfMonthCache, toDate: NSDate(), options: NSCalendarOptions())
                                 
                                 self.todayIndexPath = NSIndexPath(forItem: differenceFromTodayComponents.day, inSection: differenceFromTodayComponents.month)
                         
@@ -233,7 +233,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
                         
                         
                         
-                        let differenceComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.CalendarUnitMonth, fromDate: startDateCache, toDate: endDateCache, options: NSCalendarOptions.allZeros)
+                        let differenceComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.Month, fromDate: startDateCache, toDate: endDateCache, options: NSCalendarOptions())
                         
                        
                         return differenceComponents.month + 1 // if we are for example on the same month and the difference is 0 we still need 1 to display it
@@ -255,11 +255,11 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         // offset by the number of months
         monthOffsetComponents.month = section;
         
-        if let correctMonthForSectionDate = NSCalendar.currentCalendar().dateByAddingComponents(monthOffsetComponents, toDate: startOfMonthCache, options: NSCalendarOptions.allZeros) {
+        if let correctMonthForSectionDate = NSCalendar.currentCalendar().dateByAddingComponents(monthOffsetComponents, toDate: startOfMonthCache, options: NSCalendarOptions()) {
             
-            let numberOfDaysInMonth = NSCalendar.currentCalendar().rangeOfUnit(NSCalendarUnit.CalendarUnitDay, inUnit: NSCalendarUnit.CalendarUnitMonth, forDate: correctMonthForSectionDate).length
+            let numberOfDaysInMonth = NSCalendar.currentCalendar().rangeOfUnit(NSCalendarUnit.Day, inUnit: NSCalendarUnit.Month, forDate: correctMonthForSectionDate).length
             
-            var firstWeekdayOfMonthIndex = NSCalendar.currentCalendar().component(NSCalendarUnit.CalendarUnitWeekday, fromDate: correctMonthForSectionDate)
+            var firstWeekdayOfMonthIndex = NSCalendar.currentCalendar().component(NSCalendarUnit.Weekday, fromDate: correctMonthForSectionDate)
             firstWeekdayOfMonthIndex = firstWeekdayOfMonthIndex - 1 // firstWeekdayOfMonthIndex should be 0-Indexed
             firstWeekdayOfMonthIndex = (firstWeekdayOfMonthIndex + 6) % 7 // push it modularly so that we take it back one day so that the first day is Monday instead of Sunday which is the default
      
@@ -293,7 +293,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             dayCell.hidden = true
         }
         
-        dayCell.selected = contains(selectedIndexPaths, indexPath)
+        dayCell.selected = selectedIndexPaths.contains(indexPath)
         
         if indexPath.section == 0 && indexPath.item == 0 {
             self.scrollViewDidEndDecelerating(collectionView)
@@ -326,14 +326,14 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
 
         page = page > 0 ? page : 0
         
-        var monthsOffsetComponents = NSDateComponents()
+        let monthsOffsetComponents = NSDateComponents()
         monthsOffsetComponents.month = page
         
         
-        if let yearDate = NSCalendar.currentCalendar().dateByAddingComponents(monthsOffsetComponents, toDate: self.startOfMonthCache, options: NSCalendarOptions.allZeros),
+        if let yearDate = NSCalendar.currentCalendar().dateByAddingComponents(monthsOffsetComponents, toDate: self.startOfMonthCache, options: NSCalendarOptions()),
             monthName = NSDateFormatter().monthSymbols[page % 12] as? String {
             
-            let year = NSCalendar.currentCalendar().component(NSCalendarUnit.CalendarUnitYear, fromDate: yearDate)
+            let year = NSCalendar.currentCalendar().component(NSCalendarUnit.Year, fromDate: yearDate)
                 
             self.headerView.monthLabel.text = monthName + " " + String(year)
                 
@@ -354,11 +354,11 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         let currentMonthInfo : [Int] = monthInfo[indexPath.section]!
         let firstDayInMonth = currentMonthInfo[0]
         
-        var offsetComponents = NSDateComponents()
+        let offsetComponents = NSDateComponents()
         offsetComponents.month = indexPath.section
         offsetComponents.day = indexPath.item - firstDayInMonth
         
-        if let dateUserSelected = NSCalendar.currentCalendar().dateByAddingComponents(offsetComponents, toDate: self.startOfMonthCache, options: NSCalendarOptions.allZeros) {
+        if let dateUserSelected = NSCalendar.currentCalendar().dateByAddingComponents(offsetComponents, toDate: self.startOfMonthCache, options: NSCalendarOptions()) {
             
             dateBeingSelectedByUser = dateUserSelected
             
@@ -380,7 +380,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         
         if let
             delegate = self.delegate,
-            index = find(selectedIndexPaths, indexPath),
+            index = selectedIndexPaths.indexOf(indexPath),
             dateSelectedByUser = dateBeingSelectedByUser {
                 
                 delegate.calendar?(self, didDeselectDate: dateSelectedByUser)

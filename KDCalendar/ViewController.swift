@@ -42,7 +42,7 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
         
         let today = NSDate()
         
-        let threeMonthsAgo = NSCalendar.currentCalendar().dateByAddingComponents(dateComponents, toDate: today, options: NSCalendarOptions.allZeros)
+        let threeMonthsAgo = NSCalendar.currentCalendar().dateByAddingComponents(dateComponents, toDate: today, options: NSCalendarOptions())
         
         return threeMonthsAgo
     }
@@ -55,7 +55,7 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
         dateComponents.month = 3;
         let today = NSDate()
         
-        let threeMonthsAgo = NSCalendar.currentCalendar().dateByAddingComponents(dateComponents, toDate: today, options: NSCalendarOptions.allZeros)
+        let threeMonthsAgo = NSCalendar.currentCalendar().dateByAddingComponents(dateComponents, toDate: today, options: NSCalendarOptions())
         
         return threeMonthsAgo
   
@@ -97,7 +97,7 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
                 let predicate = store.predicateForEventsWithStartDate(startDate, endDate:endDate, calendars: nil)
                 
                 // if can return nil for no events between these dates
-                if let eventsBetweenDates = store.eventsMatchingPredicate(predicate) as? [EKEvent] {
+                if let eventsBetweenDates = store.eventsMatchingPredicate(predicate) as [EKEvent]? {
                     
                     self.calendarView.events = eventsBetweenDates
                     
@@ -105,11 +105,11 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
                 
             }
             
-            let q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0)
+            // let q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0)
             
-            if EKEventStore.authorizationStatusForEntityType(EKEntityTypeEvent) != EKAuthorizationStatus.Authorized {
+            if EKEventStore.authorizationStatusForEntityType(EKEntityType.Event) != EKAuthorizationStatus.Authorized {
                 
-                store.requestAccessToEntityType(EKEntityTypeEvent, completion: {(granted : Bool, error : NSError!) -> Void in
+                store.requestAccessToEntityType(EKEntityType.Event, completion: {(granted, error ) -> Void in
                     if granted {
                         fetchEvents()
                     }

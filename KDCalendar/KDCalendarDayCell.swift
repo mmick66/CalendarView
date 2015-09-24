@@ -16,7 +16,7 @@ class KDCalendarDayCell: UICollectionViewCell {
     
     var eventsCount = 0 {
         didSet {
-            for sview in self.dotsView.subviews as! [UIView] {
+            for sview in self.dotsView.subviews {
                 sview.removeFromSuperview()
             }
             
@@ -114,7 +114,7 @@ class KDCalendarDayCell: UICollectionViewCell {
         self.addSubview(dotsView)
     }
 
-    required init(coder aDecoder: NSCoder) {
+    required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
     
