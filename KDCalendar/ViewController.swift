@@ -74,8 +74,14 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
     
     // MARK : KDCalendarDelegate
    
-    func calendar(calendar: KDCalendarView, didSelectDate date : NSDate) {
-        // println("Did Select: \(date)")
+    func calendar(calendar: KDCalendarView, didSelectDate date : NSDate, withEvents events: [EKEvent]) {
+        if events.count > 0 {
+            let event : EKEvent = events[0]
+            print("We have an event starting at: \(event.startDate)")
+        }
+        print("Did Select: \(date) with Events: \(events.count)")
+        
+        
     }
     
     func calendar(calendar: KDCalendarView, didScrollToMonth date : NSDate) {

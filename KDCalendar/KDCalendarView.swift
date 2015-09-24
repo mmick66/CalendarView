@@ -31,7 +31,7 @@ let DATE_SELECTED_INDEX = 2
     
     optional func calendar(calendar : KDCalendarView, canSelectDate date : NSDate) -> Bool
     func calendar(calendar : KDCalendarView, didScrollToMonth date : NSDate) -> Void
-    func calendar(calendar : KDCalendarView, didSelectDate date : NSDate) -> Void
+    func calendar(calendar : KDCalendarView, didSelectDate date : NSDate, withEvents events: [EKEvent]) -> Void
     optional func calendar(calendar : KDCalendarView, didDeselectDate date : NSDate) -> Void
 }
 
@@ -405,7 +405,14 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             delegate = self.delegate,
             dateSelectedByUser = dateBeingSelectedByUser {
                 
-                delegate.calendar(self, didSelectDate: dateSelectedByUser)
+                var eventsArray : [EKEvent] = [EKEvent]()
+                
+                if let eventsForDay = self.eventsByIndexPath?[indexPath] {
+                    eventsArray = eventsForDay;
+                }
+                
+                
+                delegate.calendar(self, didSelectDate: dateSelectedByUser, withEvents: eventsArray)
                 
                 // Update model
                 selectedIndexPaths.append(indexPath)
