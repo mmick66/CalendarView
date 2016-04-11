@@ -24,7 +24,7 @@ class KDCalendarDayCell: UICollectionViewCell {
             let viewHeight = self.dotsView.frame.size.height
             let halfViewHeight = viewHeight / 2.0
             
-            for var i = 0 ; i < eventsCount ; i++ {
+            for _ in 0..<eventsCount {
                 let frm = CGRect(x: (stride+1.0) - halfViewHeight, y: 0.0, width: viewHeight, height: viewHeight)
                 let circle = UIView(frame: frm)
                 circle.layer.cornerRadius = halfViewHeight
