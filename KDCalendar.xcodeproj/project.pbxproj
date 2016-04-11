@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		BE9331CD1AD43562000FD862 /* KDCalendarHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE9331CC1AD43562000FD862 /* KDCalendarHeaderView.swift */; };
+		BE9331CD1AD43562000FD862 /* CalendarHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE9331CC1AD43562000FD862 /* CalendarHeaderView.swift */; };
 		BEF6665F1AEA50140012EC2E /* EventKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BEF6665E1AEA50140012EC2E /* EventKit.framework */; };
 		BEFD65551ACC072000ADE917 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65541ACC072000ADE917 /* AppDelegate.swift */; };
 		BEFD65571ACC072000ADE917 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65561ACC072000ADE917 /* ViewController.swift */; };
@@ -15,9 +15,9 @@
 		BEFD655C1ACC072000ADE917 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BEFD655B1ACC072000ADE917 /* Images.xcassets */; };
 		BEFD655F1ACC072000ADE917 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = BEFD655D1ACC072000ADE917 /* LaunchScreen.xib */; };
 		BEFD656B1ACC072000ADE917 /* KDCalendarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD656A1ACC072000ADE917 /* KDCalendarTests.swift */; };
-		BEFD65821ACD379C00ADE917 /* KDCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65811ACD379C00ADE917 /* KDCalendarView.swift */; };
-		BEFD65841ACD537F00ADE917 /* KDCalendarDayCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65831ACD537F00ADE917 /* KDCalendarDayCell.swift */; };
-		BEFD65861ACD81C100ADE917 /* KDCalendarFlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65851ACD81C100ADE917 /* KDCalendarFlowLayout.swift */; };
+		BEFD65821ACD379C00ADE917 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65811ACD379C00ADE917 /* CalendarView.swift */; };
+		BEFD65841ACD537F00ADE917 /* CalendarDayCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65831ACD537F00ADE917 /* CalendarDayCell.swift */; };
+		BEFD65861ACD81C100ADE917 /* CalendarFlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD65851ACD81C100ADE917 /* CalendarFlowLayout.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -31,7 +31,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		BE9331CC1AD43562000FD862 /* KDCalendarHeaderView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KDCalendarHeaderView.swift; sourceTree = "<group>"; };
+		BE9331CC1AD43562000FD862 /* CalendarHeaderView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CalendarHeaderView.swift; sourceTree = "<group>"; };
 		BEF6665E1AEA50140012EC2E /* EventKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = EventKit.framework; path = System/Library/Frameworks/EventKit.framework; sourceTree = SDKROOT; };
 		BEFD654F1ACC072000ADE917 /* KDCalendar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KDCalendar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BEFD65531ACC072000ADE917 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -43,9 +43,9 @@
 		BEFD65641ACC072000ADE917 /* KDCalendarTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KDCalendarTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BEFD65691ACC072000ADE917 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BEFD656A1ACC072000ADE917 /* KDCalendarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDCalendarTests.swift; sourceTree = "<group>"; };
-		BEFD65811ACD379C00ADE917 /* KDCalendarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KDCalendarView.swift; sourceTree = "<group>"; };
-		BEFD65831ACD537F00ADE917 /* KDCalendarDayCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KDCalendarDayCell.swift; sourceTree = "<group>"; };
-		BEFD65851ACD81C100ADE917 /* KDCalendarFlowLayout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KDCalendarFlowLayout.swift; sourceTree = "<group>"; };
+		BEFD65811ACD379C00ADE917 /* CalendarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
+		BEFD65831ACD537F00ADE917 /* CalendarDayCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CalendarDayCell.swift; sourceTree = "<group>"; };
+		BEFD65851ACD81C100ADE917 /* CalendarFlowLayout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CalendarFlowLayout.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,7 +89,7 @@
 		BEFD65511ACC072000ADE917 /* KDCalendar */ = {
 			isa = PBXGroup;
 			children = (
-				BEFD65741ACC074A00ADE917 /* KDCalendar */,
+				BEFD65741ACC074A00ADE917 /* Calendar */,
 				BEFD65541ACC072000ADE917 /* AppDelegate.swift */,
 				BEFD65561ACC072000ADE917 /* ViewController.swift */,
 				BEFD65581ACC072000ADE917 /* Main.storyboard */,
@@ -125,15 +125,15 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		BEFD65741ACC074A00ADE917 /* KDCalendar */ = {
+		BEFD65741ACC074A00ADE917 /* Calendar */ = {
 			isa = PBXGroup;
 			children = (
-				BEFD65811ACD379C00ADE917 /* KDCalendarView.swift */,
-				BEFD65831ACD537F00ADE917 /* KDCalendarDayCell.swift */,
-				BEFD65851ACD81C100ADE917 /* KDCalendarFlowLayout.swift */,
-				BE9331CC1AD43562000FD862 /* KDCalendarHeaderView.swift */,
+				BEFD65811ACD379C00ADE917 /* CalendarView.swift */,
+				BEFD65831ACD537F00ADE917 /* CalendarDayCell.swift */,
+				BEFD65851ACD81C100ADE917 /* CalendarFlowLayout.swift */,
+				BE9331CC1AD43562000FD862 /* CalendarHeaderView.swift */,
 			);
-			name = KDCalendar;
+			name = Calendar;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -238,10 +238,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BE9331CD1AD43562000FD862 /* KDCalendarHeaderView.swift in Sources */,
-				BEFD65861ACD81C100ADE917 /* KDCalendarFlowLayout.swift in Sources */,
-				BEFD65821ACD379C00ADE917 /* KDCalendarView.swift in Sources */,
-				BEFD65841ACD537F00ADE917 /* KDCalendarDayCell.swift in Sources */,
+				BE9331CD1AD43562000FD862 /* CalendarHeaderView.swift in Sources */,
+				BEFD65861ACD81C100ADE917 /* CalendarFlowLayout.swift in Sources */,
+				BEFD65821ACD379C00ADE917 /* CalendarView.swift in Sources */,
+				BEFD65841ACD537F00ADE917 /* CalendarDayCell.swift in Sources */,
 				BEFD65571ACC072000ADE917 /* ViewController.swift in Sources */,
 				BEFD65551ACC072000ADE917 /* AppDelegate.swift in Sources */,
 			);

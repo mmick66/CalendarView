@@ -9,7 +9,7 @@
 import UIKit
 import EventKit
 
-let cellReuseIdentifier = "KDCalendarDayCell"
+let cellReuseIdentifier = "CalendarDayCell"
 
 let NUMBER_OF_DAYS_IN_WEEK = 7
 let MAXIMUM_NUMBER_OF_ROWS = 6
@@ -20,30 +20,30 @@ let FIRST_DAY_INDEX = 0
 let NUMBER_OF_DAYS_INDEX = 1
 let DATE_SELECTED_INDEX = 2
 
-@objc protocol KDCalendarViewDataSource {
+@objc protocol CalendarViewDataSource {
     
     func startDate() -> NSDate?
     func endDate() -> NSDate?
     
 }
 
-@objc protocol KDCalendarViewDelegate {
+@objc protocol CalendarViewDelegate {
     
-    optional func calendar(calendar : KDCalendarView, canSelectDate date : NSDate) -> Bool
-    func calendar(calendar : KDCalendarView, didScrollToMonth date : NSDate) -> Void
-    func calendar(calendar : KDCalendarView, didSelectDate date : NSDate, withEvents events: [EKEvent]) -> Void
-    optional func calendar(calendar : KDCalendarView, didDeselectDate date : NSDate) -> Void
+    optional func calendar(calendar : CalendarView, canSelectDate date : NSDate) -> Bool
+    func calendar(calendar : CalendarView, didScrollToMonth date : NSDate) -> Void
+    func calendar(calendar : CalendarView, didSelectDate date : NSDate, withEvents events: [EKEvent]) -> Void
+    optional func calendar(calendar : CalendarView, didDeselectDate date : NSDate) -> Void
 }
 
 
-class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate {
+class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate {
     
-    var dataSource : KDCalendarViewDataSource?
-    var delegate : KDCalendarViewDelegate?
+    var dataSource  : CalendarViewDataSource?
+    var delegate    : CalendarViewDelegate?
     
     var direction : UICollectionViewScrollDirection = .Horizontal {
         didSet {
-            if let layout = self.calendarView.collectionViewLayout as? KDCalendarFlowLayout {
+            if let layout = self.calendarView.collectionViewLayout as? CalendarFlowLayout {
                 layout.scrollDirection = direction
                 self.calendarView.reloadData()
             }
@@ -103,9 +103,9 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         } // didSet
     }
     
-    lazy var headerView : KDCalendarHeaderView = {
+    lazy var headerView : CalendarHeaderView = {
        
-        let hv = KDCalendarHeaderView(frame:CGRectZero)
+        let hv = CalendarHeaderView(frame:CGRectZero)
         
         return hv
         
@@ -113,7 +113,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     
     lazy var calendarView : UICollectionView = {
      
-        let layout = KDCalendarFlowLayout()
+        let layout = CalendarFlowLayout()
         layout.scrollDirection = self.direction;
         layout.minimumInteritemSpacing = 0
         layout.minimumLineSpacing = 0
@@ -144,7 +144,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
             
             self.calendarView.frame = CGRect(x:0.0, y:80.0, width: self.frame.size.width, height:self.frame.size.height - 80.0)
             
-            let layout = self.calendarView.collectionViewLayout as! KDCalendarFlowLayout
+            let layout = self.calendarView.collectionViewLayout as! CalendarFlowLayout
             
             self.calendarView.collectionViewLayout = layout
             
@@ -176,7 +176,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
         self.clipsToBounds = true
         
         // Register Class
-        self.calendarView.registerClass(KDCalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
+        self.calendarView.registerClass(CalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
         
         
         self.addSubview(self.headerView)
@@ -274,7 +274,7 @@ class KDCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelega
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         
-        let dayCell = collectionView.dequeueReusableCellWithReuseIdentifier(cellReuseIdentifier, forIndexPath: indexPath) as! KDCalendarDayCell
+        let dayCell = collectionView.dequeueReusableCellWithReuseIdentifier(cellReuseIdentifier, forIndexPath: indexPath) as! CalendarDayCell
      
         let currentMonthInfo : [Int] = monthInfo[indexPath.section]! // we are guaranteed an array by the fact that we reached this line (so unwrap)
         

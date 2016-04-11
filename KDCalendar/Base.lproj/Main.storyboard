@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6751" systemVersion="14C109" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="vXZ-lx-hvc">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="10116" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="vXZ-lx-hvc">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6736"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
     </dependencies>
     <scenes>
         <!--View Controller-->
@@ -16,12 +17,32 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="hW4-le-uM3" customClass="KDCalendarView" customModule="KDCalendar" customModuleProvider="target">
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="hW4-le-uM3" customClass="CalendarView" customModule="KDCalendar" customModuleProvider="target">
                                 <rect key="frame" x="16" y="28" width="382" height="402"/>
                                 <color key="backgroundColor" red="0.94004629629629632" green="0.80393518518518514" blue="0.87748842592592591" alpha="0.87" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="402" id="Gz9-A3-iLW"/>
+                                </constraints>
                             </view>
+                            <datePicker contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="dateAndTime" minuteInterval="1" translatesAutoresizingMaskIntoConstraints="NO" id="ZI5-5E-Eq0">
+                                <rect key="frame" x="16" y="500" width="382" height="216"/>
+                                <date key="date" timeIntervalSinceReferenceDate="482061469.277242">
+                                    <!--2016-04-11 09:57:49 +0000-->
+                                </date>
+                                <connections>
+                                    <action selector="onValueChange:" destination="vXZ-lx-hvc" eventType="valueChanged" id="YJA-Ef-5x9"/>
+                                </connections>
+                            </datePicker>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="ZI5-5E-Eq0" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leading" constant="16" id="6CH-G3-Mhc"/>
+                            <constraint firstItem="hW4-le-uM3" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leading" constant="16" id="8wO-aF-0Eb"/>
+                            <constraint firstItem="2fi-mo-0CV" firstAttribute="top" secondItem="ZI5-5E-Eq0" secondAttribute="bottom" constant="20" id="EM0-cT-QdX"/>
+                            <constraint firstItem="hW4-le-uM3" firstAttribute="top" secondItem="jyV-Pf-zRb" secondAttribute="bottom" constant="8" id="MZh-zF-zaS"/>
+                            <constraint firstAttribute="trailing" secondItem="ZI5-5E-Eq0" secondAttribute="trailing" constant="16" id="jgi-JH-Dcg"/>
+                            <constraint firstAttribute="trailing" secondItem="hW4-le-uM3" secondAttribute="trailing" constant="16" id="vYW-BD-MiV"/>
+                        </constraints>
                     </view>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina55"/>
                     <connections>

@@ -12,7 +12,7 @@ let cellColorDefault = UIColor(white: 0.0, alpha: 0.1)
 let cellColorToday = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.3)
 let borderColor = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8)
 
-class KDCalendarDayCell: UICollectionViewCell {
+class CalendarDayCell: UICollectionViewCell {
     
     var eventsCount = 0 {
         didSet {

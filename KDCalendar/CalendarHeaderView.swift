@@ -8,7 +8,7 @@
 
 import UIKit
 
-class KDCalendarHeaderView: UIView {
+class CalendarHeaderView: UIView {
     
     lazy var monthLabel : UILabel = {
         

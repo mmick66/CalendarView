@@ -9,10 +9,10 @@
 import UIKit
 import EventKit
 
-class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarViewDelegate {
+class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDelegate {
 
     
-    @IBOutlet weak var calendarView: KDCalendarView!
+    @IBOutlet weak var calendarView: CalendarView!
     
     
     override func viewDidLoad() {
@@ -74,7 +74,7 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
     
     // MARK : KDCalendarDelegate
    
-    func calendar(calendar: KDCalendarView, didSelectDate date : NSDate, withEvents events: [EKEvent]) {
+    func calendar(calendar: CalendarView, didSelectDate date : NSDate, withEvents events: [EKEvent]) {
         if events.count > 0 {
             let event : EKEvent = events[0]
             print("We have an event starting at: \(event.startDate)")
@@ -84,7 +84,7 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
         
     }
     
-    func calendar(calendar: KDCalendarView, didScrollToMonth date : NSDate) {
+    func calendar(calendar: CalendarView, didScrollToMonth date : NSDate) {
         // println("Did Scroll to: \(date)")
     }
 
@@ -126,6 +126,16 @@ class ViewController: UIViewController, KDCalendarViewDataSource, KDCalendarView
             }
             
         }
+        
+    }
+    
+    
+    // MARK : Events
+    
+    @IBAction func onValueChange(picker : UIDatePicker) {
+        
+        
+    
         
     }
     

@@ -8,7 +8,7 @@
 
 import UIKit
 
-class KDCalendarFlowLayout: UICollectionViewFlowLayout {
+class CalendarFlowLayout: UICollectionViewFlowLayout {
     
     
     override func layoutAttributesForElementsInRect(rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
