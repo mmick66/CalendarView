@@ -134,7 +134,7 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
     
     @IBAction func onValueChange(picker : UIDatePicker) {
         
-        
+        self.calendarView.setDisplayDate(picker.date, animated: true)
     
         
     }

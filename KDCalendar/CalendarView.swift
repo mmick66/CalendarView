@@ -20,6 +20,15 @@ let FIRST_DAY_INDEX = 0
 let NUMBER_OF_DAYS_INDEX = 1
 let DATE_SELECTED_INDEX = 2
 
+
+extension NSDate {
+    var stringValue: String {
+        let formatter = NSDateFormatter()
+        formatter.dateFormat = "dd MMMM yyyy"
+        return formatter.stringFromDate(self)
+    }
+}
+
 @objc protocol CalendarViewDataSource {
     
     func startDate() -> NSDate?
@@ -54,6 +63,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     private var endDateCache : NSDate = NSDate()
     private var startOfMonthCache : NSDate = NSDate()
     private var todayIndexPath : NSIndexPath?
+    var displayDate : NSDate?
     
     private(set) var selectedIndexPaths : [NSIndexPath] = [NSIndexPath]()
     private(set) var selectedDates : [NSDate] = [NSDate]()
@@ -170,7 +180,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     
     // MARK: Setup 
     
-    func initialSetup() {
+    private func initialSetup() {
         
         
         self.clipsToBounds = true
@@ -319,38 +329,45 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     
     
     func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
+        self.calculateDateBasedOnScrollViewPosition(scrollView)
+    }
+    
+    func calculateDateBasedOnScrollViewPosition(scrollView: UIScrollView) {
         
         let cvbounds = self.calendarView.bounds
         
         var page : Int = Int(floor(self.calendarView.contentOffset.x / cvbounds.size.width))
-
+        
         page = page > 0 ? page : 0
         
         let monthsOffsetComponents = NSDateComponents()
         monthsOffsetComponents.month = page
         
-        
-        if let yearDate = NSCalendar.currentCalendar().dateByAddingComponents(monthsOffsetComponents, toDate: self.startOfMonthCache, options: NSCalendarOptions()) {
-            
-            let month = NSCalendar.currentCalendar().component(NSCalendarUnit.Month, fromDate: yearDate)
-            
-            let monthName = NSDateFormatter().monthSymbols[(month-1) % 12] // 0 indexed array
-            
-                let year = NSCalendar.currentCalendar().component(NSCalendarUnit.Year, fromDate: yearDate)
-                
-            
-                self.headerView.monthLabel.text = monthName + " " + String(year)
-                
-            
-                if let delegate = self.delegate {
-                
-                    delegate.calendar(self, didScrollToMonth: yearDate)
-            
-                }
-            
+        guard let delegate = self.delegate else {
+            return
         }
+        
+        let calendar : NSCalendar = NSCalendar.currentCalendar()
+        guard let yearDate = calendar.dateByAddingComponents(monthsOffsetComponents, toDate: self.startOfMonthCache, options: NSCalendarOptions()) else {
+            return
+        }
+        
+        let month = calendar.component(NSCalendarUnit.Month, fromDate: yearDate) // get month
+        
+        let monthName = NSDateFormatter().monthSymbols[(month-1) % 12] // 0 indexed array
+        
+        let year = calendar.component(NSCalendarUnit.Year, fromDate: yearDate)
+        
+        
+        self.headerView.monthLabel.text = monthName + " " + String(year)
+        
+        self.displayDate = yearDate
+        
+        print("\(yearDate.stringValue)")
+        
+        delegate.calendar(self, didScrollToMonth: yearDate)
+        
     }
-    
     
     
     // MARK: UICollectionViewDelegate
@@ -425,5 +442,49 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     func reloadData() {
         self.calendarView.reloadData()
     }
+    
+    func scrollViewDidEndScrollingAnimation(scrollView: UIScrollView) {
+        self.calculateDateBasedOnScrollViewPosition(scrollView)
+    }
+    
+    func setDisplayDate(date : NSDate, animated: Bool) {
+        
+        if let dispDate = self.displayDate {
+            
+            // skip is we are trying to set the same date
+            if  date.compare(dispDate) == NSComparisonResult.OrderedSame {
+                return
+            }
+            
+            
+            // check if the date is within range
+            if  date.compare(startDateCache) == NSComparisonResult.OrderedAscending ||
+                date.compare(endDateCache) == NSComparisonResult.OrderedDescending   {
+                return
+            }
+            
+        
+            let difference = NSCalendar.currentCalendar().components([NSCalendarUnit.Month], fromDate: startOfMonthCache, toDate: date, options: NSCalendarOptions())
+            
+            print("DIFF: \(difference.month)")
+            
+            let distance : CGFloat = CGFloat(difference.month) * self.calendarView.frame.size.width
+            
+            self.calendarView.performBatchUpdates({
+                
+                self.calendarView.setContentOffset(CGPoint(x: distance, y: 0.0), animated: animated)
+                
+                }, completion: { (success) in
+                    
+                    //self.scrollViewDidEndDecelerating(self.calendarView)
+                    
+            })
+            
+            
+        }
+        
+    }
+    
+    
 
 }

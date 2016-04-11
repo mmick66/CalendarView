@@ -24,7 +24,7 @@
                                     <constraint firstAttribute="height" constant="402" id="Gz9-A3-iLW"/>
                                 </constraints>
                             </view>
-                            <datePicker contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="dateAndTime" minuteInterval="1" translatesAutoresizingMaskIntoConstraints="NO" id="ZI5-5E-Eq0">
+                            <datePicker contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="date" minuteInterval="1" translatesAutoresizingMaskIntoConstraints="NO" id="ZI5-5E-Eq0">
                                 <rect key="frame" x="16" y="500" width="382" height="216"/>
                                 <date key="date" timeIntervalSinceReferenceDate="482061469.277242">
                                     <!--2016-04-11 09:57:49 +0000-->
