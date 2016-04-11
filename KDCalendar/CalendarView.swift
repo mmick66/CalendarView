@@ -332,6 +332,11 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         self.calculateDateBasedOnScrollViewPosition(scrollView)
     }
     
+    func scrollViewDidEndScrollingAnimation(scrollView: UIScrollView) {
+        self.calculateDateBasedOnScrollViewPosition(scrollView)
+    }
+    
+    
     func calculateDateBasedOnScrollViewPosition(scrollView: UIScrollView) {
         
         let cvbounds = self.calendarView.bounds
@@ -363,7 +368,6 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         
         self.displayDate = yearDate
         
-        print("\(yearDate.stringValue)")
         
         delegate.calendar(self, didScrollToMonth: yearDate)
         
@@ -443,9 +447,6 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         self.calendarView.reloadData()
     }
     
-    func scrollViewDidEndScrollingAnimation(scrollView: UIScrollView) {
-        self.calculateDateBasedOnScrollViewPosition(scrollView)
-    }
     
     func setDisplayDate(date : NSDate, animated: Bool) {
         
@@ -470,15 +471,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             
             let distance : CGFloat = CGFloat(difference.month) * self.calendarView.frame.size.width
             
-            self.calendarView.performBatchUpdates({
-                
-                self.calendarView.setContentOffset(CGPoint(x: distance, y: 0.0), animated: animated)
-                
-                }, completion: { (success) in
-                    
-                    //self.scrollViewDidEndDecelerating(self.calendarView)
-                    
-            })
+            self.calendarView.setContentOffset(CGPoint(x: distance, y: 0.0), animated: animated)
             
             
         }

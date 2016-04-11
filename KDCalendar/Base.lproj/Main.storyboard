@@ -47,6 +47,7 @@
                     <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina55"/>
                     <connections>
                         <outlet property="calendarView" destination="hW4-le-uM3" id="RAW-Yt-1by"/>
+                        <outlet property="datePicker" destination="ZI5-5E-Eq0" id="TEh-9D-yoJ"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="x5A-6p-PRh" sceneMemberID="firstResponder"/>

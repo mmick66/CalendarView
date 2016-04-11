@@ -13,6 +13,7 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
 
     
     @IBOutlet weak var calendarView: CalendarView!
+    @IBOutlet weak var datePicker: UIDatePicker!
     
     
     override func viewDidLoad() {
@@ -85,7 +86,8 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
     }
     
     func calendar(calendar: CalendarView, didScrollToMonth date : NSDate) {
-        // println("Did Scroll to: \(date)")
+    
+        self.datePicker.setDate(date, animated: true)
     }
 
     // MARK : Events
