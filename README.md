@@ -1,4 +1,4 @@
-# KDCalendar #
+# Calendar View #
 
 This is an implementation of a calendar component for iOS written in Swift.
 
