@@ -182,6 +182,8 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     
     private func initialSetup() {
         
+        print("Time zone: \(NSCalendar.currentCalendar().timeZone)")
+        
         
         self.clipsToBounds = true
         
@@ -219,38 +221,29 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             
             // discart day and minutes so that they round off to the first of the month
             let dayOneComponents = NSCalendar.currentCalendar().components( [NSCalendarUnit.Era, NSCalendarUnit.Year, NSCalendarUnit.Month], fromDate: startDateCache)
-                    
-            // create a GMT set calendar so that the
-            if let  gmtCalendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierGregorian),
-                    gmtTimeZone = NSTimeZone(abbreviation: "GMT") {
-                        
-                    gmtCalendar.timeZone = gmtTimeZone
-                        
-                    if let dateFromDayOneComponents = gmtCalendar.dateFromComponents(dayOneComponents) {
-                            
-                        startOfMonthCache = dateFromDayOneComponents
-                        
-                        let today = NSDate()
-                        
-                        if  startOfMonthCache.compare(today) == NSComparisonResult.OrderedAscending &&
-                            endDateCache.compare(today) == NSComparisonResult.OrderedDescending {
-                                
-                                let differenceFromTodayComponents = NSCalendar.currentCalendar().components([NSCalendarUnit.Month, NSCalendarUnit.Day], fromDate: startOfMonthCache, toDate: NSDate(), options: NSCalendarOptions())
-                                
-                                self.todayIndexPath = NSIndexPath(forItem: differenceFromTodayComponents.day, inSection: differenceFromTodayComponents.month)
-                        
-                        }
-                        
-                        
-                        
-                        let differenceComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.Month, fromDate: startDateCache, toDate: endDateCache, options: NSCalendarOptions())
-                        
-                       
-                        return differenceComponents.month + 1 // if we are for example on the same month and the difference is 0 we still need 1 to display it
-                    }
-                        
+            
+            guard let dateFromDayOneComponents = NSCalendar.currentCalendar().dateFromComponents(dayOneComponents) else {
+                return 0
             }
-              
+                    
+            startOfMonthCache = dateFromDayOneComponents
+            
+            let today = NSDate()
+            
+            if  startOfMonthCache.compare(today) == NSComparisonResult.OrderedAscending &&
+                endDateCache.compare(today) == NSComparisonResult.OrderedDescending {
+                
+                let differenceFromTodayComponents = NSCalendar.currentCalendar().components([NSCalendarUnit.Month, NSCalendarUnit.Day], fromDate: startOfMonthCache, toDate: NSDate(), options: NSCalendarOptions())
+                
+                self.todayIndexPath = NSIndexPath(forItem: differenceFromTodayComponents.day, inSection: differenceFromTodayComponents.month)
+                
+            }
+            
+            let differenceComponents = NSCalendar.currentCalendar().components(NSCalendarUnit.Month, fromDate: startDateCache, toDate: endDateCache, options: NSCalendarOptions())
+            
+            
+            return differenceComponents.month + 1 // if we are for example on the same month and the difference is 0 we still need 1 to display it
+            
         }
         
         return 0
@@ -265,20 +258,20 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         // offset by the number of months
         monthOffsetComponents.month = section;
         
-        if let correctMonthForSectionDate = NSCalendar.currentCalendar().dateByAddingComponents(monthOffsetComponents, toDate: startOfMonthCache, options: NSCalendarOptions()) {
-            
-            let numberOfDaysInMonth = NSCalendar.currentCalendar().rangeOfUnit(NSCalendarUnit.Day, inUnit: NSCalendarUnit.Month, forDate: correctMonthForSectionDate).length
-            
-            var firstWeekdayOfMonthIndex = NSCalendar.currentCalendar().component(NSCalendarUnit.Weekday, fromDate: correctMonthForSectionDate)
-            firstWeekdayOfMonthIndex = firstWeekdayOfMonthIndex - 1 // firstWeekdayOfMonthIndex should be 0-Indexed
-            firstWeekdayOfMonthIndex = (firstWeekdayOfMonthIndex + 6) % 7 // push it modularly so that we take it back one day so that the first day is Monday instead of Sunday which is the default
-     
-            monthInfo[section] = [firstWeekdayOfMonthIndex, numberOfDaysInMonth]
-            
-            return NUMBER_OF_DAYS_IN_WEEK * MAXIMUM_NUMBER_OF_ROWS // 7 x 6 = 42
+        guard let correctMonthForSectionDate = NSCalendar.currentCalendar().dateByAddingComponents(monthOffsetComponents, toDate: startOfMonthCache, options: NSCalendarOptions()) else {
+            return 0
         }
         
-        return 0
+        let numberOfDaysInMonth = NSCalendar.currentCalendar().rangeOfUnit(NSCalendarUnit.Day, inUnit: NSCalendarUnit.Month, forDate: correctMonthForSectionDate).length
+        
+        var firstWeekdayOfMonthIndex = NSCalendar.currentCalendar().component(NSCalendarUnit.Weekday, fromDate: correctMonthForSectionDate)
+        firstWeekdayOfMonthIndex = firstWeekdayOfMonthIndex - 1 // firstWeekdayOfMonthIndex should be 0-Indexed
+        firstWeekdayOfMonthIndex = (firstWeekdayOfMonthIndex + 6) % 7 // push it modularly so that we take it back one day so that the first day is Monday instead of Sunday which is the default
+        
+        monthInfo[section] = [firstWeekdayOfMonthIndex, numberOfDaysInMonth]
+        
+        return NUMBER_OF_DAYS_IN_WEEK * MAXIMUM_NUMBER_OF_ROWS // 7 x 6 = 42
+        
         
     }
     
