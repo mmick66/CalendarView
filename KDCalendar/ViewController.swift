@@ -29,9 +29,22 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
     }
     
     override func viewDidAppear(animated: Bool) {
+        
         super.viewDidAppear(animated)
         
         self.loadEventsInCalendar()
+        
+        let dateComponents = NSDateComponents()
+        dateComponents.month = -3
+        dateComponents.day = -5
+        
+        let today = NSDate()
+        
+        if let date = self.calendarView.calendar.dateByAddingComponents(dateComponents, toDate: today, options: NSCalendarOptions()) {
+            self.calendarView.selectDate(date)
+        }
+        
+        
     }
 
     // MARK : KDCalendarDataSource
@@ -43,9 +56,8 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         let today = NSDate()
         
-        let threeMonthsAgo = NSCalendar.currentCalendar().dateByAddingComponents(dateComponents, toDate: today, options: NSCalendarOptions())
+        let threeMonthsAgo = self.calendarView.calendar.dateByAddingComponents(dateComponents, toDate: today, options: NSCalendarOptions())
         
-        print("today: \(today)")
         
         return threeMonthsAgo
     }
@@ -57,7 +69,7 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         dateComponents.year = 2;
         let today = NSDate()
         
-        let twoYearsFromNow = NSCalendar.currentCalendar().dateByAddingComponents(dateComponents, toDate: today, options: NSCalendarOptions())
+        let twoYearsFromNow = self.calendarView.calendar.dateByAddingComponents(dateComponents, toDate: today, options: NSCalendarOptions())
         
         return twoYearsFromNow
   
@@ -73,6 +85,7 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         
     }
+    
     
     
     // MARK : KDCalendarDelegate

@@ -58,6 +58,10 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         return cal
     }()
     
+    var calendar : NSCalendar {
+        return self.gregorian
+    }
+    
     var direction : UICollectionViewScrollDirection = .Horizontal {
         didSet {
             if let layout = self.calendarView.collectionViewLayout as? CalendarFlowLayout {
@@ -103,14 +107,6 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
                 // Get the distance of the event from the start
                 let distanceFromStartComponent = self.gregorian.components( flags, fromDate:startOfMonthCache, toDate: startDate, options: NSCalendarOptions() )
                 
-                print("title: \(event.title) day: \(distanceFromStartComponent.day) month: \(distanceFromStartComponent.month) date: \(startDate)")
-                if event.title == "John F. Kennedy’s Birthday" {
-                    
-                    
-                    
-                    
-                    
-                }
                 
                 let indexPath = NSIndexPath(forItem: distanceFromStartComponent.day, inSection: distanceFromStartComponent.month)
                 
@@ -416,6 +412,23 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         }
         
         return false // if date is out of scope
+        
+    }
+    
+    func selectDate(date : NSDate) {
+        
+        let distanceFromStartComponent = self.gregorian.components( [.Month, .Day], fromDate:startOfMonthCache, toDate: date, options: NSCalendarOptions() )
+        
+        if let currentMonthInfo : [Int] = monthInfo[distanceFromStartComponent.month] {
+            
+            let fromStartOfMonthIndexPath = NSIndexPath(forItem: distanceFromStartComponent.day + currentMonthInfo[FIRST_DAY_INDEX], inSection: distanceFromStartComponent.month)
+            
+            self.calendarView.selectItemAtIndexPath(fromStartOfMonthIndexPath, animated: false, scrollPosition: .None)
+            
+            selectedIndexPaths.append(fromStartOfMonthIndexPath)
+            selectedDates.append(date)
+            
+        }
         
     }
     
