@@ -20,17 +20,23 @@ let FIRST_DAY_INDEX = 0
 let NUMBER_OF_DAYS_INDEX = 1
 let DATE_SELECTED_INDEX = 2
 
-
-extension NSDate {
-    var stringValue: String {
-        let formatter = NSDateFormatter()
-        formatter.timeZone = NSTimeZone.localTimeZone()
-        formatter.dateFormat = "dd MMMM yyyy"
-        return formatter.stringFromDate(self)
+extension EKEvent {
+    func localize() {
+        let hoursDifference = NSTimeZone.localTimeZone().secondsFromGMTForDate(startDate) / (60 * 60)
+        self.startDate = self.startDate.dateByAddingHours(hoursDifference)
+        self.endDate = self.endDate.dateByAddingHours(hoursDifference)
+        
     }
 }
 
-
+extension NSDate {
+    func dateByAddingHours(hoursToAdd:Int) -> NSDate {
+        return self.dateByAddingTimeInterval(60 * 60 * NSTimeInterval(hoursToAdd))
+    }
+    func dateByAddingDays(daysToAdd:Int) -> NSDate {
+        return self.dateByAddingTimeInterval(60 * 60 * 24 * NSTimeInterval(daysToAdd))
+    }
+}
 
 @objc protocol CalendarViewDataSource {
     
@@ -94,6 +100,9 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             eventsByIndexPath = [NSIndexPath:[EKEvent]]() // Map IndexPath to Event Array
             
             for event in events {
+                
+                event.localize()
+                print("\(event.title) \(event.startDate)")
                 
                 let flags: NSCalendarUnit = [NSCalendarUnit.Month, NSCalendarUnit.Day]
                 
@@ -358,16 +367,16 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             return
         }
         
-        let calendar : NSCalendar = self.gregorian
-        guard let yearDate = calendar.dateByAddingComponents(monthsOffsetComponents, toDate: self.startOfMonthCache, options: NSCalendarOptions()) else {
+        
+        guard let yearDate = self.gregorian.dateByAddingComponents(monthsOffsetComponents, toDate: self.startOfMonthCache, options: NSCalendarOptions()) else {
             return
         }
         
-        let month = calendar.component(NSCalendarUnit.Month, fromDate: yearDate) // get month
+        let month = self.gregorian.component(NSCalendarUnit.Month, fromDate: yearDate) // get month
         
         let monthName = NSDateFormatter().monthSymbols[(month-1) % 12] // 0 indexed array
         
-        let year = calendar.component(NSCalendarUnit.Year, fromDate: yearDate)
+        let year = self.gregorian.component(NSCalendarUnit.Year, fromDate: yearDate)
         
         
         self.headerView.monthLabel.text = monthName + " " + String(year)
