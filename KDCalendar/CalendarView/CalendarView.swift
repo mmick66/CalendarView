@@ -215,11 +215,23 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             }
             
             // discart day and minutes so that they round off to the first of the month
-            let dayOneComponents = NSCalendar.currentCalendar().components( [NSCalendarUnit.Era, NSCalendarUnit.Year, NSCalendarUnit.Month], fromDate: startDateCache)
+            let roundedComponents = NSCalendar.currentCalendar().components( [NSCalendarUnit.Era, NSCalendarUnit.Year, NSCalendarUnit.Month], fromDate: startDateCache)
+            
+            let dayOneComponents = NSDateComponents()
+            dayOneComponents.era = roundedComponents.era
+            dayOneComponents.year = roundedComponents.year
+            dayOneComponents.month = roundedComponents.month
+            dayOneComponents.day = 1
+            dayOneComponents.hour = 1
+            dayOneComponents.minute = 0
+            dayOneComponents.second = 0
+            
             
             guard let dateFromDayOneComponents = NSCalendar.currentCalendar().dateFromComponents(dayOneComponents) else {
                 return 0
             }
+            
+            print("YEAR: \(dayOneComponents.year) MONTH: \(dayOneComponents.month) DAY: \(dayOneComponents.day) DATE: \(dateFromDayOneComponents) START: \(startDateCache)")
                     
             startOfMonthCache = dateFromDayOneComponents
             
@@ -374,14 +386,14 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         offsetComponents.month = indexPath.section
         offsetComponents.day = indexPath.item - firstDayInMonth
         
+        
         if let dateUserSelected = NSCalendar.currentCalendar().dateByAddingComponents(offsetComponents, toDate: self.startOfMonthCache, options: NSCalendarOptions()) {
             
             dateBeingSelectedByUser = dateUserSelected
             
-            // Optional protocol method
+            // Optional protocol method (the delegate can "object")
             if let canSelectFromDelegate = delegate?.calendar?(self, canSelectDate: dateUserSelected) {
                 return canSelectFromDelegate
-                
             }
             
             return true // it can select any date by default
@@ -392,42 +404,41 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         
     }
     
-    func collectionView(collectionView: UICollectionView, didDeselectItemAtIndexPath indexPath: NSIndexPath) {
-        
-        if let
-            delegate = self.delegate,
-            index = selectedIndexPaths.indexOf(indexPath),
-            dateSelectedByUser = dateBeingSelectedByUser {
-                
-                delegate.calendar?(self, didDeselectDate: dateSelectedByUser)
-                
-                selectedIndexPaths.removeAtIndex(index)
-                selectedDates.removeAtIndex(index)
-                
-        }
-        
-    }
     
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         
-        if let
-            delegate = self.delegate,
-            dateSelectedByUser = dateBeingSelectedByUser {
-                
-                var eventsArray : [EKEvent] = [EKEvent]()
-                
-                if let eventsForDay = self.eventsByIndexPath?[indexPath] {
-                    eventsArray = eventsForDay;
-                }
-                
-                
-                delegate.calendar(self, didSelectDate: dateSelectedByUser, withEvents: eventsArray)
-                
-                // Update model
-                selectedIndexPaths.append(indexPath)
-                selectedDates.append(dateSelectedByUser)
-                
+        guard let dateBeingSelectedByUser = dateBeingSelectedByUser else {
+            return
         }
+        
+        var eventsArray : [EKEvent] = [EKEvent]()
+        
+        if let eventsForDay = self.eventsByIndexPath?[indexPath] {
+            eventsArray = eventsForDay;
+        }
+        
+        delegate?.calendar(self, didSelectDate: dateBeingSelectedByUser, withEvents: eventsArray)
+        
+        // Update model
+        selectedIndexPaths.append(indexPath)
+        selectedDates.append(dateBeingSelectedByUser)
+    }
+    
+    func collectionView(collectionView: UICollectionView, didDeselectItemAtIndexPath indexPath: NSIndexPath) {
+        
+        guard let dateBeingSelectedByUser = dateBeingSelectedByUser else {
+            return
+        }
+        
+        guard let index = selectedIndexPaths.indexOf(indexPath) else {
+            return
+        }
+        
+        delegate?.calendar?(self, didDeselectDate: dateBeingSelectedByUser)
+        
+        selectedIndexPaths.removeAtIndex(index)
+        selectedDates.removeAtIndex(index)
+        
     }
     
     
@@ -454,8 +465,6 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             
         
             let difference = NSCalendar.currentCalendar().components([NSCalendarUnit.Month], fromDate: startOfMonthCache, toDate: date, options: NSCalendarOptions())
-            
-            print("DIFF: \(difference.month)")
             
             let distance : CGFloat = CGFloat(difference.month) * self.calendarView.frame.size.width
             
