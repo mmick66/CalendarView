@@ -21,7 +21,7 @@ let NUMBER_OF_DAYS_INDEX = 1
 let DATE_SELECTED_INDEX = 2
 
 extension EKEvent {
-    func localize() {
+    func gmt_correction() {
         let hoursDifference = NSTimeZone.localTimeZone().secondsFromGMTForDate(startDate) / (60 * 60)
         self.startDate = self.startDate.dateByAddingHours(hoursDifference)
         self.endDate = self.endDate.dateByAddingHours(hoursDifference)
@@ -87,37 +87,37 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     private(set) var selectedDates : [NSDate] = [NSDate]()
     
     
-    private var eventsByIndexPath : [NSIndexPath:[EKEvent]]?
+    private var eventsByIndexPath : [NSIndexPath:[EKEvent]] = [NSIndexPath:[EKEvent]]()
     var events : [EKEvent]? {
         
         didSet {
             
+            eventsByIndexPath = [NSIndexPath:[EKEvent]]()
+            
             guard let events = events else {
-                eventsByIndexPath = nil
                 return
             }
             
-            eventsByIndexPath = [NSIndexPath:[EKEvent]]() // Map IndexPath to Event Array
-            
             for event in events {
                 
-                event.localize() // might be relating to a bug on ios
+                event.gmt_correction() // might be relating to a bug on ios
                 
                 let flags: NSCalendarUnit = [NSCalendarUnit.Month, NSCalendarUnit.Day]
                 
-                let distanceFromStartComponent = self.gregorian.components( // Get the distance of the event from the start
-                    flags, fromDate:startOfMonthCache, toDate: event.startDate, options: NSCalendarOptions()
-                )
+                // Get the distance of the event from the start
+                let distanceFromStartComponent = self.gregorian.components( flags, fromDate:startOfMonthCache, toDate: event.startDate, options: NSCalendarOptions() )
+                
+                print("title: \(event.title) day: \(distanceFromStartComponent.day) month: \(distanceFromStartComponent.month)")
                 
                 let indexPath = NSIndexPath(forItem: distanceFromStartComponent.day, inSection: distanceFromStartComponent.month)
                 
-                if var eventsList : [EKEvent] = eventsByIndexPath?[indexPath] { // If we have initialized a list for this IndexPath
+                if var eventsList : [EKEvent] = eventsByIndexPath[indexPath] { // If we have initialized a list for this IndexPath
                     
                     eventsList.append(event) // Simply append
                 }
                 else {
                     
-                    eventsByIndexPath?[indexPath] = [event] // Otherwise create the list with the first element
+                    eventsByIndexPath[indexPath] = [event] // Otherwise create the list with the first element
                     
                 }
                 
@@ -197,8 +197,6 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     
     private func initialSetup() {
         
-        print("Time zone: \(self.gregorian.timeZone)")
-        
         
         self.clipsToBounds = true
         
@@ -235,10 +233,9 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             }
             
             // discart day and minutes so that they round off to the first of the month
-            let components : NSCalendarUnit = [.Era, .Year, .Month, .Day, .Hour, .Minute, .Second]
+            let components : NSCalendarUnit = [.Era, .Year, .Month]
             let firstDayOfStartMonth = self.gregorian.components( components, fromDate: startDateCache)
             firstDayOfStartMonth.day = 1
-            firstDayOfStartMonth.hour = 0
             
             guard let dateFromDayOneComponents = self.gregorian.dateFromComponents(firstDayOfStartMonth) else {
                 return 0
@@ -246,8 +243,6 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             
                     
             startOfMonthCache = dateFromDayOneComponents
-            
-            
             
             let today = NSDate()
             
@@ -327,7 +322,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             dayCell.isToday = (idx.section == indexPath.section && idx.item + fdIndex == indexPath.item)
         }
         
-        if let eventsForDay = self.eventsByIndexPath?[indexPath] {
+        if let eventsForDay = eventsByIndexPath[indexPath] {
             
             dayCell.eventsCount = eventsForDay.count
             
@@ -427,7 +422,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         
         var eventsArray : [EKEvent] = [EKEvent]()
         
-        if let eventsForDay = self.eventsByIndexPath?[indexPath] {
+        if let eventsForDay = eventsByIndexPath[indexPath] {
             eventsArray = eventsForDay;
         }
         
