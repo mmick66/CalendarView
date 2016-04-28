@@ -76,11 +76,13 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
     // MARK : KDCalendarDelegate
    
     func calendar(calendar: CalendarView, didSelectDate date : NSDate, withEvents events: [EKEvent]) {
+        
         if events.count > 0 {
             let event : EKEvent = events[0]
-            print("We have an event starting at: \(event.startDate)")
+            print("We have an event starting at \(event.startDate) : \(event.title)")
         }
         print("Did Select: \(date) with Events: \(events.count)")
+        
         
         
     }

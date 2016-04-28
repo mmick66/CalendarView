@@ -74,43 +74,38 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         
         didSet {
             
-            if let events = events { // If events are not null
-                
-                eventsByIndexPath = [NSIndexPath:[EKEvent]]() // Map IndexPath to Event Array
-            
-                for event in events {
-                    
-                    let flags: NSCalendarUnit = [NSCalendarUnit.Month, NSCalendarUnit.Day]
-                    
-                    let distanceFromStartComponent = NSCalendar.currentCalendar().components( // Get the distance of the event from the start
-                        flags, fromDate:startOfMonthCache, toDate: event.startDate, options: NSCalendarOptions()
-                    )
-                    
-                    let indexPath = NSIndexPath(forItem: distanceFromStartComponent.day, inSection: distanceFromStartComponent.month)
-                    
-                    if var eventsList : [EKEvent] = eventsByIndexPath?[indexPath] { // If we have initialized a list for this IndexPath
-                        
-                        eventsList.append(event) // Simply append
-                    }
-                    else {
-                        
-                        eventsByIndexPath?[indexPath] = [event] // Otherwise create the list with the first element
-                      
-                    }
-                    
-                } // [for event in events ...]
-            
-                self.calendarView.reloadData()
-                
-            } // [if let events ...]
-                
-            else {
-                
+            guard let events = events else {
                 eventsByIndexPath = nil
+                return
+            }
+            
+            eventsByIndexPath = [NSIndexPath:[EKEvent]]() // Map IndexPath to Event Array
+            
+            for event in events {
+                
+                let flags: NSCalendarUnit = [NSCalendarUnit.Month, NSCalendarUnit.Day]
+                
+                let distanceFromStartComponent = NSCalendar.currentCalendar().components( // Get the distance of the event from the start
+                    flags, fromDate:startOfMonthCache, toDate: event.startDate, options: NSCalendarOptions()
+                )
+                
+                let indexPath = NSIndexPath(forItem: distanceFromStartComponent.day, inSection: distanceFromStartComponent.month)
+                
+                if var eventsList : [EKEvent] = eventsByIndexPath?[indexPath] { // If we have initialized a list for this IndexPath
+                    
+                    eventsList.append(event) // Simply append
+                }
+                else {
+                    
+                    eventsByIndexPath?[indexPath] = [event] // Otherwise create the list with the first element
+                    
+                }
                 
             }
             
-        } // didSet
+            self.calendarView.reloadData()
+            
+        }
     }
     
     lazy var headerView : CalendarHeaderView = {
