@@ -219,10 +219,11 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             
             // discart day and minutes so that they round off to the first of the month
             let components : NSCalendarUnit = [.Era, .Year, .Month, .Day, .Hour, .Minute, .Second]
-            let dayOneComponents = NSCalendar.currentCalendar().components( components, fromDate: startDateCache)
-            dayOneComponents.day = 1
+            let firstDayOfStartMonth = NSCalendar.currentCalendar().components( components, fromDate: startDateCache)
+            firstDayOfStartMonth.day = 1
+            firstDayOfStartMonth.hour = firstDayOfStartMonth.hour + NSTimeZone.localTimeZone().secondsFromGMTForDate(startDate) / (60 * 60)
             
-            guard let dateFromDayOneComponents = NSCalendar.currentCalendar().dateFromComponents(dayOneComponents) else {
+            guard let dateFromDayOneComponents = NSCalendar.currentCalendar().dateFromComponents(firstDayOfStartMonth) else {
                 return 0
             }
             
@@ -263,7 +264,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             return 0
         }
         
-        let numberOfDaysInMonth = NSCalendar.currentCalendar().rangeOfUnit(NSCalendarUnit.Day, inUnit: NSCalendarUnit.Month, forDate: correctMonthForSectionDate).length
+        let numberOfDaysInMonth = NSCalendar.currentCalendar().rangeOfUnit(.Day, inUnit: .Month, forDate: correctMonthForSectionDate).length
         
         var firstWeekdayOfMonthIndex = NSCalendar.currentCalendar().component(NSCalendarUnit.Weekday, fromDate: correctMonthForSectionDate)
         firstWeekdayOfMonthIndex = firstWeekdayOfMonthIndex - 1 // firstWeekdayOfMonthIndex should be 0-Indexed
