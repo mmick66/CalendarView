@@ -41,9 +41,11 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         let dateComponents = NSDateComponents()
         dateComponents.month = -3
         
-        let today = NSDate()
+        let today = NSDate.localDate()
         
         let threeMonthsAgo = NSCalendar.currentCalendar().dateByAddingComponents(dateComponents, toDate: today, options: NSCalendarOptions())
+        
+        print("today: \(today)")
         
         return threeMonthsAgo
     }

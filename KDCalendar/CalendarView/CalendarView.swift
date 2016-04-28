@@ -29,6 +29,20 @@ extension NSDate {
     }
 }
 
+extension NSDate {
+    
+    class func localDate() -> NSDate {
+        
+        let gmtDate                 = NSDate()
+        
+        let secondsFromGMTForDate    = NSTimeZone.localTimeZone().secondsFromGMTForDate(gmtDate)
+        
+        let destinationDate         = NSDate(timeInterval: NSTimeInterval(secondsFromGMTForDate), sinceDate: gmtDate)
+        
+        return destinationDate
+    }
+}
+
 @objc protocol CalendarViewDataSource {
     
     func startDate() -> NSDate?
