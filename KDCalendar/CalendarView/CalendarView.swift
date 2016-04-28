@@ -101,8 +101,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             
             for event in events {
                 
-                event.localize()
-                print("\(event.title) \(event.startDate)")
+                event.localize() // might be relating to a bug on ios
                 
                 let flags: NSCalendarUnit = [NSCalendarUnit.Month, NSCalendarUnit.Day]
                 
