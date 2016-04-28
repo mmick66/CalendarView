@@ -24,24 +24,13 @@ let DATE_SELECTED_INDEX = 2
 extension NSDate {
     var stringValue: String {
         let formatter = NSDateFormatter()
+        formatter.timeZone = NSTimeZone.localTimeZone()
         formatter.dateFormat = "dd MMMM yyyy"
         return formatter.stringFromDate(self)
     }
 }
 
-extension NSDate {
-    
-    class func localDate() -> NSDate {
-        
-        let gmtDate                 = NSDate()
-        
-        let secondsFromGMTForDate    = NSTimeZone.localTimeZone().secondsFromGMTForDate(gmtDate)
-        
-        let destinationDate         = NSDate(timeInterval: NSTimeInterval(secondsFromGMTForDate), sinceDate: gmtDate)
-        
-        return destinationDate
-    }
-}
+
 
 @objc protocol CalendarViewDataSource {
     
@@ -224,28 +213,19 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             endDateCache = endDate
             
             // check if the dates are in correct order
-            if NSCalendar.currentCalendar().compareDate(startDate, toDate: endDate, toUnitGranularity: NSCalendarUnit.Nanosecond) != NSComparisonResult.OrderedAscending {
+            if NSCalendar.currentCalendar().compareDate(startDate, toDate: endDate, toUnitGranularity: .Nanosecond) != NSComparisonResult.OrderedAscending {
                 return 0
             }
             
             // discart day and minutes so that they round off to the first of the month
-            let roundedComponents = NSCalendar.currentCalendar().components( [NSCalendarUnit.Era, NSCalendarUnit.Year, NSCalendarUnit.Month], fromDate: startDateCache)
-            
-            let dayOneComponents = NSDateComponents()
-            dayOneComponents.era = roundedComponents.era
-            dayOneComponents.year = roundedComponents.year
-            dayOneComponents.month = roundedComponents.month
+            let components : NSCalendarUnit = [.Era, .Year, .Month, .Day, .Hour, .Minute, .Second]
+            let dayOneComponents = NSCalendar.currentCalendar().components( components, fromDate: startDateCache)
             dayOneComponents.day = 1
-            dayOneComponents.hour = 1
-            dayOneComponents.minute = 0
-            dayOneComponents.second = 0
-            
             
             guard let dateFromDayOneComponents = NSCalendar.currentCalendar().dateFromComponents(dayOneComponents) else {
                 return 0
             }
             
-            print("YEAR: \(dayOneComponents.year) MONTH: \(dayOneComponents.month) DAY: \(dayOneComponents.day) DATE: \(dateFromDayOneComponents) START: \(startDateCache)")
                     
             startOfMonthCache = dateFromDayOneComponents
             
