@@ -14,11 +14,13 @@ let cellReuseIdentifier = "CalendarDayCell"
 let NUMBER_OF_DAYS_IN_WEEK = 7
 let MAXIMUM_NUMBER_OF_ROWS = 6
 
-let HEADER_DEFAULT_SIZE = 40.0
+let HEADER_DEFAULT_HEIGHT : CGFloat = 80.0
+
 
 let FIRST_DAY_INDEX = 0
 let NUMBER_OF_DAYS_INDEX = 1
 let DATE_SELECTED_INDEX = 2
+
 
 
 extension EKEvent {
@@ -151,7 +153,6 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         cv.showsVerticalScrollIndicator = false
         cv.allowsMultipleSelection = true
         
-        
         return cv
         
     }()
@@ -159,18 +160,14 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     override var frame: CGRect {
         didSet {
             
-            var elementFrame = CGRect(x:0.0, y:0.0, width: self.frame.size.width, height:80.0)
+            let heigh = frame.size.height - HEADER_DEFAULT_HEIGHT
+            let width = frame.size.width
             
-            self.headerView.frame = elementFrame
+            self.headerView.frame   = CGRect(x:0.0, y:0.0, width: frame.size.width, height:HEADER_DEFAULT_HEIGHT)
+            self.calendarView.frame = CGRect(x:0.0, y:HEADER_DEFAULT_HEIGHT, width: width, height: heigh)
             
-            elementFrame.origin.y += elementFrame.size.height
-            elementFrame.size.height = self.frame.size.height - elementFrame.size.height
-            
-            self.calendarView.frame = CGRect(x:0.0, y:80.0, width: self.frame.size.width, height:self.frame.size.height - 80.0)
-            
-            let layout = self.calendarView.collectionViewLayout as! CalendarFlowLayout
-            
-            self.calendarView.collectionViewLayout = layout
+            let layout = self.calendarView.collectionViewLayout as! UICollectionViewFlowLayout
+            layout.itemSize = CGSizeMake(width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), heigh / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
             
         }
     }
@@ -213,54 +210,45 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
         
-        // Set the collection view to the correct layout
-        let layout = self.calendarView.collectionViewLayout as! UICollectionViewFlowLayout
-        layout.itemSize = CGSizeMake(self.calendarView.frame.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), (self.calendarView.frame.size.height - layout.headerReferenceSize.height) / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
-     
-        self.calendarView.collectionViewLayout = layout
-        
+        guard let startDate = self.dataSource?.startDate(), endDate = self.dataSource?.endDate() else {
+            return 0
+        }
        
-        if let  startDate = self.dataSource?.startDate(),
-                endDate = self.dataSource?.endDate() {
+        startDateCache = startDate
+        endDateCache = endDate
+        
+        // check if the dates are in correct order
+        if self.gregorian.compareDate(startDate, toDate: endDate, toUnitGranularity: .Nanosecond) != NSComparisonResult.OrderedAscending {
+            return 0
+        }
+        
+        
+        let firstDayOfStartMonth = self.gregorian.components( [.Era, .Year, .Month], fromDate: startDateCache)
+        firstDayOfStartMonth.day = 1
+        
+        guard let dateFromDayOneComponents = self.gregorian.dateFromComponents(firstDayOfStartMonth) else {
+            return 0
+        }
+        
+        startOfMonthCache = dateFromDayOneComponents
+        
+        
+        let today = NSDate()
+        
+        if  startOfMonthCache.compare(today) == NSComparisonResult.OrderedAscending &&
+            endDateCache.compare(today) == NSComparisonResult.OrderedDescending {
             
-            startDateCache = startDate
-            endDateCache = endDate
+            let differenceFromTodayComponents = self.gregorian.components([NSCalendarUnit.Month, NSCalendarUnit.Day], fromDate: startOfMonthCache, toDate: today, options: NSCalendarOptions())
             
-            // check if the dates are in correct order
-            if self.gregorian.compareDate(startDate, toDate: endDate, toUnitGranularity: .Nanosecond) != NSComparisonResult.OrderedAscending {
-                return 0
-            }
-            
-            
-            let firstDayOfStartMonth = self.gregorian.components( [.Era, .Year, .Month], fromDate: startDateCache)
-            firstDayOfStartMonth.day = 1
-            
-            guard let dateFromDayOneComponents = self.gregorian.dateFromComponents(firstDayOfStartMonth) else {
-                return 0
-            }
-            
-            startOfMonthCache = dateFromDayOneComponents
-            
-            
-            let today = NSDate()
-            
-            if  startOfMonthCache.compare(today) == NSComparisonResult.OrderedAscending &&
-                endDateCache.compare(today) == NSComparisonResult.OrderedDescending {
-                
-                let differenceFromTodayComponents = self.gregorian.components([NSCalendarUnit.Month, NSCalendarUnit.Day], fromDate: startOfMonthCache, toDate: today, options: NSCalendarOptions())
-                
-                self.todayIndexPath = NSIndexPath(forItem: differenceFromTodayComponents.day, inSection: differenceFromTodayComponents.month)
-                
-            }
-            
-            let differenceComponents = self.gregorian.components(NSCalendarUnit.Month, fromDate: startDateCache, toDate: endDateCache, options: NSCalendarOptions())
-            
-            
-            return differenceComponents.month + 1 // if we are for example on the same month and the difference is 0 we still need 1 to display it
+            self.todayIndexPath = NSIndexPath(forItem: differenceFromTodayComponents.day, inSection: differenceFromTodayComponents.month)
             
         }
         
-        return 0
+        let differenceComponents = self.gregorian.components(NSCalendarUnit.Month, fromDate: startDateCache, toDate: endDateCache, options: NSCalendarOptions())
+        
+        
+        return differenceComponents.month + 1 // if we are for example on the same month and the difference is 0 we still need 1 to display it
+        
     }
     
     var monthInfo : [Int:[Int]] = [Int:[Int]]()
