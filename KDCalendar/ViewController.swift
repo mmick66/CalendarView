@@ -35,13 +35,13 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         self.loadEventsInCalendar()
         
         let dateComponents = NSDateComponents()
-        dateComponents.month = -3
         dateComponents.day = -5
         
         let today = NSDate()
         
         if let date = self.calendarView.calendar.dateByAddingComponents(dateComponents, toDate: today, options: NSCalendarOptions()) {
             self.calendarView.selectDate(date)
+            //self.calendarView.deselectDate(date)
         }
         
         

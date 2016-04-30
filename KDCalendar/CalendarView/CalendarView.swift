@@ -405,18 +405,58 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     
     func selectDate(date : NSDate) {
         
+        guard let indexPath = self.indexPathForDate(date) else {
+            return
+        }
+        
+        guard self.calendarView.indexPathsForSelectedItems()?.contains(indexPath) == false else {
+            return
+        }
+        
+        self.calendarView.selectItemAtIndexPath(indexPath, animated: false, scrollPosition: .None)
+        
+        selectedIndexPaths.append(indexPath)
+        selectedDates.append(date)
+        
+    }
+    
+    func deselectDate(date : NSDate) {
+        
+        guard let indexPath = self.indexPathForDate(date) else {
+            return
+        }
+        
+        guard self.calendarView.indexPathsForSelectedItems()?.contains(indexPath) == true else {
+            return
+        }
+        
+        
+        self.calendarView.deselectItemAtIndexPath(indexPath, animated: false)
+        
+        guard let index = selectedIndexPaths.indexOf(indexPath) else {
+            return
+        }
+        
+        
+        selectedIndexPaths.removeAtIndex(index)
+        selectedDates.removeAtIndex(index)
+        
+        
+    }
+    
+    func indexPathForDate(date : NSDate) -> NSIndexPath? {
+     
         let distanceFromStartComponent = self.gregorian.components( [.Month, .Day], fromDate:startOfMonthCache, toDate: date, options: NSCalendarOptions() )
         
-        if let currentMonthInfo : [Int] = monthInfo[distanceFromStartComponent.month] {
-            
-            let fromStartOfMonthIndexPath = NSIndexPath(forItem: distanceFromStartComponent.day + currentMonthInfo[FIRST_DAY_INDEX], inSection: distanceFromStartComponent.month)
-            
-            self.calendarView.selectItemAtIndexPath(fromStartOfMonthIndexPath, animated: false, scrollPosition: .None)
-            
-            selectedIndexPaths.append(fromStartOfMonthIndexPath)
-            selectedDates.append(date)
-            
+        guard let currentMonthInfo : [Int] = monthInfo[distanceFromStartComponent.month] else {
+            return nil
         }
+        
+        
+        let item = distanceFromStartComponent.day + currentMonthInfo[FIRST_DAY_INDEX]
+        let indexPath = NSIndexPath(forItem: item, inSection: distanceFromStartComponent.month)
+        
+        return indexPath
         
     }
     
