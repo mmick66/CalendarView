@@ -33,6 +33,12 @@ You can select dates either by clicking on a cell or by selecting a date program
 self.calendarView.selectDate(date)
 ```
 
+Similarly you can deselect
+
+```Swift
+self.calendarView.deselectDate(date)
+```
+
 You can get all the dates that where selected, either manually or programatically by 
 
 ```Swift
