@@ -47,11 +47,11 @@ class CalendarDayCell: UICollectionViewCell {
         }
     }
     
-    override var selected : Bool {
+    override var isSelected : Bool {
         
         didSet {
             
-            if selected == true {
+            if isSelected == true {
                 self.pBackgroundView.layer.borderWidth = 2.0
                 
             }
@@ -64,13 +64,13 @@ class CalendarDayCell: UICollectionViewCell {
     
      lazy var pBackgroundView : UIView = {
         
-        var vFrame = CGRectInset(self.frame, 3.0, 3.0)
+        var vFrame = self.frame.insetBy(dx: 3.0, dy: 3.0)
         
         let view = UIView(frame: vFrame)
         
         view.layer.cornerRadius = 4.0
         
-        view.layer.borderColor = borderColor.CGColor
+        view.layer.borderColor = borderColor.cgColor
         view.layer.borderWidth = 0.0
         
         view.center = CGPoint(x: self.bounds.size.width * 0.5, y: self.bounds.size.height * 0.5)
@@ -84,8 +84,8 @@ class CalendarDayCell: UICollectionViewCell {
     lazy var textLabel : UILabel = {
        
         let lbl = UILabel()
-        lbl.textAlignment = NSTextAlignment.Center
-        lbl.textColor = UIColor.darkGrayColor()
+        lbl.textAlignment = NSTextAlignment.center
+        lbl.textColor = UIColor.darkGray
         
         return lbl
         

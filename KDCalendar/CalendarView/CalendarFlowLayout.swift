@@ -11,9 +11,9 @@ import UIKit
 class CalendarFlowLayout: UICollectionViewFlowLayout {
     
     
-    override func layoutAttributesForElementsInRect(rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
+    override func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
         
-        return super.layoutAttributesForElementsInRect(rect)?.map {
+        return super.layoutAttributesForElements(in: rect)?.map {
             attrs in
             let attrscp = attrs.copy() as! UICollectionViewLayoutAttributes
             self.applyLayoutAttributes(attrscp)
@@ -22,9 +22,9 @@ class CalendarFlowLayout: UICollectionViewFlowLayout {
         
     }
     
-    override func layoutAttributesForItemAtIndexPath(indexPath: NSIndexPath) -> UICollectionViewLayoutAttributes? {
+    override func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
         
-        if let attrs = super.layoutAttributesForItemAtIndexPath(indexPath) {
+        if let attrs = super.layoutAttributesForItem(at: indexPath) {
             let attrscp = attrs.copy() as! UICollectionViewLayoutAttributes
             self.applyLayoutAttributes(attrscp)
             return attrscp
@@ -34,7 +34,7 @@ class CalendarFlowLayout: UICollectionViewFlowLayout {
     }
     
     
-    func applyLayoutAttributes(attributes : UICollectionViewLayoutAttributes) {
+    func applyLayoutAttributes(_ attributes : UICollectionViewLayoutAttributes) {
         
         if attributes.representedElementKind != nil {
             return
@@ -42,21 +42,21 @@ class CalendarFlowLayout: UICollectionViewFlowLayout {
         
         if let collectionView = self.collectionView {
             
-            let stride = (self.scrollDirection == .Horizontal) ? collectionView.frame.size.width : collectionView.frame.size.height
+            let stride = (self.scrollDirection == .horizontal) ? collectionView.frame.size.width : collectionView.frame.size.height
             
-            let offset = CGFloat(attributes.indexPath.section) * stride
+            let offset = CGFloat((attributes.indexPath as NSIndexPath).section) * stride
             
-            var xCellOffset : CGFloat = CGFloat(attributes.indexPath.item % 7) * self.itemSize.width
+            var xCellOffset : CGFloat = CGFloat((attributes.indexPath as NSIndexPath).item % 7) * self.itemSize.width
             
-            var yCellOffset : CGFloat = CGFloat(attributes.indexPath.item / 7) * self.itemSize.height
+            var yCellOffset : CGFloat = CGFloat((attributes.indexPath as NSIndexPath).item / 7) * self.itemSize.height
             
-            if(self.scrollDirection == .Horizontal) {
+            if(self.scrollDirection == .horizontal) {
                 xCellOffset += offset;
             } else {
                 yCellOffset += offset
             }
             
-            attributes.frame = CGRectMake(xCellOffset, yCellOffset, self.itemSize.width, self.itemSize.height)
+            attributes.frame = CGRect(x: xCellOffset, y: yCellOffset, width: self.itemSize.width, height: self.itemSize.height)
         }
         
     }

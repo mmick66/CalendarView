@@ -13,9 +13,9 @@ class CalendarHeaderView: UIView {
     lazy var monthLabel : UILabel = {
         
         let lbl = UILabel()
-        lbl.textAlignment = NSTextAlignment.Center
+        lbl.textAlignment = NSTextAlignment.center
         lbl.font = UIFont(name: "Helvetica", size: 20.0)
-        lbl.textColor = UIColor.grayColor()
+        lbl.textColor = UIColor.gray
         
         self.addSubview(lbl)
         
@@ -26,7 +26,7 @@ class CalendarHeaderView: UIView {
         
         let v = UIView()
         
-        let formatter : NSDateFormatter = NSDateFormatter()
+        let formatter : DateFormatter = DateFormatter()
         
         for index in 1...7 {
             
@@ -36,9 +36,9 @@ class CalendarHeaderView: UIView {
             
             weekdayLabel.font = UIFont(name: "Helvetica", size: 14.0)
             
-            weekdayLabel.text = day.substringToIndex(2).uppercaseString
-            weekdayLabel.textColor = UIColor.grayColor()
-            weekdayLabel.textAlignment = NSTextAlignment.Center
+            weekdayLabel.text = day.substring(to: 2).uppercased()
+            weekdayLabel.textColor = UIColor.gray
+            weekdayLabel.textAlignment = NSTextAlignment.center
             
             v.addSubview(weekdayLabel)
         }
