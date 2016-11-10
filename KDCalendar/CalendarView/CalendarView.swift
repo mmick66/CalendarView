@@ -354,15 +354,27 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        self.calculateDateBasedOnScrollViewPosition(scrollView)
+        let yearDate = self.calculateDateBasedOnScrollViewPosition()
+        
+        if  let date = yearDate,
+            let delegate = self.delegate {
+            
+            delegate.calendar(self, didScrollToMonth: date)
+        }
+        
     }
     
     func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-        self.calculateDateBasedOnScrollViewPosition(scrollView)
+        let yearDate = self.calculateDateBasedOnScrollViewPosition()
+        
+        if let date = yearDate,
+            let delegate = self.delegate {
+            delegate.calendar(self, didScrollToMonth: date)
+        }
     }
     
     
-    func calculateDateBasedOnScrollViewPosition(_ scrollView: UIScrollView) {
+    func calculateDateBasedOnScrollViewPosition() -> Date? {
         
         let cvbounds = self.calendarView.bounds
         
@@ -383,13 +395,8 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         var monthsOffsetComponents = DateComponents()
         monthsOffsetComponents.month = page
         
-        guard let delegate = self.delegate else {
-            return
-        }
-        
-        
         guard let yearDate = (self.gregorian as NSCalendar).date(byAdding: monthsOffsetComponents, to: self.startOfMonthCache, options: NSCalendar.Options()) else {
-            return
+            return nil
         }
         
         let month = (self.gregorian as NSCalendar).component(NSCalendar.Unit.month, from: yearDate) // get month
@@ -403,10 +410,12 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         
         self.displayDate = yearDate
         
+        return yearDate;
         
-        delegate.calendar(self, didScrollToMonth: yearDate)
         
     }
+    
+    
     
     
     // MARK: UICollectionViewDelegate
@@ -567,7 +576,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             
             self.calendarView.setContentOffset(CGPoint(x: distance, y: 0.0), animated: animated)
             
-            
+            _ = self.calculateDateBasedOnScrollViewPosition()
         }
         
     }
