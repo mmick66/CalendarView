@@ -32,14 +32,14 @@
 
 /* Begin PBXFileReference section */
 		BEF6665E1AEA50140012EC2E /* EventKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = EventKit.framework; path = System/Library/Frameworks/EventKit.framework; sourceTree = SDKROOT; };
-		BEFD654F1ACC072000ADE917 /* KDCalendar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KDCalendar.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BEFD654F1ACC072000ADE917 /* CalendarView.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CalendarView.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BEFD65531ACC072000ADE917 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BEFD65541ACC072000ADE917 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		BEFD65561ACC072000ADE917 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		BEFD65591ACC072000ADE917 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		BEFD655B1ACC072000ADE917 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		BEFD655E1ACC072000ADE917 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
-		BEFD65641ACC072000ADE917 /* KDCalendarTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KDCalendarTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BEFD65641ACC072000ADE917 /* CalendarViewTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CalendarViewTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BEFD65691ACC072000ADE917 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BEFD656A1ACC072000ADE917 /* KDCalendarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDCalendarTests.swift; sourceTree = "<group>"; };
 		C7C16A6C1CBBE536004DC8CF /* CalendarDayCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CalendarDayCell.swift; path = CalendarView/CalendarDayCell.swift; sourceTree = "<group>"; };
@@ -80,8 +80,8 @@
 		BEFD65501ACC072000ADE917 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				BEFD654F1ACC072000ADE917 /* KDCalendar.app */,
-				BEFD65641ACC072000ADE917 /* KDCalendarTests.xctest */,
+				BEFD654F1ACC072000ADE917 /* CalendarView.app */,
+				BEFD65641ACC072000ADE917 /* CalendarViewTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -139,9 +139,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		BEFD654E1ACC072000ADE917 /* KDCalendar */ = {
+		BEFD654E1ACC072000ADE917 /* CalendarView */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = BEFD656E1ACC072000ADE917 /* Build configuration list for PBXNativeTarget "KDCalendar" */;
+			buildConfigurationList = BEFD656E1ACC072000ADE917 /* Build configuration list for PBXNativeTarget "CalendarView" */;
 			buildPhases = (
 				BEFD654B1ACC072000ADE917 /* Sources */,
 				BEFD654C1ACC072000ADE917 /* Frameworks */,
@@ -151,14 +151,14 @@
 			);
 			dependencies = (
 			);
-			name = KDCalendar;
+			name = CalendarView;
 			productName = KDCalendar;
-			productReference = BEFD654F1ACC072000ADE917 /* KDCalendar.app */;
+			productReference = BEFD654F1ACC072000ADE917 /* CalendarView.app */;
 			productType = "com.apple.product-type.application";
 		};
-		BEFD65631ACC072000ADE917 /* KDCalendarTests */ = {
+		BEFD65631ACC072000ADE917 /* CalendarViewTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = BEFD65711ACC072000ADE917 /* Build configuration list for PBXNativeTarget "KDCalendarTests" */;
+			buildConfigurationList = BEFD65711ACC072000ADE917 /* Build configuration list for PBXNativeTarget "CalendarViewTests" */;
 			buildPhases = (
 				BEFD65601ACC072000ADE917 /* Sources */,
 				BEFD65611ACC072000ADE917 /* Frameworks */,
@@ -169,9 +169,9 @@
 			dependencies = (
 				BEFD65661ACC072000ADE917 /* PBXTargetDependency */,
 			);
-			name = KDCalendarTests;
+			name = CalendarViewTests;
 			productName = KDCalendarTests;
-			productReference = BEFD65641ACC072000ADE917 /* KDCalendarTests.xctest */;
+			productReference = BEFD65641ACC072000ADE917 /* CalendarViewTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -188,6 +188,7 @@
 					BEFD654E1ACC072000ADE917 = {
 						CreatedOnToolsVersion = 6.2;
 						LastSwiftMigration = 0800;
+						ProvisioningStyle = Manual;
 					};
 					BEFD65631ACC072000ADE917 = {
 						CreatedOnToolsVersion = 6.2;
@@ -196,7 +197,7 @@
 					};
 				};
 			};
-			buildConfigurationList = BEFD654A1ACC072000ADE917 /* Build configuration list for PBXProject "KDCalendar" */;
+			buildConfigurationList = BEFD654A1ACC072000ADE917 /* Build configuration list for PBXProject "CalendarView" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -209,8 +210,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				BEFD654E1ACC072000ADE917 /* KDCalendar */,
-				BEFD65631ACC072000ADE917 /* KDCalendarTests */,
+				BEFD654E1ACC072000ADE917 /* CalendarView */,
+				BEFD65631ACC072000ADE917 /* CalendarViewTests */,
 			);
 		};
 /* End PBXProject section */
@@ -262,7 +263,7 @@
 /* Begin PBXTargetDependency section */
 		BEFD65661ACC072000ADE917 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = BEFD654E1ACC072000ADE917 /* KDCalendar */;
+			target = BEFD654E1ACC072000ADE917 /* CalendarView */;
 			targetProxy = BEFD65651ACC072000ADE917 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -376,6 +377,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = KDCalendar/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "KD.$(PRODUCT_NAME:rfc1034identifier)";
@@ -388,6 +390,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = KDCalendar/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "KD.$(PRODUCT_NAME:rfc1034identifier)";
@@ -413,7 +416,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "KD.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 3.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KDCalendar.app/KDCalendar";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CalendarView.app/CalendarView";
 			};
 			name = Debug;
 		};
@@ -430,14 +433,14 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "KD.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 3.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KDCalendar.app/KDCalendar";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CalendarView.app/CalendarView";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		BEFD654A1ACC072000ADE917 /* Build configuration list for PBXProject "KDCalendar" */ = {
+		BEFD654A1ACC072000ADE917 /* Build configuration list for PBXProject "CalendarView" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BEFD656C1ACC072000ADE917 /* Debug */,
@@ -446,7 +449,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		BEFD656E1ACC072000ADE917 /* Build configuration list for PBXNativeTarget "KDCalendar" */ = {
+		BEFD656E1ACC072000ADE917 /* Build configuration list for PBXNativeTarget "CalendarView" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BEFD656F1ACC072000ADE917 /* Debug */,
@@ -455,7 +458,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		BEFD65711ACC072000ADE917 /* Build configuration list for PBXNativeTarget "KDCalendarTests" */ = {
+		BEFD65711ACC072000ADE917 /* Build configuration list for PBXNativeTarget "CalendarViewTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BEFD65721ACC072000ADE917 /* Debug */,

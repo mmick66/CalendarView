@@ -202,7 +202,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
 
     override init(frame: CGRect) {
         super.init(frame : CGRect(x: 0.0, y: 0.0, width: 200.0, height: 200.0))
-        self.initialSetup()
+        self.createSubviews()
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -210,14 +210,15 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     }
     
     override func awakeFromNib() {
-        self.initialSetup()
+        super.awakeFromNib()
+        self.createSubviews()
     }
     
     
     
     // MARK: Setup 
     
-    fileprivate func initialSetup() {
+    fileprivate func createSubviews() {
         
         
         self.clipsToBounds = true

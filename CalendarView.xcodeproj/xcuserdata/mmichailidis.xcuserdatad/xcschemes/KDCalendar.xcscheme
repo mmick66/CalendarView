@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "BEFD654E1ACC072000ADE917"
-               BuildableName = "KDCalendar.app"
-               BlueprintName = "KDCalendar"
-               ReferencedContainer = "container:KDCalendar.xcodeproj">
+               BuildableName = "CalendarView.app"
+               BlueprintName = "CalendarView"
+               ReferencedContainer = "container:CalendarView.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "BEFD65631ACC072000ADE917"
-               BuildableName = "KDCalendarTests.xctest"
-               BlueprintName = "KDCalendarTests"
-               ReferencedContainer = "container:KDCalendar.xcodeproj">
+               BuildableName = "CalendarViewTests.xctest"
+               BlueprintName = "CalendarViewTests"
+               ReferencedContainer = "container:CalendarView.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -43,9 +43,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "BEFD654E1ACC072000ADE917"
-            BuildableName = "KDCalendar.app"
-            BlueprintName = "KDCalendar"
-            ReferencedContainer = "container:KDCalendar.xcodeproj">
+            BuildableName = "CalendarView.app"
+            BlueprintName = "CalendarView"
+            ReferencedContainer = "container:CalendarView.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -66,9 +66,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "BEFD654E1ACC072000ADE917"
-            BuildableName = "KDCalendar.app"
-            BlueprintName = "KDCalendar"
-            ReferencedContainer = "container:KDCalendar.xcodeproj">
+            BuildableName = "CalendarView.app"
+            BlueprintName = "CalendarView"
+            ReferencedContainer = "container:CalendarView.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>
@@ -85,9 +85,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "BEFD654E1ACC072000ADE917"
-            BuildableName = "KDCalendar.app"
-            BlueprintName = "KDCalendar"
-            ReferencedContainer = "container:KDCalendar.xcodeproj">
+            BuildableName = "CalendarView.app"
+            BlueprintName = "CalendarView"
+            ReferencedContainer = "container:CalendarView.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

@@ -24,7 +24,7 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         calendarView.delegate = self
         
         // change the code to get a vertical calender.
-        calendarView.direction = .vertical
+        calendarView.direction = .horizontal
         
     }
     
@@ -34,15 +34,20 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         self.loadEventsInCalendar()
         
-        var dateComponents = DateComponents()
-        dateComponents.day = -5
+        var tomorrowComponents = DateComponents()
+        tomorrowComponents.day = 1
         
         let today = Date()
         
-        if let date = (self.calendarView.calendar as NSCalendar).date(byAdding: dateComponents, to: today, options: NSCalendar.Options()) {
-            self.calendarView.selectDate(date)
+        
+        if let tomorrow = (self.calendarView.calendar as NSCalendar).date(byAdding: tomorrowComponents, to: today, options: NSCalendar.Options()) {
+            self.calendarView.selectDate(tomorrow)
             //self.calendarView.deselectDate(date)
+            
         }
+        
+        self.calendarView.setDisplayDate(today, animated: false)
+        self.datePicker.setDate(today, animated: false)
         
         
     }
