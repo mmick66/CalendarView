@@ -365,8 +365,18 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         
         let cvbounds = self.calendarView.bounds
         
-        var page : Int = Int(floor(self.calendarView.contentOffset.x / cvbounds.size.width))
+        var page : Int = 0
         
+        switch self.direction {
+            
+        case .horizontal:
+            page = Int(floor(self.calendarView.contentOffset.x / cvbounds.size.width))
+            break
+            
+        case .vertical:
+            page = Int(floor(self.calendarView.contentOffset.y / cvbounds.size.height))
+            break
+        }
         page = page > 0 ? page : 0
         
         var monthsOffsetComponents = DateComponents()
