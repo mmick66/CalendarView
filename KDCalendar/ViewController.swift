@@ -106,6 +106,8 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
     
         self.datePicker.setDate(date, animated: true)
     }
+    
+    
 
     // MARK : Events
     
@@ -158,8 +160,36 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
     }
     
+    @IBAction func goToPreviousMonth(_ sender: Any) {
+        
+        
+        self.calendarView.goToPreviousMonth()
+    }
+    @IBAction func goToNextMonth(_ sender: Any) {
+        self.calendarView.goToNextMonth()
+        
+    }
+    
+   
+    
+    
+    
 }
 
+
+extension Date {
+
+    func applyOffSetOfMonth(calendar: Calendar, offset:Int) -> Date? {
+        
+        var dateComponents = DateComponents()
+        
+        dateComponents.month = offset;
+        
+        return(calendar as NSCalendar).date(byAdding: dateComponents, to: self, options: NSCalendar.Options())
+        
+    }
+
+}
 
 
 

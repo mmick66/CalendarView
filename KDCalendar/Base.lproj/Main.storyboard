@@ -44,10 +44,16 @@
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="d9N-eH-E3w">
                                         <rect key="frame" x="0.0" y="0.0" width="171.5" height="30"/>
                                         <state key="normal" title="previous month"/>
+                                        <connections>
+                                            <action selector="goToPreviousMonth:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="EG0-ui-QxY"/>
+                                        </connections>
                                     </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ETR-rE-QOo">
                                         <rect key="frame" x="171.5" y="0.0" width="171.5" height="30"/>
                                         <state key="normal" title="next month"/>
+                                        <connections>
+                                            <action selector="goToNextMonth:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="u8x-yv-w2y"/>
+                                        </connections>
                                     </button>
                                 </subviews>
                             </stackView>

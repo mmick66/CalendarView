@@ -364,7 +364,10 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             let delegate = self.delegate {
             
             delegate.calendar(self, didScrollToMonth: date)
+            self.displayDate = date
         }
+        
+        
         
     }
     
@@ -586,9 +589,27 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         }
         
     }
+
+}
+
+extension CalendarView{
+
+    func goToMonthWithOffet(_ offet:Int){
+        
+        if let newDate = (self.displayDate?.applyOffSetOfMonth(calendar: self.calendar, offset: offet)){
+            
+            self.setDisplayDate(newDate, animated: true)
+            
+        }
+    }
     
     
-    
+    func goToNextMonth(){
+        goToMonthWithOffet(1)
+    }
+    func goToPreviousMonth(){
+        goToMonthWithOffet(-1)
+    }
     
 
 }
