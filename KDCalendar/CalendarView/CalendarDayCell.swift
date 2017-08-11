@@ -16,23 +16,15 @@ class CalendarDayCell: UICollectionViewCell {
     
     var eventsCount = 0 {
         didSet {
-            for sview in self.dotsView.subviews {
-                sview.removeFromSuperview()
-            }
             
-            let stride = self.dotsView.frame.size.width / CGFloat(eventsCount+1)
-            let viewHeight = self.dotsView.frame.size.height
-            let halfViewHeight = viewHeight / 2.0
+            self.dotsView.isHidden = eventsCount == 0
+            self.setNeedsLayout()
             
-            for _ in 0..<eventsCount {
-                let frm = CGRect(x: (stride+1.0) - halfViewHeight, y: 0.0, width: viewHeight, height: viewHeight)
-                let circle = UIView(frame: frm)
-                circle.layer.cornerRadius = halfViewHeight
-                circle.backgroundColor = borderColor
-                self.dotsView.addSubview(circle)
-            }
         }
     }
+    
+    
+   
     
     var isToday : Bool = false {
         
@@ -91,12 +83,11 @@ class CalendarDayCell: UICollectionViewCell {
         
     }()
     
+    
     lazy var dotsView : UIView = {
         
-        let frm = CGRect(x: 8.0, y: self.frame.size.width - 10.0 - 4.0, width: self.frame.size.width - 16.0, height: 8.0)
-        let dv = UIView(frame: frm)
-        
-        
+        let dv = UIView()
+        dv.backgroundColor = borderColor
         return dv
         
     }()
@@ -105,18 +96,31 @@ class CalendarDayCell: UICollectionViewCell {
         
         super.init(frame: frame)
         
-        
         self.addSubview(self.pBackgroundView)
-        
         self.textLabel.frame = self.bounds
         self.addSubview(self.textLabel)
+        self.addSubview(self.dotsView)
         
-        self.addSubview(dotsView)
     }
 
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        let dotFactor : CGFloat = 0.07
+        let size = self.bounds.height*dotFactor
+        self.dotsView.frame = CGRect(x: 0, y: 0, width: size, height: size)
+        self.dotsView.center = CGPoint(x: self.textLabel.center.x, y: self.bounds.height - 3*size)
+        self.dotsView.layer.cornerRadius = size * 0.5
+//        let validSize = self.bounds.height >= self.bounds.width
+//        assert(validSize, "The cell mustbe taller than the width")
+        
+        
+    }
+    
+    
     
     
 }

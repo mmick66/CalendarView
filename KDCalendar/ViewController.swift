@@ -84,10 +84,6 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         super.viewDidLayoutSubviews()
         
-        let width = self.view.frame.size.width - 16.0 * 2
-        let height = width + 20.0
-        self.calendarView.frame = CGRect(x: 16.0, y: 32.0, width: width, height: height)
-        
         
     }
     

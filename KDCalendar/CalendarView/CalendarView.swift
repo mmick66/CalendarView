@@ -183,22 +183,29 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     override var frame: CGRect {
         didSet {
             
-            let heigh = frame.size.height - HEADER_DEFAULT_HEIGHT
-            let width = frame.size.width
-            
-            self.headerView.frame   = CGRect(x:0.0, y:0.0, width: frame.size.width, height:HEADER_DEFAULT_HEIGHT)
-            self.calendarView.frame = CGRect(x:0.0, y:HEADER_DEFAULT_HEIGHT, width: width, height: heigh)
-            
-            let layout = self.calendarView.collectionViewLayout as! UICollectionViewFlowLayout
-            layout.itemSize = CGSize(width: width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), height: heigh / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
+           
             
         }
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        let heigh = frame.size.height - HEADER_DEFAULT_HEIGHT
+        let width = frame.size.width
+        
+        self.headerView.frame   = CGRect(x:0.0, y:0.0, width: frame.size.width, height:HEADER_DEFAULT_HEIGHT)
+        self.calendarView.frame = CGRect(x:0.0, y:HEADER_DEFAULT_HEIGHT, width: width, height: heigh)
+        
+        let layout = self.calendarView.collectionViewLayout as! UICollectionViewFlowLayout
+        layout.itemSize = CGSize(width: width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), height: heigh / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
+        
     }
     
     
 
     override init(frame: CGRect) {
-        super.init(frame : CGRect(x: 0.0, y: 0.0, width: 200.0, height: 200.0))
+        super.init(frame :frame)
         self.createSubviews()
     }
 
@@ -342,7 +349,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         } else {
             dayCell.eventsCount = 0
         }
-        
+
         
         return dayCell
     }
@@ -579,6 +586,8 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         }
         
     }
+    
+    
     
     
 
