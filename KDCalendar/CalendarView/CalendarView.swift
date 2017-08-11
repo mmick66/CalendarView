@@ -564,7 +564,14 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         selectedIndexPaths.remove(at: index)
         selectedDates.remove(at: index)
         
-        self.dateBeingSelectedByUser = selectedDates.last
+        
+        if allowMultipleSelection {
+            self.dateBeingSelectedByUser = selectedDates.last
+        }else{
+         self.dateBeingSelectedByUser = nil
+        
+        }
+        
         
     }
     
