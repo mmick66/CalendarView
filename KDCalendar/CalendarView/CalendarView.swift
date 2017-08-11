@@ -102,6 +102,15 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     fileprivate(set) var selectedIndexPaths : [IndexPath] = [IndexPath]()
     fileprivate(set) var selectedDates : [Date] = [Date]()
     
+    var allowMultipleSelection : Bool = false {
+    
+        didSet{
+        
+        
+            self.calendarView.allowsMultipleSelection = allowMultipleSelection
+        }
+    
+    }
     
     fileprivate var eventsByIndexPath : [IndexPath:[CalendarEvent]] = [IndexPath:[CalendarEvent]]()
     var events : [EKEvent]? {
@@ -229,7 +238,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         
         // Register Class
         self.calendarView.register(CalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
-        
+        self.calendarView.allowsMultipleSelection = allowMultipleSelection
         
         self.addSubview(self.headerView)
         self.addSubview(self.calendarView)
@@ -466,6 +475,8 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             return
         }
         
+       
+        
         self.calendarView.selectItem(at: indexPath, animated: false, scrollPosition: UICollectionViewScrollPosition())
         
         selectedIndexPaths.append(indexPath)
@@ -531,6 +542,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         }
         
         delegate?.calendar(self, didSelectDate: dateBeingSelectedByUser, withEvents: eventsArray)
+        
         
         // Update model
         selectedIndexPaths.append(indexPath)
