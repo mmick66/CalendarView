@@ -102,6 +102,15 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     fileprivate(set) var selectedIndexPaths : [IndexPath] = [IndexPath]()
     fileprivate(set) var selectedDates : [Date] = [Date]()
     
+    var allowMultipleSelection : Bool = false {
+    
+        didSet{
+        
+        
+            self.calendarView.allowsMultipleSelection = allowMultipleSelection
+        }
+    
+    }
     
     fileprivate var eventsByIndexPath : [IndexPath:[CalendarEvent]] = [IndexPath:[CalendarEvent]]()
     var events : [EKEvent]? {
@@ -183,22 +192,29 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     override var frame: CGRect {
         didSet {
             
-            let heigh = frame.size.height - HEADER_DEFAULT_HEIGHT
-            let width = frame.size.width
-            
-            self.headerView.frame   = CGRect(x:0.0, y:0.0, width: frame.size.width, height:HEADER_DEFAULT_HEIGHT)
-            self.calendarView.frame = CGRect(x:0.0, y:HEADER_DEFAULT_HEIGHT, width: width, height: heigh)
-            
-            let layout = self.calendarView.collectionViewLayout as! UICollectionViewFlowLayout
-            layout.itemSize = CGSize(width: width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), height: heigh / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
+           
             
         }
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        let heigh = frame.size.height - HEADER_DEFAULT_HEIGHT
+        let width = frame.size.width
+        
+        self.headerView.frame   = CGRect(x:0.0, y:0.0, width: frame.size.width, height:HEADER_DEFAULT_HEIGHT)
+        self.calendarView.frame = CGRect(x:0.0, y:HEADER_DEFAULT_HEIGHT, width: width, height: heigh)
+        
+        let layout = self.calendarView.collectionViewLayout as! UICollectionViewFlowLayout
+        layout.itemSize = CGSize(width: width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), height: heigh / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
+        
     }
     
     
 
     override init(frame: CGRect) {
-        super.init(frame : CGRect(x: 0.0, y: 0.0, width: 200.0, height: 200.0))
+        super.init(frame :frame)
         self.createSubviews()
     }
 
@@ -222,7 +238,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         
         // Register Class
         self.calendarView.register(CalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
-        
+        self.calendarView.allowsMultipleSelection = allowMultipleSelection
         
         self.addSubview(self.headerView)
         self.addSubview(self.calendarView)
@@ -342,7 +358,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         } else {
             dayCell.eventsCount = 0
         }
-        
+
         
         return dayCell
     }
@@ -357,7 +373,10 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             let delegate = self.delegate {
             
             delegate.calendar(self, didScrollToMonth: date)
+            self.displayDate = date
         }
+        
+        
         
     }
     
@@ -456,6 +475,8 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             return
         }
         
+       
+        
         self.calendarView.selectItem(at: indexPath, animated: false, scrollPosition: UICollectionViewScrollPosition())
         
         selectedIndexPaths.append(indexPath)
@@ -522,6 +543,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         
         delegate?.calendar(self, didSelectDate: dateBeingSelectedByUser, withEvents: eventsArray)
         
+        
         // Update model
         selectedIndexPaths.append(indexPath)
         selectedDates.append(dateBeingSelectedByUser)
@@ -542,7 +564,14 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         selectedIndexPaths.remove(at: index)
         selectedDates.remove(at: index)
         
-        self.dateBeingSelectedByUser = selectedDates.last
+        
+        if allowMultipleSelection {
+            self.dateBeingSelectedByUser = selectedDates.last
+        }else{
+         self.dateBeingSelectedByUser = nil
+        
+        }
+        
         
     }
     
@@ -579,7 +608,27 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         }
         
     }
+
+}
+
+extension CalendarView{
+
+    func goToMonthWithOffet(_ offet:Int){
+        
+        if let newDate = (self.displayDate?.applyOffSetOfMonth(calendar: self.calendar, offset: offet)){
+            
+            self.setDisplayDate(newDate, animated: true)
+            
+        }
+    }
     
+    
+    func goToNextMonth(){
+        goToMonthWithOffet(1)
+    }
+    func goToPreviousMonth(){
+        goToMonthWithOffet(-1)
+    }
     
 
 }
