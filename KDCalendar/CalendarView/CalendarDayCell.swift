@@ -106,7 +106,9 @@ class CalendarDayCell: UICollectionViewCell {
     }
     
     override func layoutSubviews() {
+        
         super.layoutSubviews()
+        
         let dotFactor : CGFloat = 0.07
         let size = self.bounds.height*dotFactor
         self.dotsView.frame = CGRect(x: 0, y: 0, width: size, height: size)
@@ -114,7 +116,6 @@ class CalendarDayCell: UICollectionViewCell {
         self.dotsView.layer.cornerRadius = size * 0.5
 //        let validSize = self.bounds.height >= self.bounds.width
 //        assert(validSize, "The cell mustbe taller than the width")
-        
         
     }
     
