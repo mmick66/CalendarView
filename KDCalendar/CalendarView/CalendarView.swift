@@ -156,7 +156,9 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
                 
             }
             
-            self.calendarView.reloadData()
+            DispatchQueue.main.async { self.calendarView.reloadData() }
+            
+            
             
         }
     }
