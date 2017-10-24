@@ -111,7 +111,7 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
 
     // MARK : Events
     
-    func loadEventsInCalendar() {
+    @objc func loadEventsInCalendar() {
         
         if let  startDate = self.startDate(),
                 let endDate = self.endDate() {

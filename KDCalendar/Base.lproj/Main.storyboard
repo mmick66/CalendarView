@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="12121" systemVersion="16G29" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="vXZ-lx-hvc">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13196" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="vXZ-lx-hvc">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12089"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13173"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
-        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -38,36 +38,58 @@
                                     <action selector="onValueChange:" destination="vXZ-lx-hvc" eventType="valueChanged" id="YJA-Ef-5x9"/>
                                 </connections>
                             </datePicker>
-                            <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="E6V-EL-8AD">
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="BMl-ka-oh2">
                                 <rect key="frame" x="16" y="379" width="343" height="30"/>
                                 <subviews>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="d9N-eH-E3w">
-                                        <rect key="frame" x="0.0" y="0.0" width="171.5" height="30"/>
+                                        <rect key="frame" x="8" y="0.0" width="154" height="30"/>
                                         <state key="normal" title="previous month"/>
                                         <connections>
                                             <action selector="goToPreviousMonth:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="EG0-ui-QxY"/>
                                         </connections>
                                     </button>
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ybt-dF-Rdi" userLabel="separator">
+                                        <rect key="frame" x="170" y="0.0" width="3" height="30"/>
+                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="3" id="Y0i-Mv-oBa"/>
+                                        </constraints>
+                                    </view>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ETR-rE-QOo">
-                                        <rect key="frame" x="171.5" y="0.0" width="171.5" height="30"/>
+                                        <rect key="frame" x="181" y="0.0" width="154" height="30"/>
                                         <state key="normal" title="next month"/>
                                         <connections>
                                             <action selector="goToNextMonth:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="u8x-yv-w2y"/>
                                         </connections>
                                     </button>
                                 </subviews>
-                            </stackView>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstItem="ybt-dF-Rdi" firstAttribute="leading" secondItem="d9N-eH-E3w" secondAttribute="trailing" constant="8" id="0bc-cf-2Ek"/>
+                                    <constraint firstAttribute="bottom" secondItem="ybt-dF-Rdi" secondAttribute="bottom" id="203-6i-3Vj"/>
+                                    <constraint firstItem="ybt-dF-Rdi" firstAttribute="top" secondItem="BMl-ka-oh2" secondAttribute="top" id="2Cb-Ds-Srt"/>
+                                    <constraint firstAttribute="trailing" secondItem="ETR-rE-QOo" secondAttribute="trailing" constant="8" id="C9U-TY-iZ1"/>
+                                    <constraint firstItem="ETR-rE-QOo" firstAttribute="top" secondItem="BMl-ka-oh2" secondAttribute="top" id="Mds-5C-1Nt"/>
+                                    <constraint firstItem="ETR-rE-QOo" firstAttribute="leading" secondItem="ybt-dF-Rdi" secondAttribute="trailing" constant="8" id="Tdi-R5-XT5"/>
+                                    <constraint firstAttribute="height" constant="30" id="UM1-Wh-Ibu"/>
+                                    <constraint firstAttribute="bottom" secondItem="d9N-eH-E3w" secondAttribute="bottom" id="akm-zp-ZAB"/>
+                                    <constraint firstItem="d9N-eH-E3w" firstAttribute="leading" secondItem="BMl-ka-oh2" secondAttribute="leading" constant="8" id="ckl-hq-hEb"/>
+                                    <constraint firstItem="d9N-eH-E3w" firstAttribute="top" secondItem="BMl-ka-oh2" secondAttribute="top" id="ja8-Rt-he5"/>
+                                    <constraint firstAttribute="bottom" secondItem="ETR-rE-QOo" secondAttribute="bottom" id="n03-3L-i98"/>
+                                    <constraint firstItem="ybt-dF-Rdi" firstAttribute="centerX" secondItem="BMl-ka-oh2" secondAttribute="centerX" id="vAu-hH-jPT"/>
+                                </constraints>
+                            </view>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="ZI5-5E-Eq0" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leading" constant="16" id="6CH-G3-Mhc"/>
+                            <constraint firstItem="BMl-ka-oh2" firstAttribute="leading" secondItem="hW4-le-uM3" secondAttribute="leading" id="7Z1-Xk-xnJ"/>
                             <constraint firstItem="hW4-le-uM3" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leading" constant="16" id="8wO-aF-0Eb"/>
                             <constraint firstItem="2fi-mo-0CV" firstAttribute="top" secondItem="ZI5-5E-Eq0" secondAttribute="bottom" constant="20" id="EM0-cT-QdX"/>
+                            <constraint firstItem="BMl-ka-oh2" firstAttribute="top" secondItem="hW4-le-uM3" secondAttribute="bottom" constant="8" id="KWY-nY-Oys"/>
                             <constraint firstItem="hW4-le-uM3" firstAttribute="top" secondItem="jyV-Pf-zRb" secondAttribute="bottom" constant="8" id="MZh-zF-zaS"/>
-                            <constraint firstAttribute="trailingMargin" secondItem="E6V-EL-8AD" secondAttribute="trailing" id="S5E-Z6-SRN"/>
-                            <constraint firstItem="E6V-EL-8AD" firstAttribute="top" secondItem="hW4-le-uM3" secondAttribute="bottom" constant="8" id="jX7-OM-dxP"/>
+                            <constraint firstItem="BMl-ka-oh2" firstAttribute="trailing" secondItem="hW4-le-uM3" secondAttribute="trailing" id="Prb-A3-Qwc"/>
                             <constraint firstAttribute="trailing" secondItem="ZI5-5E-Eq0" secondAttribute="trailing" constant="16" id="jgi-JH-Dcg"/>
-                            <constraint firstItem="E6V-EL-8AD" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leadingMargin" id="seM-yE-EWg"/>
                             <constraint firstAttribute="trailing" secondItem="hW4-le-uM3" secondAttribute="trailing" constant="16" id="vYW-BD-MiV"/>
                         </constraints>
                     </view>
@@ -78,7 +100,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="x5A-6p-PRh" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="722.39999999999998" y="627.4362818590705"/>
+            <point key="canvasLocation" x="721.5" y="626.5"/>
         </scene>
     </scenes>
 </document>

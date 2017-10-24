@@ -14,7 +14,7 @@ let borderColor = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0,
 
 class CalendarDayCell: UICollectionViewCell {
     
-    var eventsCount = 0 {
+    @objc var eventsCount = 0 {
         didSet {
             
             self.dotsView.isHidden = eventsCount == 0
@@ -26,7 +26,7 @@ class CalendarDayCell: UICollectionViewCell {
     
    
     
-    var isToday : Bool = false {
+    @objc var isToday : Bool = false {
         
         didSet {
            
@@ -54,7 +54,7 @@ class CalendarDayCell: UICollectionViewCell {
         }
     }
     
-     lazy var pBackgroundView : UIView = {
+     @objc lazy var pBackgroundView : UIView = {
         
         var vFrame = self.frame.insetBy(dx: 3.0, dy: 3.0)
         
@@ -73,7 +73,7 @@ class CalendarDayCell: UICollectionViewCell {
         return view
     }()
     
-    lazy var textLabel : UILabel = {
+    @objc lazy var textLabel : UILabel = {
        
         let lbl = UILabel()
         lbl.textAlignment = NSTextAlignment.center
@@ -84,7 +84,7 @@ class CalendarDayCell: UICollectionViewCell {
     }()
     
     
-    lazy var dotsView : UIView = {
+    @objc lazy var dotsView : UIView = {
         
         let dv = UIView()
         dv.backgroundColor = borderColor

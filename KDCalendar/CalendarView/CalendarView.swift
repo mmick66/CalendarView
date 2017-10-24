@@ -25,7 +25,7 @@ let DATE_SELECTED_INDEX = 2
     private var title: String
     private var latitude: Double
     private var longitude: Double
-    public init(title: String, latitude: Double, longitude: Double) {
+    @objc public init(title: String, latitude: Double, longitude: Double) {
         self.title = title
         self.latitude = latitude
         self.longitude = longitude
@@ -33,10 +33,10 @@ let DATE_SELECTED_INDEX = 2
 }
 
 @objc class CalendarEvent : NSObject {
-    private(set) var title: String
-    private(set) var startDate: Date
-    private(set) var endDate:Date
-    public init(title: String, startDate: Date, endDate: Date) {
+    @objc private(set) var title: String
+    @objc private(set) var startDate: Date
+    @objc private(set) var endDate:Date
+    @objc public init(title: String, startDate: Date, endDate: Date) {
         self.title = title;
         self.startDate = startDate;
         self.endDate = endDate;
@@ -44,7 +44,7 @@ let DATE_SELECTED_INDEX = 2
 }
 
 extension EKEvent {
-    var isOneDay : Bool {
+    @objc var isOneDay : Bool {
         let components = (Calendar.current as NSCalendar).components([.era, .year, .month, .day], from: self.startDate, to: self.endDate, options: NSCalendar.Options())
         return (components.era == 0 && components.year == 0 && components.month == 0 && components.day == 0)
     }
@@ -68,10 +68,10 @@ extension EKEvent {
 
 class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate {
     
-    var dataSource  : CalendarViewDataSource?
-    var delegate    : CalendarViewDelegate?
+    @objc var dataSource  : CalendarViewDataSource?
+    @objc var delegate    : CalendarViewDelegate?
     
-    lazy var gregorian : Calendar = {
+    @objc lazy var gregorian : Calendar = {
         
         var cal = Calendar(identifier: Calendar.Identifier.gregorian)
         
@@ -80,11 +80,11 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         return cal
     }()
     
-    var calendar : Calendar {
+    @objc var calendar : Calendar {
         return self.gregorian
     }
     
-    var direction : UICollectionViewScrollDirection = .horizontal {
+    @objc var direction : UICollectionViewScrollDirection = .horizontal {
         didSet {
             if let layout = self.calendarView.collectionViewLayout as? CalendarFlowLayout {
                 layout.scrollDirection = direction
@@ -97,12 +97,12 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     fileprivate var endDateCache : Date = Date()
     fileprivate var startOfMonthCache : Date = Date()
     fileprivate var todayIndexPath : IndexPath?
-    var displayDate : Date?
+    @objc var displayDate : Date?
     
-    fileprivate(set) var selectedIndexPaths : [IndexPath] = [IndexPath]()
-    fileprivate(set) var selectedDates : [Date] = [Date]()
+    @objc fileprivate(set) var selectedIndexPaths : [IndexPath] = [IndexPath]()
+    @objc fileprivate(set) var selectedDates : [Date] = [Date]()
     
-    var allowMultipleSelection : Bool = false {
+    @objc var allowMultipleSelection : Bool = false {
     
         didSet{
         
@@ -113,7 +113,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     }
     
     fileprivate var eventsByIndexPath : [IndexPath:[CalendarEvent]] = [IndexPath:[CalendarEvent]]()
-    var events : [EKEvent]? {
+    @objc var events : [EKEvent]? {
         
         didSet {
             
@@ -161,7 +161,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         }
     }
     
-    lazy var headerView : CalendarHeaderView = {
+    @objc lazy var headerView : CalendarHeaderView = {
        
         let hv = CalendarHeaderView(frame:CGRect.zero)
         
@@ -169,7 +169,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         
     }()
     
-    lazy var calendarView : UICollectionView = {
+    @objc lazy var calendarView : UICollectionView = {
      
         let layout = CalendarFlowLayout()
         layout.scrollDirection = self.direction;
@@ -291,7 +291,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         
     }
     
-    var monthInfo : [Int:[Int]] = [Int:[Int]]()
+    @objc var monthInfo : [Int:[Int]] = [Int:[Int]]()
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         
@@ -390,7 +390,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     }
     
     
-    func calculateDateBasedOnScrollViewPosition() -> Date? {
+    @objc func calculateDateBasedOnScrollViewPosition() -> Date? {
         
         let cvbounds = self.calendarView.bounds
         
@@ -465,7 +465,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         
     }
     
-    func selectDate(_ date : Date) {
+    @objc func selectDate(_ date : Date) {
         
         guard let indexPath = self.indexPathForDate(date) else {
             return
@@ -484,7 +484,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         
     }
     
-    func deselectDate(_ date : Date) {
+    @objc func deselectDate(_ date : Date) {
         
         guard let indexPath = self.indexPathForDate(date) else {
             return
@@ -508,7 +508,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         
     }
     
-    func indexPathForDate(_ date : Date) -> IndexPath? {
+    @objc func indexPathForDate(_ date : Date) -> IndexPath? {
      
         let distanceFromStartComponent = (self.gregorian as NSCalendar).components( [.month, .day], from:startOfMonthCache, to: date, options: NSCalendar.Options() )
         
@@ -576,12 +576,12 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     }
     
     
-    func reloadData() {
+    @objc func reloadData() {
         self.calendarView.reloadData()
     }
     
     
-    func setDisplayDate(_ date : Date, animated: Bool) {
+    @objc func setDisplayDate(_ date : Date, animated: Bool) {
         
         if let dispDate = self.displayDate {
             
@@ -613,7 +613,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
 
 extension CalendarView{
 
-    func goToMonthWithOffet(_ offet:Int){
+    @objc func goToMonthWithOffet(_ offet:Int){
         
         if let newDate = (self.displayDate?.applyOffSetOfMonth(calendar: self.calendar, offset: offet)){
             
@@ -623,10 +623,10 @@ extension CalendarView{
     }
     
     
-    func goToNextMonth(){
+    @objc func goToNextMonth(){
         goToMonthWithOffet(1)
     }
-    func goToPreviousMonth(){
+    @objc func goToPreviousMonth(){
         goToMonthWithOffet(-1)
     }
     
