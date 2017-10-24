@@ -318,12 +318,12 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         
         let dayCell = collectionView.dequeueReusableCell(withReuseIdentifier: cellReuseIdentifier, for: indexPath) as! CalendarDayCell
      
-        let currentMonthInfo : [Int] = monthInfo[(indexPath as NSIndexPath).section]! // we are guaranteed an array by the fact that we reached this line (so unwrap)
+        let currentMonthInfo : [Int] = monthInfo[indexPath.section]! // we are guaranteed an array by the fact that we reached this line (so unwrap)
         
         let fdIndex = currentMonthInfo[FIRST_DAY_INDEX]
         let nDays = currentMonthInfo[NUMBER_OF_DAYS_INDEX]
         
-        let fromStartOfMonthIndexPath = IndexPath(item: (indexPath as NSIndexPath).item - fdIndex, section: (indexPath as NSIndexPath).section) // if the first is wednesday, add 2
+        let fromStartOfMonthIndexPath = IndexPath(item: indexPath.item - fdIndex, section: indexPath.section) // if the first is wednesday, add 2
         
         if indexPath.item >= fdIndex && indexPath.item < (fdIndex + nDays) {
             
@@ -338,12 +338,12 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         
         dayCell.isSelected = selectedIndexPaths.contains(indexPath)
         
-        if (indexPath as NSIndexPath).section == 0 && (indexPath as NSIndexPath).item == 0 {
+        if indexPath.section == 0 && indexPath.item == 0 {
             self.scrollViewDidEndDecelerating(collectionView)
         }
         
         if let idx = todayIndexPath {
-            dayCell.isToday = ((idx as NSIndexPath).section == (indexPath as NSIndexPath).section && (idx as NSIndexPath).item + fdIndex == (indexPath as NSIndexPath).item)
+            dayCell.isToday = (idx.section == indexPath.section && idx.item + fdIndex == indexPath.item)
         }
         
         
@@ -407,9 +407,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         var monthsOffsetComponents = DateComponents()
         monthsOffsetComponents.month = page
         
-        guard let yearDate = (self.gregorian as NSCalendar).date(byAdding: monthsOffsetComponents, to: self.startOfMonthCache, options: NSCalendar.Options()) else {
-            return nil
-        }
+        guard let yearDate = self.gregorian.date(byAdding: monthsOffsetComponents, to: self.startOfMonthCache) else { return nil }
         
         let month = (self.gregorian as NSCalendar).component(NSCalendar.Unit.month, from: yearDate) // get month
         
