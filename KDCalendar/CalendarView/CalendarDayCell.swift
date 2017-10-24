@@ -24,9 +24,7 @@ class CalendarDayCell: UICollectionViewCell {
     }
     
     
-   
-    
-    @objc var isToday : Bool = false {
+    var isToday : Bool = false {
         
         didSet {
            
@@ -54,7 +52,7 @@ class CalendarDayCell: UICollectionViewCell {
         }
     }
     
-     @objc lazy var pBackgroundView : UIView = {
+     lazy var pBackgroundView : UIView = {
         
         var vFrame = self.frame.insetBy(dx: 3.0, dy: 3.0)
         
@@ -73,7 +71,7 @@ class CalendarDayCell: UICollectionViewCell {
         return view
     }()
     
-    @objc lazy var textLabel : UILabel = {
+    lazy var textLabel : UILabel = {
        
         let lbl = UILabel()
         lbl.textAlignment = NSTextAlignment.center
@@ -84,7 +82,7 @@ class CalendarDayCell: UICollectionViewCell {
     }()
     
     
-    @objc lazy var dotsView : UIView = {
+    lazy var dotsView : UIView = {
         
         let dv = UIView()
         dv.backgroundColor = borderColor

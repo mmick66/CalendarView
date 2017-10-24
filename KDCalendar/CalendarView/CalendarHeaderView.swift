@@ -10,7 +10,7 @@ import UIKit
 
 class CalendarHeaderView: UIView {
     
-    @objc lazy var monthLabel : UILabel = {
+    lazy var monthLabel : UILabel = {
         
         let lbl = UILabel()
         lbl.textAlignment = NSTextAlignment.center
@@ -22,7 +22,7 @@ class CalendarHeaderView: UIView {
         return lbl
     }()
     
-    @objc lazy var dayLabelContainerView : UIView = {
+    lazy var dayLabelContainerView : UIView = {
         
         let v = UIView()
         
@@ -77,8 +77,6 @@ class CalendarHeaderView: UIView {
             lbl.frame = labelFrame
             labelFrame.origin.x += labelFrame.size.width
         }
-        
-        
         
     }
     
