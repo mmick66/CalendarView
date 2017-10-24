@@ -158,6 +158,10 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
     }
     
+    override var prefersStatusBarHidden: Bool {
+        return true
+    }
+    
 }
 
 
