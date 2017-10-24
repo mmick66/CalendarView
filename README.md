@@ -2,7 +2,7 @@
 
 This is an implementation of a calendar component for iOS written in Swift.
 
-![Calendar Screenshot](http://s15.postimg.org/b2hmailwr/Screen_Shot_2016_04_11_at_15_52_16_2.png)
+![Calendar Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/screenshot.png)
 
 ### Installation
 
