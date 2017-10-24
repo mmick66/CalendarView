@@ -34,30 +34,27 @@ class CalendarFlowLayout: UICollectionViewFlowLayout {
     }
     
     
-    @objc func applyLayoutAttributes(_ attributes : UICollectionViewLayoutAttributes) {
+    func applyLayoutAttributes(_ attributes : UICollectionViewLayoutAttributes) {
         
-        if attributes.representedElementKind != nil {
-            return
+        guard attributes.representedElementKind == nil else { return }
+        
+        guard let collectionView = self.collectionView else { return }
+        
+        let stride = (self.scrollDirection == .horizontal) ? collectionView.frame.size.width : collectionView.frame.size.height
+        
+        let offset = CGFloat((attributes.indexPath as NSIndexPath).section) * stride
+        
+        var xCellOffset : CGFloat = CGFloat((attributes.indexPath as NSIndexPath).item % 7) * self.itemSize.width
+        
+        var yCellOffset : CGFloat = CGFloat((attributes.indexPath as NSIndexPath).item / 7) * self.itemSize.height
+        
+        if(self.scrollDirection == .horizontal) {
+            xCellOffset += offset;
+        } else {
+            yCellOffset += offset
         }
         
-        if let collectionView = self.collectionView {
-            
-            let stride = (self.scrollDirection == .horizontal) ? collectionView.frame.size.width : collectionView.frame.size.height
-            
-            let offset = CGFloat((attributes.indexPath as NSIndexPath).section) * stride
-            
-            var xCellOffset : CGFloat = CGFloat((attributes.indexPath as NSIndexPath).item % 7) * self.itemSize.width
-            
-            var yCellOffset : CGFloat = CGFloat((attributes.indexPath as NSIndexPath).item / 7) * self.itemSize.height
-            
-            if(self.scrollDirection == .horizontal) {
-                xCellOffset += offset;
-            } else {
-                yCellOffset += offset
-            }
-            
-            attributes.frame = CGRect(x: xCellOffset, y: yCellOffset, width: self.itemSize.width, height: self.itemSize.height)
-        }
+        attributes.frame = CGRect(x: xCellOffset, y: yCellOffset, width: self.itemSize.width, height: self.itemSize.height)
         
     }
     

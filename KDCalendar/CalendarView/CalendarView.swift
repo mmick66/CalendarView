@@ -104,9 +104,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     
     @objc var allowMultipleSelection : Bool = false {
     
-        didSet{
-        
-        
+        didSet {
             self.calendarView.allowsMultipleSelection = allowMultipleSelection
         }
     
@@ -191,25 +189,23 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         
     }()
     
-    override var frame: CGRect {
-        didSet {
-            
-           
-            
-        }
-    }
     
     override func layoutSubviews() {
         super.layoutSubviews()
         
-        let heigh = frame.size.height - HEADER_DEFAULT_HEIGHT
-        let width = frame.size.width
+        let heigh = self.frame.size.height - HEADER_DEFAULT_HEIGHT
+        let width = self.frame.size.width
         
-        self.headerView.frame   = CGRect(x:0.0, y:0.0, width: frame.size.width, height:HEADER_DEFAULT_HEIGHT)
+        self.headerView.frame   = CGRect(x:0.0, y:0.0, width: width, height:HEADER_DEFAULT_HEIGHT)
         self.calendarView.frame = CGRect(x:0.0, y:HEADER_DEFAULT_HEIGHT, width: width, height: heigh)
         
-        let layout = self.calendarView.collectionViewLayout as! UICollectionViewFlowLayout
+        guard let layout = self.calendarView.collectionViewLayout as? UICollectionViewFlowLayout else { return }
+
         layout.itemSize = CGSize(width: width / CGFloat(NUMBER_OF_DAYS_IN_WEEK), height: heigh / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
+        
+        print("self.frame: \(self.frame)")
+        
+        self.calendarView.reloadData()
         
     }
     
@@ -302,11 +298,11 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         // offset by the number of months
         monthOffsetComponents.month = section;
         
-        guard let correctMonthForSectionDate = (self.gregorian as NSCalendar).date(byAdding: monthOffsetComponents, to: startOfMonthCache, options: NSCalendar.Options()) else {
-            return 0
-        }
+        guard
+            let correctMonthForSectionDate = self.gregorian.date(byAdding: monthOffsetComponents, to: startOfMonthCache),
+            let rangeOfDaysInMonth:Range<Int> = self.gregorian.range(of: .day, in: .month, for: correctMonthForSectionDate) else { return 0 }
         
-        let numberOfDaysInMonth = (self.gregorian as NSCalendar).range(of: .day, in: .month, for: correctMonthForSectionDate).length
+        let numberOfDaysInMonth = rangeOfDaysInMonth.upperBound
         
         var firstWeekdayOfMonthIndex = (self.gregorian as NSCalendar).component(NSCalendar.Unit.weekday, from: correctMonthForSectionDate)
         firstWeekdayOfMonthIndex = firstWeekdayOfMonthIndex - 1 // firstWeekdayOfMonthIndex should be 0-Indexed
@@ -315,7 +311,6 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         monthInfo[section] = [firstWeekdayOfMonthIndex, numberOfDaysInMonth]
         
         return NUMBER_OF_DAYS_IN_WEEK * MAXIMUM_NUMBER_OF_ROWS // 7 x 6 = 42
-        
         
     }
     
@@ -330,8 +325,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         
         let fromStartOfMonthIndexPath = IndexPath(item: (indexPath as NSIndexPath).item - fdIndex, section: (indexPath as NSIndexPath).section) // if the first is wednesday, add 2
         
-        if (indexPath as NSIndexPath).item >= fdIndex &&
-            (indexPath as NSIndexPath).item < fdIndex + nDays {
+        if indexPath.item >= fdIndex && indexPath.item < (fdIndex + nDays) {
             
             dayCell.textLabel.text = String((fromStartOfMonthIndexPath as NSIndexPath).item + 1)
             dayCell.isHidden = false
@@ -567,9 +561,9 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
         selectedDates.remove(at: index)
         
         
-        if allowMultipleSelection {
+        if self.calendarView.allowsMultipleSelection {
             self.dateBeingSelectedByUser = selectedDates.last
-        }else{
+        } else {
          self.dateBeingSelectedByUser = nil
         
         }
