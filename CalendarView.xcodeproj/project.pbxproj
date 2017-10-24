@@ -20,6 +20,7 @@
 		C7C16A731CBBE536004DC8CF /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C16A6F1CBBE536004DC8CF /* CalendarView.swift */; };
 		C7EF3F461F9F846000C2DF2D /* CalendarView+DataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7EF3F451F9F846000C2DF2D /* CalendarView+DataSource.swift */; };
 		C7EF3F481F9F84ED00C2DF2D /* CalendarView+Delegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7EF3F471F9F84ED00C2DF2D /* CalendarView+Delegate.swift */; };
+		C7EF3F4A1F9F8DF800C2DF2D /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7EF3F491F9F8DF800C2DF2D /* Extensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,6 +51,7 @@
 		C7C16A6F1CBBE536004DC8CF /* CalendarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CalendarView.swift; path = CalendarView/CalendarView.swift; sourceTree = "<group>"; };
 		C7EF3F451F9F846000C2DF2D /* CalendarView+DataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CalendarView+DataSource.swift"; sourceTree = "<group>"; };
 		C7EF3F471F9F84ED00C2DF2D /* CalendarView+Delegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CalendarView+Delegate.swift"; sourceTree = "<group>"; };
+		C7EF3F491F9F8DF800C2DF2D /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -138,6 +140,7 @@
 				C7C16A6E1CBBE536004DC8CF /* CalendarHeaderView.swift */,
 				C7EF3F451F9F846000C2DF2D /* CalendarView+DataSource.swift */,
 				C7EF3F471F9F84ED00C2DF2D /* CalendarView+Delegate.swift */,
+				C7EF3F491F9F8DF800C2DF2D /* Extensions.swift */,
 			);
 			name = CalendarView;
 			sourceTree = "<group>";
@@ -248,6 +251,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BEFD65571ACC072000ADE917 /* ViewController.swift in Sources */,
+				C7EF3F4A1F9F8DF800C2DF2D /* Extensions.swift in Sources */,
 				C7EF3F481F9F84ED00C2DF2D /* CalendarView+Delegate.swift in Sources */,
 				BEFD65551ACC072000ADE917 /* AppDelegate.swift in Sources */,
 				C7EF3F461F9F846000C2DF2D /* CalendarView+DataSource.swift in Sources */,

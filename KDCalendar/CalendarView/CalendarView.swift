@@ -1,10 +1,27 @@
-//
-//  KDCalendarView.swift
-//  KDCalendar
-//
-//  Created by Michael Michailidis on 02/04/2015.
-//  Copyright (c) 2015 Karmadust. All rights reserved.
-//
+/*
+ * CalendarView.swift
+ * Created by Michael Michailidis on 02/04/2015.
+ * http://blog.karmadust.com/
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ */
 
 import UIKit
 import EventKit
@@ -33,16 +50,21 @@ struct CalendarEvent {
     let endDate:Date
 }
 
-extension EKEvent {
-    var isOneDay : Bool {
-        let components = (Calendar.current as NSCalendar).components([.era, .year, .month, .day], from: self.startDate, to: self.endDate, options: NSCalendar.Options())
-        return (components.era == 0 && components.year == 0 && components.month == 0 && components.day == 0)
-    }
-}
+
 
 protocol CalendarViewDataSource {
-    func startDate() -> Date?
-    func endDate() -> Date?
+    func startDate() -> Date
+    func endDate() -> Date
+}
+
+extension CalendarViewDataSource {
+    
+    func startDate() -> Date {
+        return Date()
+    }
+    func endDate() -> Date {
+        return Date()
+    }
 }
 
 protocol CalendarViewDelegate {
@@ -57,7 +79,6 @@ extension CalendarViewDelegate {
     func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool { return true }
     func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void { return }
 }
-
 
 
 class CalendarView: UIView {
@@ -97,7 +118,6 @@ class CalendarView: UIView {
     internal(set) var selectedDates : [Date] = [Date]()
     
     var allowMultipleSelection : Bool = false {
-    
         didSet {
             self.calendarView.allowsMultipleSelection = allowMultipleSelection
         }
@@ -352,18 +372,16 @@ class CalendarView: UIView {
 }
 
 
-
-extension Date {
-    func isBetween(_ date1: Date, and date2: Date) -> Bool {
-        return (min(date1, date2) ... max(date1, date2)).contains(self)
-    }
-}
-
 extension CalendarView {
 
-    func goToMonthWithOffet(_ offet:Int){
+    func goToMonthWithOffet(_ offset: Int){
         
-        if let newDate = (self.displayDate?.applyOffSetOfMonth(calendar: self.calendar, offset: offet)) {
+        guard let displayDate = self.displayDate else { return }
+        
+        var dateComponents = DateComponents()
+        dateComponents.month = offset;
+        
+        if let newDate = self.calendar.date(byAdding: dateComponents, to: displayDate) {
             self.setDisplayDate(newDate, animated: true)
         }
     }

@@ -54,27 +54,26 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
 
     // MARK : KDCalendarDataSource
     
-    func startDate() -> Date? {
+    func startDate() -> Date {
         
         var dateComponents = DateComponents()
         dateComponents.month = -3
         
         let today = Date()
         
-        let threeMonthsAgo = (self.calendarView.calendar as NSCalendar).date(byAdding: dateComponents, to: today, options: NSCalendar.Options())
-        
+        let threeMonthsAgo = self.calendarView.calendar.date(byAdding: dateComponents, to: today)!
         
         return threeMonthsAgo
     }
     
-    func endDate() -> Date? {
+    func endDate() -> Date {
         
         var dateComponents = DateComponents()
       
         dateComponents.year = 2;
         let today = Date()
         
-        let twoYearsFromNow = (self.calendarView.calendar as NSCalendar).date(byAdding: dateComponents, to: today, options: NSCalendar.Options())
+        let twoYearsFromNow = self.calendarView.calendar.date(byAdding: dateComponents, to: today)!
         
         return twoYearsFromNow
   
@@ -99,7 +98,6 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         print("Did Select: \(date) with Events: \(events.count)")
         
         
-        
     }
     
     func calendar(_ calendar: CalendarView, didScrollToMonth date : Date) {
@@ -113,39 +111,34 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
     
     @objc func loadEventsInCalendar() {
         
-        if let  startDate = self.startDate(),
-                let endDate = self.endDate() {
+        let  startDate = self.startDate()
+        let endDate = self.endDate()
+        
+        let store = EKEventStore()
+        
+        let fetchEvents = { () -> Void in
             
-            let store = EKEventStore()
+            let predicate = store.predicateForEvents(withStart: startDate, end:endDate, calendars: nil)
             
-            let fetchEvents = { () -> Void in
+            // if can return nil for no events between these dates
+            if let eventsBetweenDates = store.events(matching: predicate) as [EKEvent]? {
                 
-                let predicate = store.predicateForEvents(withStart: startDate, end:endDate, calendars: nil)
+                self.calendarView.events = eventsBetweenDates
                 
-                // if can return nil for no events between these dates
-                if let eventsBetweenDates = store.events(matching: predicate) as [EKEvent]? {
-                    
-                    self.calendarView.events = eventsBetweenDates
-                    
+            }
+        }
+        
+        
+        if EKEventStore.authorizationStatus(for: .event) != .authorized {
+            
+            store.requestAccess(to: EKEntityType.event, completion: {(granted, error ) -> Void in
+                if granted {
+                    fetchEvents()
                 }
-                
-            }
-            
-            // let q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0)
-            
-            if EKEventStore.authorizationStatus(for: EKEntityType.event) != EKAuthorizationStatus.authorized {
-                
-                store.requestAccess(to: EKEntityType.event, completion: {(granted, error ) -> Void in
-                    if granted {
-                        fetchEvents()
-                    }
-                })
-                
-            }
-            else {
-                fetchEvents()
-            }
-            
+            })
+        }
+        else {
+            fetchEvents()
         }
         
     }
@@ -154,15 +147,10 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
     // MARK : Events
     
     @IBAction func onValueChange(_ picker : UIDatePicker) {
-        
         self.calendarView.setDisplayDate(picker.date, animated: true)
-    
-        
     }
     
     @IBAction func goToPreviousMonth(_ sender: Any) {
-        
-        
         self.calendarView.goToPreviousMonth()
     }
     @IBAction func goToNextMonth(_ sender: Any) {
@@ -170,26 +158,9 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
     }
     
-   
-    
-    
-    
 }
 
 
-extension Date {
-
-    func applyOffSetOfMonth(calendar: Calendar, offset:Int) -> Date? {
-        
-        var dateComponents = DateComponents()
-        
-        dateComponents.month = offset;
-        
-        return(calendar as NSCalendar).date(byAdding: dateComponents, to: self, options: NSCalendar.Options())
-        
-    }
-
-}
 
 
 
