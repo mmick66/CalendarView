@@ -21,26 +21,16 @@ let FIRST_DAY_INDEX = 0
 let NUMBER_OF_DAYS_INDEX = 1
 let DATE_SELECTED_INDEX = 2
 
-class EventLocation: NSObject {
-    private var title: String
-    private var latitude: Double
-    private var longitude: Double
-    init(title: String, latitude: Double, longitude: Double) {
-        self.title = title
-        self.latitude = latitude
-        self.longitude = longitude
-    }
+struct EventLocation {
+    let title: String
+    let latitude: Double
+    let longitude: Double
 }
 
-class CalendarEvent : NSObject {
-    private(set) var title: String
-    private(set) var startDate: Date
-    private(set) var endDate:Date
-    init(title: String, startDate: Date, endDate: Date) {
-        self.title = title;
-        self.startDate = startDate;
-        self.endDate = endDate;
-    }
+struct CalendarEvent {
+    let title: String
+    let startDate: Date
+    let endDate:Date
 }
 
 extension EKEvent {
@@ -50,17 +40,22 @@ extension EKEvent {
     }
 }
 
-@objc protocol CalendarViewDataSource {
+protocol CalendarViewDataSource {
     func startDate() -> Date?
     func endDate() -> Date?
 }
 
-@objc protocol CalendarViewDelegate {
+protocol CalendarViewDelegate {
     
-    @objc optional func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool
+    /* optional */ func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool
     func calendar(_ calendar : CalendarView, didScrollToMonth date : Date) -> Void
     func calendar(_ calendar : CalendarView, didSelectDate date : Date, withEvents events: [CalendarEvent]) -> Void
-    @objc optional func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void
+    /* optional */ func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void
+}
+
+extension CalendarViewDelegate {
+    func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool { return true }
+    func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void { return }
 }
 
 
@@ -431,12 +426,8 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             
             dateBeingSelectedByUser = dateUserSelected
             
-            // Optional protocol method (the delegate can "object")
-            if let canSelectFromDelegate = delegate?.calendar?(self, canSelectDate: dateUserSelected) {
-                return canSelectFromDelegate
-            }
-            
-            return true // it can select any date by default
+            if let delegate = self.delegate { return delegate.calendar(self, canSelectDate: dateUserSelected) }
+            else { return true }
             
         }
         
@@ -465,25 +456,16 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
     
     func deselectDate(_ date : Date) {
         
-        guard let indexPath = self.indexPathForDate(date) else {
-            return
-        }
+        guard let indexPath = self.indexPathForDate(date) else { return }
         
-        guard self.calendarView.indexPathsForSelectedItems?.contains(indexPath) == true else {
-            return
-        }
-        
+        guard self.calendarView.indexPathsForSelectedItems?.contains(indexPath) == true else { return }
         
         self.calendarView.deselectItem(at: indexPath, animated: false)
         
-        guard let index = selectedIndexPaths.index(of: indexPath) else {
-            return
-        }
-        
+        guard let index = selectedIndexPaths.index(of: indexPath) else { return }
         
         selectedIndexPaths.remove(at: index)
         selectedDates.remove(at: index)
-        
         
     }
     
@@ -537,7 +519,7 @@ class CalendarView: UIView, UICollectionViewDataSource, UICollectionViewDelegate
             return
         }
         
-        delegate?.calendar?(self, didDeselectDate: dateBeingSelectedByUser)
+        delegate?.calendar(self, didDeselectDate: dateBeingSelectedByUser)
         
         selectedIndexPaths.remove(at: index)
         selectedDates.remove(at: index)
