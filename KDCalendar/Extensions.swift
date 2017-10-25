@@ -28,36 +28,32 @@ import EventKit
 
 
 extension Date {
-    func isBetween(_ date1: Date, and date2: Date) -> Bool {
-        return (min(date1, date2) ... max(date1, date2)).contains(self)
+    static func ==(lhs:Date, rhs:Date) -> Bool {
+        return lhs.compare(rhs) == .orderedSame
+    }
+    
+    static func <(lhs:Date, rhs:Date) -> Bool {
+        return lhs.compare(rhs) == .orderedAscending
+    }
+    
+    static func >(lhs:Date, rhs:Date) -> Bool {
+        return lhs.compare(rhs) == .orderedDescending
+    }
+    
+    static func <=(lhs:Date, rhs:Date) -> Bool {
+        return lhs < rhs || lhs == rhs
+    }
+    
+    static func >=(lhs:Date, rhs:Date) -> Bool {
+        return lhs > rhs || lhs == rhs
+    }
+    
+    static func !=(lhs:Date, rhs:Date) -> Bool {
+        return lhs.compare(rhs) != .orderedSame
     }
 }
 
-func ==(lhs:Date, rhs:Date) -> Bool {
-    return lhs.compare(rhs) == .orderedSame
-}
 
-func <(lhs:Date, rhs:Date) -> Bool {
-    return lhs.compare(rhs) == .orderedAscending
-}
-
-func >(lhs:Date, rhs:Date) -> Bool {
-    return lhs.compare(rhs) == .orderedDescending
-}
-
-func <=(lhs:Date, rhs:Date) -> Bool {
-    let result = lhs.compare(rhs)
-    return result == .orderedAscending || result == .orderedSame
-}
-
-func >=(lhs:Date, rhs:Date) -> Bool {
-    let result = lhs.compare(rhs)
-    return result == .orderedDescending || result == .orderedSame
-}
-
-func !=(lhs:Date, rhs:Date) -> Bool {
-    return lhs.compare(rhs) != .orderedSame
-}
 
 extension EKEvent {
     var isOneDay : Bool {

@@ -309,23 +309,15 @@ class CalendarView: UIView {
     
     func setDisplayDate(_ date : Date, animated: Bool) {
         
-        if let displayDate = self.displayDate {
-            
-            guard date != displayDate else { return }
-            
-            // check if the date is within range
-            guard date.isBetween(startDateCache, and: endDateCache) else { return }
-            
-            guard date.compare(startDateCache) != .orderedAscending && date.compare(endDateCache) != .orderedDescending else { return }
-            
-            let difference = (self.gregorian as NSCalendar).components([NSCalendar.Unit.month], from: startOfMonthCache, to: date, options: NSCalendar.Options())
-            
-            let distance : CGFloat = CGFloat(difference.month!) * self.calendarView.frame.size.width
-            
-            self.calendarView.setContentOffset(CGPoint(x: distance, y: 0.0), animated: animated)
-            
-            self.dateFromScrollViewPosition()
-        }
+        guard (date > startDateCache) && (date < endDateCache) else { return }
+        
+        let difference = self.gregorian.dateComponents([.month], from: startOfMonthCache, to: date)
+        
+        let distance : CGFloat = CGFloat(difference.month!) * self.calendarView.frame.size.width
+        
+        self.calendarView.setContentOffset(CGPoint(x: distance, y: 0.0), animated: animated)
+        
+        self.dateFromScrollViewPosition()
         
     }
 
