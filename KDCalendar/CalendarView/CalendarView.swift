@@ -255,13 +255,9 @@ class CalendarView: UIView {
 
     func selectDate(_ date : Date) {
         
-        guard let indexPath = self.indexPathForDate(date) else {
-            return
-        }
+        guard let indexPath = self.indexPathForDate(date) else { return }
         
-        guard self.collectionView.indexPathsForSelectedItems?.contains(indexPath) == false else {
-            return
-        }
+        guard selectedIndexPaths.contains(indexPath) == false else { return }
         
         self.collectionView.selectItem(at: indexPath, animated: false, scrollPosition: UICollectionViewScrollPosition())
         
