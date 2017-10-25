@@ -11,11 +11,11 @@ The files needed to be included are in the CalendarView subfolder.
 The calendar is a UIView subview and can be added either programmatically or via a XIB/Storyboard. It needs a delegate and data source that comply with:
 
 ```Swift
-@objc protocol CalendarViewDataSource {
-    func startDate() -> NSDate? // UTC Date
-    func endDate() -> NSDate?   // UTC Date
+protocol CalendarViewDataSource {
+    func startDate() -> NSDate // UTC Date
+    func endDate() -> NSDate   // UTC Date
 }
-@objc protocol CalendarViewDelegate {
+protocol CalendarViewDelegate {
     optional func calendar(calendar : CalendarView, canSelectDate date : NSDate) -> Bool
     func calendar(calendar : CalendarView, didScrollToMonth date : NSDate) -> Void
     func calendar(calendar : CalendarView, didSelectDate date : NSDate, withEvents events: [EKEvent]) -> Void
@@ -32,14 +32,14 @@ You would want to implement the delegate functions inside your view controller a
 Say you want to be able to scroll 3 months in the past, then:
 
 ```Swift
-func startDate() -> Date? {
+func startDate() -> Date {
 
     var dateComponents = DateComponents()
     dateComponents.month = -3
 
     let today = Date()
 
-    let threeMonthsAgo = (self.calendarView.calendar as NSCalendar).date(byAdding: dateComponents, to: today, options: NSCalendar.Options())
+    let threeMonthsAgo = self.calendarView.calendar.date(byAdding: dateComponents, to: today)
 
     return threeMonthsAgo
 }
@@ -64,7 +64,7 @@ Say you want tomorrow to be selected for some reason:
 ```Swift
 // can be in the viewDidAppear
 let today = Date()
-if let tomorrow = (self.calendarView.calendar as NSCalendar).date(byAdding: tomorrowComponents, to: today, options: NSCalendar.Options()) {
+if let tomorrow = self.calendarView.calendar.date(byAdding: tomorrowComponents, to: today) {
   self.calendarView.selectDate(tomorrow)
 }
 ```
