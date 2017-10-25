@@ -317,7 +317,7 @@ class CalendarView: UIView {
         
         self.calendarView.setContentOffset(CGPoint(x: distance, y: 0.0), animated: animated)
         
-        self.dateFromScrollViewPosition()
+        self.displayDateOnHeader(date)
         
     }
 

@@ -97,17 +97,17 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         
-        if  let date = self.dateFromScrollViewPosition(),
-            let delegate = self.delegate {
-            
-            delegate.calendar(self, didScrollToMonth: date)
-            self.displayDate = date
-        }
+        self.updateAndNotifyScrolling()
         
     }
     
     func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
   
+        self.updateAndNotifyScrolling()
+    }
+    
+    func updateAndNotifyScrolling() {
+        
         guard let date = self.dateFromScrollViewPosition() else { return }
         
         self.displayDateOnHeader(date)
