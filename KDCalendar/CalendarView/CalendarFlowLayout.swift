@@ -57,22 +57,23 @@ class CalendarFlowLayout: UICollectionViewFlowLayout {
         
         guard let collectionView = self.collectionView else { return }
         
-        let stride = (self.scrollDirection == .horizontal) ? collectionView.frame.size.width : collectionView.frame.size.height
+        var xCellOffset = CGFloat(attributes.indexPath.item % 7) * self.itemSize.width
+        var yCellOffset = CGFloat(attributes.indexPath.item / 7) * self.itemSize.height
         
-        let offset = CGFloat((attributes.indexPath as NSIndexPath).section) * stride
+        let offset = CGFloat(attributes.indexPath.section)
         
-        var xCellOffset : CGFloat = CGFloat((attributes.indexPath as NSIndexPath).item % 7) * self.itemSize.width
-        
-        var yCellOffset : CGFloat = CGFloat((attributes.indexPath as NSIndexPath).item / 7) * self.itemSize.height
-        
-        if(self.scrollDirection == .horizontal) {
-            xCellOffset += offset;
-        } else {
-            yCellOffset += offset
+        switch self.scrollDirection {
+        case .horizontal:   xCellOffset += offset * collectionView.frame.size.width
+        case .vertical:     yCellOffset += offset * collectionView.frame.size.height
         }
         
-        
-        attributes.frame = CGRect(x: xCellOffset, y: yCellOffset, width: self.itemSize.width, height: self.itemSize.height)
+        // set frame
+        attributes.frame = CGRect(
+            x: xCellOffset,
+            y: yCellOffset,
+            width: self.itemSize.width,
+            height: self.itemSize.height
+        )
         
     }
     

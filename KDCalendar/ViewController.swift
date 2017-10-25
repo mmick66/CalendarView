@@ -24,7 +24,7 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         calendarView.delegate = self
         
         // change the code to get a vertical calender.
-        calendarView.direction = .horizontal
+        calendarView.direction = .vertical
         
     }
     
@@ -40,10 +40,8 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         let today = Date()
         
         
-        if let tomorrow = (self.calendarView.calendar as NSCalendar).date(byAdding: tomorrowComponents, to: today, options: NSCalendar.Options()) {
+        if let tomorrow = self.calendarView.calendar.date(byAdding: tomorrowComponents, to: today) {
             self.calendarView.selectDate(tomorrow)
-            //self.calendarView.deselectDate(date)
-            
         }
         
         self.calendarView.setDisplayDate(today, animated: false)
@@ -78,14 +76,6 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         return twoYearsFromNow
   
     }
-    
-    override func viewDidLayoutSubviews() {
-        
-        super.viewDidLayoutSubviews()
-        
-        
-    }
-    
     
     
     // MARK : KDCalendarDelegate

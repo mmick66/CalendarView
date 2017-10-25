@@ -311,11 +311,15 @@ class CalendarView: UIView {
         
         guard (date > startDateCache) && (date < endDateCache) else { return }
         
-        let difference = self.gregorian.dateComponents([.month], from: startOfMonthCache, to: date)
+        guard let monthsDistance = self.gregorian.dateComponents([.month], from: startOfMonthCache, to: date).month else { return }
         
-        let distance : CGFloat = CGFloat(difference.month!) * self.calendarView.frame.size.width
+        var scrollPoint = CGPoint.zero
+        switch self.direction {
+        case .horizontal:   scrollPoint.x = CGFloat(monthsDistance) * self.calendarView.frame.size.width
+        case .vertical:     scrollPoint.y = CGFloat(monthsDistance) * self.calendarView.frame.size.height
+        }
         
-        self.calendarView.setContentOffset(CGPoint(x: distance, y: 0.0), animated: animated)
+        self.calendarView.setContentOffset(scrollPoint, animated: animated)
         
         self.displayDateOnHeader(date)
         
