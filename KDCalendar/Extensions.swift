@@ -33,9 +33,46 @@ extension Date {
     }
 }
 
+func ==(lhs:Date, rhs:Date) -> Bool {
+    return lhs.compare(rhs) == .orderedSame
+}
+
+func <(lhs:Date, rhs:Date) -> Bool {
+    return lhs.compare(rhs) == .orderedAscending
+}
+
+func >(lhs:Date, rhs:Date) -> Bool {
+    return lhs.compare(rhs) == .orderedDescending
+}
+
+func <=(lhs:Date, rhs:Date) -> Bool {
+    let result = lhs.compare(rhs)
+    return result == .orderedAscending || result == .orderedSame
+}
+
+func >=(lhs:Date, rhs:Date) -> Bool {
+    let result = lhs.compare(rhs)
+    return result == .orderedDescending || result == .orderedSame
+}
+
+func !=(lhs:Date, rhs:Date) -> Bool {
+    return lhs.compare(rhs) != .orderedSame
+}
+
 extension EKEvent {
     var isOneDay : Bool {
         let components = Calendar.current.dateComponents([.era, .year, .month, .day], from: self.startDate, to: self.endDate)
         return (components.era == 0 && components.year == 0 && components.month == 0 && components.day == 0)
     }
+}
+
+extension String {
+    
+    subscript(_ range: CountableRange<Int>) -> String {
+        let start = self.index(self.startIndex, offsetBy: range.lowerBound)
+        let end = self.index(self.startIndex, offsetBy: range.upperBound)
+        let subString = self[start..<end]
+        return String(subString)
+    }
+    
 }

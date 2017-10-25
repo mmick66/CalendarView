@@ -43,17 +43,15 @@ class CalendarHeaderView: UIView {
         
         let v = UIView()
         
-        let formatter : DateFormatter = DateFormatter()
+        let formatter = DateFormatter()
         
         for index in 1...7 {
-            
-            let day : NSString = formatter.weekdaySymbols[index % 7] as NSString
             
             let weekdayLabel = UILabel()
             
             weekdayLabel.font = UIFont(name: "Helvetica", size: 14.0)
             
-            weekdayLabel.text = day.substring(to: 2).uppercased()
+            weekdayLabel.text = formatter.shortWeekdaySymbols[(index % 7)]
             weekdayLabel.textColor = UIColor.gray
             weekdayLabel.textAlignment = NSTextAlignment.center
             

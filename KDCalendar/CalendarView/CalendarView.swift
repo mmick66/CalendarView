@@ -246,45 +246,9 @@ class CalendarView: UIView {
     
     
     var monthInfo = [Int:(firstDay:Int, daysTotal:Int)]()
+    var cellCallsPerMonth = [String:Int]() // REMOVE
     
-    @discardableResult
-    func calculateDateBasedOnScrollViewPosition() -> Date? {
-        
-        let cvbounds = self.calendarView.bounds
-        
-        var page : Int = 0
-        
-        switch self.direction {
-            
-        case .horizontal:
-            page = Int(floor(self.calendarView.contentOffset.x / cvbounds.size.width))
-            break
-            
-        case .vertical:
-            page = Int(floor(self.calendarView.contentOffset.y / cvbounds.size.height))
-            break
-        }
-        page = page > 0 ? page : 0
-        
-        var monthsOffsetComponents = DateComponents()
-        monthsOffsetComponents.month = page
-        
-        guard let yearDate = self.gregorian.date(byAdding: monthsOffsetComponents, to: self.startOfMonthCache) else { return nil }
-        
-        let month = self.gregorian.component(.month, from: yearDate) // get month
-        
-        let monthName = DateFormatter().monthSymbols[(month-1) % 12] // 0 indexed array
-        
-        let year = self.gregorian.component(.year, from: yearDate)
-        
-        
-        self.headerView.monthLabel.text = monthName + " " + String(year)
-        
-        self.displayDate = yearDate
-        
-        return yearDate;
-        
-    }
+
     
     
     // MARK: UICollectionViewDelegate
@@ -345,10 +309,9 @@ class CalendarView: UIView {
     
     func setDisplayDate(_ date : Date, animated: Bool) {
         
-        if let dispDate = self.displayDate {
+        if let displayDate = self.displayDate {
             
-            // skip is we are trying to set the same date
-            if  date.compare(dispDate) == ComparisonResult.orderedSame { return }
+            guard date != displayDate else { return }
             
             // check if the date is within range
             guard date.isBetween(startDateCache, and: endDateCache) else { return }
@@ -361,7 +324,7 @@ class CalendarView: UIView {
             
             self.calendarView.setContentOffset(CGPoint(x: distance, y: 0.0), animated: animated)
             
-            self.calculateDateBasedOnScrollViewPosition()
+            self.dateFromScrollViewPosition()
         }
         
     }

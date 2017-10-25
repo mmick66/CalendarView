@@ -93,6 +93,12 @@ extension CalendarView: UICollectionViewDataSource {
         
         let dayCell = collectionView.dequeueReusableCell(withReuseIdentifier: cellReuseIdentifier, for: indexPath) as! CalendarDayCell
         
+        let ms = DateFormatter().shortMonthSymbols[(indexPath.section % 12)]
+        if self.cellCallsPerMonth[ms] == nil {
+            self.cellCallsPerMonth[ms] = 0
+        }
+        self.cellCallsPerMonth[ms]! += 1
+        
         guard let (firstDayIndex, numberOfDaysTotal) = self.monthInfo[indexPath.section] else { return dayCell }
         
         let fromStartOfMonthIndexPath = IndexPath(item: indexPath.item - firstDayIndex, section: indexPath.section) // if the first is wednesday, add 2

@@ -90,16 +90,14 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         }
    
         return true // default
-        
     }
     
     
     // MARK: UIScrollViewDelegate
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        let yearDate = self.calculateDateBasedOnScrollViewPosition()
         
-        if  let date = yearDate,
+        if  let date = self.dateFromScrollViewPosition(),
             let delegate = self.delegate {
             
             delegate.calendar(self, didScrollToMonth: date)
@@ -109,11 +107,46 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
     }
     
     func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-        let yearDate = self.calculateDateBasedOnScrollViewPosition()
+  
+        guard let date = self.dateFromScrollViewPosition() else { return }
         
-        if let date = yearDate,
-            let delegate = self.delegate {
-            delegate.calendar(self, didScrollToMonth: date)
+        self.displayDateOnHeader(date)
+        self.delegate?.calendar(self, didScrollToMonth: date)
+        
+        print(self.cellCallsPerMonth)
+        self.cellCallsPerMonth.removeAll()
+    }
+
+    @discardableResult
+    func dateFromScrollViewPosition() -> Date? {
+        
+        var page: Int = 0
+        
+        switch self.direction {
+        case .horizontal:   page = Int(floor(self.calendarView.contentOffset.x / self.calendarView.bounds.size.width))
+        case .vertical:     page = Int(floor(self.calendarView.contentOffset.y / self.calendarView.bounds.size.height))
         }
+        
+        page = page > 0 ? page : 0
+        
+        var monthsOffsetComponents = DateComponents()
+        monthsOffsetComponents.month = page
+        
+        return self.gregorian.date(byAdding: monthsOffsetComponents, to: self.startOfMonthCache);
+        
+    }
+    
+    func displayDateOnHeader(_ date: Date) {
+        
+        let month = self.gregorian.component(.month, from: date) // get month
+        
+        let monthName = DateFormatter().monthSymbols[(month-1) % 12] // 0 indexed array
+        
+        let year = self.gregorian.component(.year, from: date)
+        
+        
+        self.headerView.monthLabel.text = monthName + " " + String(year)
+        
+        self.displayDate = date
     }
 }
