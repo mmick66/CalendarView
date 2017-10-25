@@ -40,7 +40,7 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         calendarView.dataSource = self
         calendarView.delegate = self
         
-        calendarView.direction = .vertical
+        calendarView.direction = .horizontal
         
     }
     

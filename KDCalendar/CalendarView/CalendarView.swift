@@ -176,6 +176,7 @@ class CalendarView: UIView {
         self.createSubviews()
     }
     
+    // MARK: Create Subviews
     var collectionView: UICollectionView!
     private func createSubviews() {
         
@@ -236,8 +237,8 @@ class CalendarView: UIView {
     
     private func cellSize(in bounds: CGRect) -> CGSize {
         return CGSize(
-            width:  round(frame.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK)),
-            height: round((frame.size.height - HEADER_DEFAULT_HEIGHT) / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
+            width:   frame.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK),
+            height: (frame.size.height - HEADER_DEFAULT_HEIGHT) / CGFloat(MAXIMUM_NUMBER_OF_ROWS)
         )
     }
     
