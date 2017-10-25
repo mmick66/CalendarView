@@ -48,10 +48,10 @@ class CalendarDayCell: UICollectionViewCell {
         
         didSet {
             if isToday == true {
-                self.pBackgroundView.backgroundColor = cellColorToday
+                self.bgView.backgroundColor = cellColorToday
             }
             else {
-                self.pBackgroundView.backgroundColor = cellColorDefault
+                self.bgView.backgroundColor = cellColorDefault
             }
         }
     }
@@ -60,21 +60,21 @@ class CalendarDayCell: UICollectionViewCell {
         
         didSet {
             if isSelected == true {
-                self.pBackgroundView.layer.borderColor = borderColor.cgColor
-                self.pBackgroundView.layer.borderWidth = 2.0
+                self.bgView.layer.borderColor = borderColor.cgColor
+                self.bgView.layer.borderWidth = 2.0
             }
             else {
-                self.pBackgroundView.layer.borderColor = UIColor.clear.cgColor
-                self.pBackgroundView.layer.borderWidth = 0.0
+                self.bgView.layer.borderColor = UIColor.clear.cgColor
+                self.bgView.layer.borderWidth = 0.0
             }
             
         }
     }
     
 
-    let textLabel       = UILabel()
-    let dotsView        = UIView()
-    let pBackgroundView = UIView()
+    let textLabel   = UILabel()
+    let dotsView    = UIView()
+    let bgView      = UIView()
     
     override init(frame: CGRect) {
         
@@ -83,11 +83,11 @@ class CalendarDayCell: UICollectionViewCell {
         
         self.dotsView.backgroundColor = borderColor
         
-        self.pBackgroundView.layer.cornerRadius = 4.0
+        self.bgView.layer.cornerRadius = 4.0
         
         super.init(frame: frame)
         
-        self.addSubview(self.pBackgroundView)
+        self.addSubview(self.bgView)
         self.addSubview(self.textLabel)
         
         self.addSubview(self.dotsView)
@@ -111,7 +111,7 @@ class CalendarDayCell: UICollectionViewCell {
 
         let elementsFrame = self.bounds.insetBy(dx: 3.0, dy: 3.0)
         self.textLabel.frame = elementsFrame
-        self.pBackgroundView.frame = elementsFrame
+        self.bgView.frame = elementsFrame
         
     }
     

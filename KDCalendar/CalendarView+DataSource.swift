@@ -69,23 +69,28 @@ extension CalendarView: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         
         var monthOffsetComponents = DateComponents()
-        
-        // offset by the number of months
         monthOffsetComponents.month = section;
         
         guard
             let correctMonthForSectionDate = self.gregorian.date(byAdding: monthOffsetComponents, to: startOfMonthCache),
             let rangeOfDaysInMonth:Range<Int> = self.gregorian.range(of: .day, in: .month, for: correctMonthForSectionDate) else { return 0 }
         
-        let numberOfDaysInMonth = rangeOfDaysInMonth.upperBound
+        // the format of the range returned is (1..<32) so subtract the lower to get the absolute
+        let numberOfDaysInMonth = rangeOfDaysInMonth.upperBound - rangeOfDaysInMonth.lowerBound
+        
+        
         
         var firstWeekdayOfMonthIndex = self.gregorian.component(.weekday, from: correctMonthForSectionDate)
         firstWeekdayOfMonthIndex = firstWeekdayOfMonthIndex - 1 // firstWeekdayOfMonthIndex should be 0-Indexed
-        firstWeekdayOfMonthIndex = (firstWeekdayOfMonthIndex + 6) % 7 // push it modularly so that we take it back one day so that the first day is Monday instead of Sunday which is the default
+        firstWeekdayOfMonthIndex = (firstWeekdayOfMonthIndex + 6) % 7 // push it modularly to take it back one day where the first day is Monday instead of Sunday
         
-        monthInfo[section] = [firstWeekdayOfMonthIndex, numberOfDaysInMonth]
+        self.monthInfo[section] = (firstDay: firstWeekdayOfMonthIndex, daysTotal: numberOfDaysInMonth)
         
         return NUMBER_OF_DAYS_IN_WEEK * MAXIMUM_NUMBER_OF_ROWS // 7 x 6 = 42
+        
+    }
+    
+    private func calculateMonths() {
         
     }
     
@@ -93,7 +98,39 @@ extension CalendarView: UICollectionViewDataSource {
         
         let dayCell = collectionView.dequeueReusableCell(withReuseIdentifier: cellReuseIdentifier, for: indexPath) as! CalendarDayCell
         
-        print(dayCell)
+        guard let (firstDayIndex, numberOfDaysTotal) = self.monthInfo[indexPath.section] else { return dayCell }
+        
+        let fromStartOfMonthIndexPath = IndexPath(item: indexPath.item - firstDayIndex, section: indexPath.section) // if the first is wednesday, add 2
+        
+        if indexPath.item >= firstDayIndex && indexPath.item < (firstDayIndex + numberOfDaysTotal) {
+            
+            dayCell.textLabel.text = String(fromStartOfMonthIndexPath.item + 1)
+            dayCell.isHidden = false
+            
+        }
+        else {
+            dayCell.textLabel.text = ""
+            dayCell.isHidden = true
+        }
+        
+        dayCell.isSelected = selectedIndexPaths.contains(indexPath)
+        
+        if indexPath.section == 0 && indexPath.item == 0 {
+            self.scrollViewDidEndDecelerating(collectionView)
+        }
+        
+        if let idx = todayIndexPath {
+            dayCell.isToday = (idx.section == indexPath.section && idx.item + firstDayIndex == indexPath.item)
+        }
+        
+        
+        if let eventsForDay = self.eventsByIndexPath[fromStartOfMonthIndexPath] {
+            
+            dayCell.eventsCount = eventsForDay.count
+            
+        } else {
+            dayCell.eventsCount = 0
+        }
         
         return dayCell
     }

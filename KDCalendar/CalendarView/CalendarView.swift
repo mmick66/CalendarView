@@ -33,9 +33,6 @@ let MAXIMUM_NUMBER_OF_ROWS = 6
 
 let HEADER_DEFAULT_HEIGHT : CGFloat = 80.0
 
-
-let FIRST_DAY_INDEX = 0
-let NUMBER_OF_DAYS_INDEX = 1
 let DATE_SELECTED_INDEX = 2
 
 struct EventLocation {
@@ -248,7 +245,7 @@ class CalendarView: UIView {
     }
     
     
-    var monthInfo : [Int:[Int]] = [Int:[Int]]()
+    var monthInfo = [Int:(firstDay:Int, daysTotal:Int)]()
     
     @discardableResult
     func calculateDateBasedOnScrollViewPosition() -> Date? {
@@ -332,9 +329,9 @@ class CalendarView: UIView {
         
         guard
             let month = distanceFromStartComponent.month,
-            let currentMonthInfo = monthInfo[month] else { return nil }
+            let (firstDayIndex, _) = monthInfo[month] else { return nil }
         
-        let item        = distanceFromStartComponent.day! + currentMonthInfo[FIRST_DAY_INDEX]
+        let item        = distanceFromStartComponent.day! + firstDayIndex
         let indexPath   = IndexPath(item: item, section: month)
         
         return indexPath
