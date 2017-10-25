@@ -65,7 +65,7 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         selectedDates.remove(at: index)
         
         
-        if self.calendarView.allowsMultipleSelection {
+        if self.collectionView.allowsMultipleSelection {
             self.dateBeingSelectedByUser = selectedDates.last
         } else {
             self.dateBeingSelectedByUser = nil
@@ -123,8 +123,8 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         var page: Int = 0
         
         switch self.direction {
-        case .horizontal:   page = Int(floor(self.calendarView.contentOffset.x / self.calendarView.bounds.size.width))
-        case .vertical:     page = Int(floor(self.calendarView.contentOffset.y / self.calendarView.bounds.size.height))
+        case .horizontal:   page = Int(floor(self.collectionView.contentOffset.x / self.collectionView.bounds.size.width))
+        case .vertical:     page = Int(floor(self.collectionView.contentOffset.y / self.collectionView.bounds.size.height))
         }
         
         page = page > 0 ? page : 0

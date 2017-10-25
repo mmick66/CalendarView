@@ -84,11 +84,8 @@ class CalendarView: UIView {
     var delegate    : CalendarViewDelegate?
     
     lazy var gregorian : Calendar = {
-        
-        var cal = Calendar(identifier: Calendar.Identifier.gregorian)
-        
+        var cal = Calendar(identifier: .gregorian)
         cal.timeZone = TimeZone(abbreviation: "UTC")!
-        
         return cal
     }()
     
@@ -98,10 +95,8 @@ class CalendarView: UIView {
     
     var direction : UICollectionViewScrollDirection = .horizontal {
         didSet {
-            if let layout = self.calendarView.collectionViewLayout as? CalendarFlowLayout {
-                layout.scrollDirection = direction
-                self.calendarView.reloadData()
-            }
+            flowLayout.scrollDirection = direction
+            self.collectionView.reloadData()
         }
     }
     
@@ -116,7 +111,7 @@ class CalendarView: UIView {
     
     var allowMultipleSelection : Bool = false {
         didSet {
-            self.calendarView.allowsMultipleSelection = allowMultipleSelection
+            self.collectionView.allowsMultipleSelection = allowMultipleSelection
         }
     
     }
@@ -160,67 +155,18 @@ class CalendarView: UIView {
                 }
             }
             
-            DispatchQueue.main.async { self.calendarView.reloadData() }
+            DispatchQueue.main.async { self.collectionView.reloadData() }
         }
     }
     
-    lazy var headerView : CalendarHeaderView = {
-       
-        let hv = CalendarHeaderView(frame:CGRect.zero)
-        
-        return hv
-        
-    }()
+    var headerView = CalendarHeaderView(frame:CGRect.zero)
     
-    lazy var calendarView : UICollectionView = {
-     
-        let layout = CalendarFlowLayout()
-        layout.scrollDirection = self.direction;
-        layout.minimumInteritemSpacing = 0
-        layout.minimumLineSpacing = 0
-        
-        let cv = UICollectionView(frame: CGRect.zero, collectionViewLayout: layout)
-        cv.dataSource       = self
-        cv.delegate         = self
-        cv.isPagingEnabled  = true
-        cv.backgroundColor  = UIColor.clear
-        cv.showsHorizontalScrollIndicator = false
-        cv.showsVerticalScrollIndicator = false
-        cv.allowsMultipleSelection = true
-        
-        return cv
-        
-    }()
-    
-    var flowLayout: CalendarFlowLayout {
-        return self.calendarView.collectionViewLayout as! CalendarFlowLayout
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        
-        let heigh = self.frame.size.height - HEADER_DEFAULT_HEIGHT
-        let width = self.frame.size.width
-        
-        self.headerView.frame   = CGRect(x:0.0, y:0.0, width: width, height:HEADER_DEFAULT_HEIGHT)
-        self.calendarView.frame = CGRect(x:0.0, y:HEADER_DEFAULT_HEIGHT, width: width, height: heigh)
-        
-        flowLayout.itemSize = CGSize(
-            width:  round(width / CGFloat(NUMBER_OF_DAYS_IN_WEEK)),
-            height: round(heigh / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
-        )
-        
-        flowLayout.invalidateLayout()
-        
-        self.reloadData()
-        
-    }
     
     override init(frame: CGRect) {
-        super.init(frame :frame)
+        super.init(frame: frame)
         self.createSubviews()
     }
-
+    
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
@@ -230,18 +176,64 @@ class CalendarView: UIView {
         self.createSubviews()
     }
     
-    // MARK: Setup 
-    
-    fileprivate func createSubviews() {
+    var collectionView: UICollectionView!
+    private func createSubviews() {
         
         self.clipsToBounds = true
         
-        // Register Class
-        self.calendarView.register(CalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
-        self.calendarView.allowsMultipleSelection = allowMultipleSelection
+        let layout = CalendarFlowLayout()
+        layout.scrollDirection = self.direction;
+        layout.sectionInset = UIEdgeInsets.zero
+        layout.minimumInteritemSpacing = 0
+        layout.minimumLineSpacing = 0
+        layout.itemSize = self.cellSize(in: self.bounds)
+        
+        self.collectionView = UICollectionView(frame: CGRect.zero, collectionViewLayout: layout)
+        self.collectionView.dataSource       = self
+        self.collectionView.delegate         = self
+        self.collectionView.isPagingEnabled  = true
+        self.collectionView.backgroundColor  = UIColor.clear
+        self.collectionView.showsHorizontalScrollIndicator = false
+        self.collectionView.showsVerticalScrollIndicator = false
+        self.collectionView.allowsMultipleSelection = true
+        self.collectionView.register(CalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
+        self.collectionView.allowsMultipleSelection = allowMultipleSelection
         
         self.addSubview(self.headerView)
-        self.addSubview(self.calendarView)
+        self.addSubview(self.collectionView)
+    }
+    
+    var flowLayout: CalendarFlowLayout {
+        return self.collectionView.collectionViewLayout as! CalendarFlowLayout
+    }
+    
+    override func layoutSubviews() {
+        
+        super.layoutSubviews()
+        
+        self.headerView.frame = CGRect(
+            x:0.0,
+            y:0.0,
+            width: self.frame.size.width,
+            height: HEADER_DEFAULT_HEIGHT
+        )
+        
+        self.collectionView.frame = CGRect(
+            x:0.0,
+            y:HEADER_DEFAULT_HEIGHT,
+            width: self.frame.size.width,
+            height: self.frame.size.height - HEADER_DEFAULT_HEIGHT
+        )
+        
+        flowLayout.itemSize = self.cellSize(in: self.bounds)
+        
+    }
+    
+    private func cellSize(in bounds: CGRect) -> CGSize {
+        return CGSize(
+            width:  round(frame.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK)),
+            height: round((frame.size.height - HEADER_DEFAULT_HEIGHT) / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
+        )
     }
     
     
@@ -261,11 +253,11 @@ class CalendarView: UIView {
             return
         }
         
-        guard self.calendarView.indexPathsForSelectedItems?.contains(indexPath) == false else {
+        guard self.collectionView.indexPathsForSelectedItems?.contains(indexPath) == false else {
             return
         }
         
-        self.calendarView.selectItem(at: indexPath, animated: false, scrollPosition: UICollectionViewScrollPosition())
+        self.collectionView.selectItem(at: indexPath, animated: false, scrollPosition: UICollectionViewScrollPosition())
         
         selectedIndexPaths.append(indexPath)
         selectedDates.append(date)
@@ -276,9 +268,9 @@ class CalendarView: UIView {
         
         guard let indexPath = self.indexPathForDate(date) else { return }
         
-        guard self.calendarView.indexPathsForSelectedItems?.contains(indexPath) == true else { return }
+        guard self.collectionView.indexPathsForSelectedItems?.contains(indexPath) == true else { return }
         
-        self.calendarView.deselectItem(at: indexPath, animated: false)
+        self.collectionView.deselectItem(at: indexPath, animated: false)
         
         guard let index = selectedIndexPaths.index(of: indexPath) else { return }
         
@@ -303,7 +295,7 @@ class CalendarView: UIView {
     }
     
     func reloadData() {
-        self.calendarView.reloadData()
+        self.collectionView.reloadData()
     }
     
     
@@ -315,11 +307,11 @@ class CalendarView: UIView {
         
         var scrollPoint = CGPoint.zero
         switch self.direction {
-        case .horizontal:   scrollPoint.x = CGFloat(monthsDistance) * self.calendarView.frame.size.width
-        case .vertical:     scrollPoint.y = CGFloat(monthsDistance) * self.calendarView.frame.size.height
+        case .horizontal:   scrollPoint.x = CGFloat(monthsDistance) * self.collectionView.frame.size.width
+        case .vertical:     scrollPoint.y = CGFloat(monthsDistance) * self.collectionView.frame.size.height
         }
         
-        self.calendarView.setContentOffset(scrollPoint, animated: animated)
+        self.collectionView.setContentOffset(scrollPoint, animated: animated)
         
         self.displayDateOnHeader(date)
         

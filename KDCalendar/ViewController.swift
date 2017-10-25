@@ -23,7 +23,6 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         calendarView.dataSource = self
         calendarView.delegate = self
         
-        // change the code to get a vertical calender.
         calendarView.direction = .vertical
         
     }
