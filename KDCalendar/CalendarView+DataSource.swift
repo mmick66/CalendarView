@@ -29,40 +29,32 @@ extension CalendarView: UICollectionViewDataSource {
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         
-        guard let startDate = self.dataSource?.startDate(), let endDate = self.dataSource?.endDate() else {
-            return 0
-        }
+        guard let dateSource = self.dataSource else { return 0 }
+
+        self.startDateCache = dateSource.startDate()
+        self.endDateCache   = dateSource.endDate()
         
-        self.startDateCache = startDate
-        self.endDateCache = endDate
-        
-        // check if the dates are in correct order
-        
-        guard self.gregorian.compare(startDate, to:endDate, toGranularity:.nanosecond) == .orderedAscending else { return 0 }
+        guard self.startDateCache <= self.endDateCache  else { return 0 }
         
         var firstDayOfStartMonth = self.gregorian.dateComponents([.era, .year, .month], from: startDateCache)
         firstDayOfStartMonth.day = 1
         
-        guard let dateFromDayOneComponents = self.gregorian.date(from: firstDayOfStartMonth) else { return 0 }
+        let dateFromDayOneComponents = self.gregorian.date(from: firstDayOfStartMonth)!
         
         self.startOfMonthCache = dateFromDayOneComponents
         
         let today = Date()
         
-        if self.startOfMonthCache.compare(today) == .orderedAscending && self.endDateCache.compare(today) == .orderedDescending {
+        if (self.startOfMonthCache ... self.endDateCache).contains(today) {
             
-            let differenceFromTodayComponents = self.gregorian.dateComponents([.month, .day], from: self.startOfMonthCache, to: today)
+            let distanceFromTodayComponents = self.gregorian.dateComponents([.month, .day], from: self.startOfMonthCache, to: today)
             
-            self.todayIndexPath = IndexPath(item: differenceFromTodayComponents.day!, section: differenceFromTodayComponents.month!)
+            self.todayIndexPath = IndexPath(item: distanceFromTodayComponents.day!, section: distanceFromTodayComponents.month!)
             
         }
         
-        let differenceComponents = self.gregorian.dateComponents([.month], from: startDateCache, to: endDateCache)
-        
-
-        
-        return differenceComponents.month! + 1 // if we are for example on the same month and the difference is 0 we still need 1 to display it
-        
+        // if we are for example on the same month and the difference is 0 we still need 1 to display it
+        return self.gregorian.dateComponents([.month], from: startDateCache, to: endDateCache).month! + 1
         
     }
     
@@ -92,12 +84,6 @@ extension CalendarView: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
         let dayCell = collectionView.dequeueReusableCell(withReuseIdentifier: cellReuseIdentifier, for: indexPath) as! CalendarDayCell
-        
-        let ms = DateFormatter().shortMonthSymbols[(indexPath.section % 12)]
-        if self.cellCallsPerMonth[ms] == nil {
-            self.cellCallsPerMonth[ms] = 0
-        }
-        self.cellCallsPerMonth[ms]! += 1
         
         guard let (firstDayIndex, numberOfDaysTotal) = self.monthInfo[indexPath.section] else { return dayCell }
         

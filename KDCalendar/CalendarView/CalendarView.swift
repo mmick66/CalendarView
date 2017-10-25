@@ -114,7 +114,6 @@ class CalendarView: UIView {
         didSet {
             self.collectionView.allowsMultipleSelection = allowMultipleSelection
         }
-    
     }
     
     internal var eventsByIndexPath : [IndexPath:[CalendarEvent]] = [IndexPath:[CalendarEvent]]()
@@ -197,11 +196,10 @@ class CalendarView: UIView {
         
         self.collectionView.showsHorizontalScrollIndicator  = false
         self.collectionView.showsVerticalScrollIndicator    = false
-        self.collectionView.allowsMultipleSelection         = true
+        
+        self.collectionView.allowsMultipleSelection         = self.allowMultipleSelection
         
         self.collectionView.register(CalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
-        self.collectionView.allowsMultipleSelection = allowMultipleSelection
-        
         
         self.addSubview(self.headerView)
         self.addSubview(self.collectionView)
@@ -244,9 +242,6 @@ class CalendarView: UIView {
     
     
     var monthInfo = [Int:(firstDay:Int, daysTotal:Int)]()
-    var cellCallsPerMonth = [String:Int]() // REMOVE
-    
-
     
     
     // MARK: UICollectionViewDelegate
@@ -255,7 +250,7 @@ class CalendarView: UIView {
 
     func selectDate(_ date : Date) {
         
-        guard let indexPath = self.indexPathForDate(date) else { return }
+        guard let indexPath = self.indexPathFromDate(date) else { return }
         
         guard selectedIndexPaths.contains(indexPath) == false else { return }
         
@@ -268,7 +263,7 @@ class CalendarView: UIView {
     
     func deselectDate(_ date : Date) {
         
-        guard let indexPath = self.indexPathForDate(date) else { return }
+        guard let indexPath = self.indexPathFromDate(date) else { return }
         
         guard self.collectionView.indexPathsForSelectedItems?.contains(indexPath) == true else { return }
         
@@ -281,20 +276,6 @@ class CalendarView: UIView {
         
     }
     
-    func indexPathForDate(_ date : Date) -> IndexPath? {
-        
-        let distanceFromStartComponent = self.gregorian.dateComponents([.month, .day], from:startOfMonthCache, to:date)
-        
-        guard
-            let month = distanceFromStartComponent.month,
-            let (firstDayIndex, _) = monthInfo[month] else { return nil }
-        
-        let item        = distanceFromStartComponent.day! + firstDayIndex
-        let indexPath   = IndexPath(item: item, section: month)
-        
-        return indexPath
-        
-    }
     
     func reloadData() {
         self.collectionView.reloadData()
@@ -328,13 +309,11 @@ class CalendarView: UIView {
         
         var point = CGPoint.zero
         
-        guard let months = self.gregorian.dateComponents([.month], from: startOfMonthCache, to: date).month else {
-            return point
-        }
+        guard let sections = self.indexPathFromDate(date)?.section else { return point }
         
         switch self.direction {
-        case .horizontal:   point.x = CGFloat(months) * collectionView.frame.size.width
-        case .vertical:     point.y = CGFloat(months) * collectionView.frame.size.height
+        case .horizontal:   point.x = CGFloat(sections) * collectionView.frame.size.width
+        case .vertical:     point.y = CGFloat(sections) * collectionView.frame.size.height
         }
         
         return point
@@ -342,6 +321,34 @@ class CalendarView: UIView {
 
 }
 
+extension CalendarView {
+    
+    func indexPathFromDate(_ date : Date) -> IndexPath? {
+        
+        let distanceFromStartComponent = self.gregorian.dateComponents([.month, .day], from: startOfMonthCache, to: date)
+        
+        guard
+            let month = distanceFromStartComponent.month,
+            let (firstDayIndex, _) = monthInfo[month] else { return nil }
+        
+        let item        = distanceFromStartComponent.day! + firstDayIndex
+        let indexPath   = IndexPath(item: item, section: month)
+        
+        return indexPath
+        
+    }
+    
+    func dateFromIndexPath(_ indexPath: IndexPath) -> Date? {
+        
+        var components      = DateComponents()
+        components.month    = indexPath.section
+        components.day      = indexPath.item
+        
+        return self.calendar.date(byAdding: components, to: self.startDateCache)
+        
+    }
+    
+}
 
 extension CalendarView {
 

@@ -27,8 +27,16 @@ import UIKit
 
 extension CalendarView: UICollectionViewDelegateFlowLayout {
     
+    func deselectAllSelected() {
+        if let indexPathsForSelectedItems = self.collectionView.indexPathsForSelectedItems {
+            for indexPath in indexPathsForSelectedItems {
+                self.collectionView.deselectItem(at: indexPath, animated: false)
+            }
+        }
+    }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        
         
         guard
             let dateBeingSelectedByUser = self.dateBeingSelectedByUser,
@@ -108,8 +116,6 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         self.displayDateOnHeader(date)
         self.delegate?.calendar(self, didScrollToMonth: date)
         
-        
-        self.cellCallsPerMonth.removeAll()
     }
 
     @discardableResult
