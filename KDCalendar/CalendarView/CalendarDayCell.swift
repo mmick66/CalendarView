@@ -31,9 +31,12 @@ let borderColor = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0,
 
 class CalendarDayCell: UICollectionViewCell {
     
-    @objc var eventsCount = 0 {
+    override var description: String {
+        return "<DayCell (text:\"\(self.textLabel.text ?? " ")\"; size:\(self.frame.size))>"
+    }
+    
+    var eventsCount = 0 {
         didSet {
-            
             self.dotsView.isHidden = eventsCount == 0
             self.setNeedsLayout()
             
@@ -44,7 +47,6 @@ class CalendarDayCell: UICollectionViewCell {
     var isToday : Bool = false {
         
         didSet {
-           
             if isToday == true {
                 self.pBackgroundView.backgroundColor = cellColorToday
             }
@@ -57,66 +59,41 @@ class CalendarDayCell: UICollectionViewCell {
     override var isSelected : Bool {
         
         didSet {
-            
             if isSelected == true {
+                self.pBackgroundView.layer.borderColor = borderColor.cgColor
                 self.pBackgroundView.layer.borderWidth = 2.0
-                
             }
             else {
+                self.pBackgroundView.layer.borderColor = UIColor.clear.cgColor
                 self.pBackgroundView.layer.borderWidth = 0.0
             }
             
         }
     }
     
-     lazy var pBackgroundView : UIView = {
-        
-        var vFrame = self.frame.insetBy(dx: 3.0, dy: 3.0)
-        
-        let view = UIView(frame: vFrame)
-        
-        view.layer.cornerRadius = 4.0
-        
-        view.layer.borderColor = borderColor.cgColor
-        view.layer.borderWidth = 0.0
-        
-        view.center = CGPoint(x: self.bounds.size.width * 0.5, y: self.bounds.size.height * 0.5)
-        
-        view.backgroundColor = cellColorDefault
-        
-        
-        return view
-    }()
-    
-    lazy var textLabel : UILabel = {
-       
-        let lbl = UILabel()
-        lbl.textAlignment = NSTextAlignment.center
-        lbl.textColor = UIColor.darkGray
-        
-        return lbl
-        
-    }()
-    
-    
-    lazy var dotsView : UIView = {
-        
-        let dv = UIView()
-        dv.backgroundColor = borderColor
-        return dv
-        
-    }()
 
+    let textLabel       = UILabel()
+    let dotsView        = UIView()
+    let pBackgroundView = UIView()
+    
     override init(frame: CGRect) {
+        
+        self.textLabel.textAlignment = NSTextAlignment.center
+        self.textLabel.textColor = UIColor.darkGray
+        
+        self.dotsView.backgroundColor = borderColor
+        
+        self.pBackgroundView.layer.cornerRadius = 4.0
         
         super.init(frame: frame)
         
         self.addSubview(self.pBackgroundView)
-        self.textLabel.frame = self.bounds
         self.addSubview(self.textLabel)
+        
         self.addSubview(self.dotsView)
         
     }
+
 
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
@@ -127,16 +104,16 @@ class CalendarDayCell: UICollectionViewCell {
         super.layoutSubviews()
         
         let dotFactor : CGFloat = 0.07
-        let size = self.bounds.height*dotFactor
+        let size = self.bounds.height * dotFactor
         self.dotsView.frame = CGRect(x: 0, y: 0, width: size, height: size)
-        self.dotsView.center = CGPoint(x: self.textLabel.center.x, y: self.bounds.height - 3*size)
+        self.dotsView.center = CGPoint(x: self.textLabel.center.x, y: self.bounds.height - 3 * size)
         self.dotsView.layer.cornerRadius = size * 0.5
-//        let validSize = self.bounds.height >= self.bounds.width
-//        assert(validSize, "The cell mustbe taller than the width")
+
+        let elementsFrame = self.bounds.insetBy(dx: 3.0, dy: 3.0)
+        self.textLabel.frame = elementsFrame
+        self.pBackgroundView.frame = elementsFrame
         
     }
     
-    
-    
-    
 }
+

@@ -25,7 +25,8 @@
 
 import UIKit
 
-extension CalendarView: UICollectionViewDelegate {
+extension CalendarView: UICollectionViewDelegateFlowLayout {
+    
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
         
         guard let dayCell = cell as? CalendarDayCell else { return }
@@ -66,6 +67,7 @@ extension CalendarView: UICollectionViewDelegate {
         } else {
             dayCell.eventsCount = 0
         }
+        
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {

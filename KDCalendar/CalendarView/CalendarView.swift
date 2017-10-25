@@ -209,8 +209,8 @@ class CalendarView: UIView {
         self.calendarView.frame = CGRect(x:0.0, y:HEADER_DEFAULT_HEIGHT, width: width, height: heigh)
         
         flowLayout.itemSize = CGSize(
-            width:  width / CGFloat(NUMBER_OF_DAYS_IN_WEEK),
-            height: heigh / CGFloat(MAXIMUM_NUMBER_OF_ROWS)
+            width:  round(width / CGFloat(NUMBER_OF_DAYS_IN_WEEK)),
+            height: round(heigh / CGFloat(MAXIMUM_NUMBER_OF_ROWS))
         )
         
         flowLayout.invalidateLayout()

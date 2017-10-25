@@ -59,7 +59,10 @@ extension CalendarView: UICollectionViewDataSource {
         
         let differenceComponents = self.gregorian.dateComponents([.month], from: startDateCache, to: endDateCache)
         
+
+        
         return differenceComponents.month! + 1 // if we are for example on the same month and the difference is 0 we still need 1 to display it
+        
         
     }
     
@@ -89,6 +92,8 @@ extension CalendarView: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
         let dayCell = collectionView.dequeueReusableCell(withReuseIdentifier: cellReuseIdentifier, for: indexPath) as! CalendarDayCell
+        
+        print(dayCell)
         
         return dayCell
     }
