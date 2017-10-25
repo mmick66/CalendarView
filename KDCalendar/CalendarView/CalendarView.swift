@@ -100,11 +100,12 @@ class CalendarView: UIView {
         }
     }
     
-    internal var startDateCache : Date = Date()
-    internal var endDateCache : Date = Date()
-    internal var startOfMonthCache : Date = Date()
-    internal var todayIndexPath : IndexPath?
-    var displayDate : Date?
+    internal var startDateCache     = Date()
+    internal var endDateCache       = Date()
+    internal var startOfMonthCache  = Date()
+    
+    internal var todayIndexPath: IndexPath?
+    public var displayDate: Date?
     
     internal(set) var selectedIndexPaths : [IndexPath] = [IndexPath]()
     internal(set) var selectedDates : [Date] = [Date]()
@@ -116,7 +117,6 @@ class CalendarView: UIView {
     
     }
     
-
     internal var eventsByIndexPath : [IndexPath:[CalendarEvent]] = [IndexPath:[CalendarEvent]]()
 
     var events : [EKEvent]? {
@@ -188,16 +188,19 @@ class CalendarView: UIView {
         layout.minimumLineSpacing = 0
         layout.itemSize = self.cellSize(in: self.bounds)
         
-        self.collectionView = UICollectionView(frame: CGRect.zero, collectionViewLayout: layout)
-        self.collectionView.dataSource       = self
-        self.collectionView.delegate         = self
-        self.collectionView.isPagingEnabled  = true
-        self.collectionView.backgroundColor  = UIColor.clear
-        self.collectionView.showsHorizontalScrollIndicator = false
-        self.collectionView.showsVerticalScrollIndicator = false
-        self.collectionView.allowsMultipleSelection = true
+        self.collectionView                     = UICollectionView(frame: CGRect.zero, collectionViewLayout: layout)
+        self.collectionView.dataSource          = self
+        self.collectionView.delegate            = self
+        self.collectionView.isPagingEnabled     = true
+        self.collectionView.backgroundColor     = UIColor.clear
+        
+        self.collectionView.showsHorizontalScrollIndicator  = false
+        self.collectionView.showsVerticalScrollIndicator    = false
+        self.collectionView.allowsMultipleSelection         = true
+        
         self.collectionView.register(CalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
         self.collectionView.allowsMultipleSelection = allowMultipleSelection
+        
         
         self.addSubview(self.headerView)
         self.addSubview(self.collectionView)
@@ -226,6 +229,8 @@ class CalendarView: UIView {
         )
         
         flowLayout.itemSize = self.cellSize(in: self.bounds)
+        
+        self.resetDisplayDate()
         
     }
     
@@ -303,18 +308,39 @@ class CalendarView: UIView {
         
         guard (date > startDateCache) && (date < endDateCache) else { return }
         
-        guard let monthsDistance = self.gregorian.dateComponents([.month], from: startOfMonthCache, to: date).month else { return }
-        
-        var scrollPoint = CGPoint.zero
-        switch self.direction {
-        case .horizontal:   scrollPoint.x = CGFloat(monthsDistance) * self.collectionView.frame.size.width
-        case .vertical:     scrollPoint.y = CGFloat(monthsDistance) * self.collectionView.frame.size.height
-        }
-        
-        self.collectionView.setContentOffset(scrollPoint, animated: animated)
+        self.collectionView.setContentOffset(
+            self.scrollViewOffset(in: self.collectionView, for: date),
+            animated: animated
+        )
         
         self.displayDateOnHeader(date)
         
+    }
+    
+    internal func resetDisplayDate() {
+        
+        guard let displayDate = self.displayDate else { return }
+        
+        self.collectionView.setContentOffset(
+            self.scrollViewOffset(in: self.collectionView, for: displayDate),
+            animated: false
+        )
+    }
+    
+    func scrollViewOffset(in collectionView: UICollectionView, for date: Date) -> CGPoint {
+        
+        var point = CGPoint.zero
+        
+        guard let months = self.gregorian.dateComponents([.month], from: startOfMonthCache, to: date).month else {
+            return point
+        }
+        
+        switch self.direction {
+        case .horizontal:   point.x = CGFloat(months) * collectionView.frame.size.width
+        case .vertical:     point.y = CGFloat(months) * collectionView.frame.size.height
+        }
+        
+        return point
     }
 
 }

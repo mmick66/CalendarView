@@ -51,19 +51,14 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
         
-        guard let dateBeingSelectedByUser = dateBeingSelectedByUser else {
-            return
-        }
-        
-        guard let index = selectedIndexPaths.index(of: indexPath) else {
-            return
-        }
+        guard let dateBeingSelectedByUser = dateBeingSelectedByUser else { return }
         
         delegate?.calendar(self, didDeselectDate: dateBeingSelectedByUser)
         
+        guard let index = selectedIndexPaths.index(of: indexPath) else { return }
+        
         selectedIndexPaths.remove(at: index)
         selectedDates.remove(at: index)
-        
         
         if self.collectionView.allowsMultipleSelection {
             self.dateBeingSelectedByUser = selectedDates.last
@@ -113,7 +108,7 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         self.displayDateOnHeader(date)
         self.delegate?.calendar(self, didScrollToMonth: date)
         
-        print(self.cellCallsPerMonth)
+        
         self.cellCallsPerMonth.removeAll()
     }
 
