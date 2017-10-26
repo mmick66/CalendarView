@@ -115,7 +115,7 @@ struct Style {
 This component has the ability to fetch events from the system's `EKEventStore` which is syncronised with the native calendar provided in iOS. 
 
 ```Swift
-EventsLoader.load(from: self.startDate(), to: self.endDate()) { (granted:Bool, events:[EKEvent]) in
+EventsLoader.load(from: self.startDate(), to: self.endDate()) { (granted:Bool, events:[CalendarEvent]) in
     if granted {
         self.calendarView.events = events
     } else {
