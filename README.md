@@ -105,6 +105,7 @@ struct Style {
     static var CellColorToday   : UIColor 
     static var CellBorderColor  : UIColor 
     static var CellBorderWidth  : CGFloat
+    static var CellEventColor   : UIColor
     static var HeaderFontName   : String  
     static var HeaderTextColor  : UIColor        
 }
