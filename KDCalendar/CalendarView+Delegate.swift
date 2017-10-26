@@ -37,20 +37,18 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
-        
         guard
             let dateBeingSelectedByUser = self.dateBeingSelectedByUser,
             let (firstDayIndex, _) = self.monthInfo[indexPath.section] else { return }
         
+        // indexPath.item might be 26 (the number of the cell from top left) while the 'fromStart...' 20, the index from the cell with 1rst of month
         let fromStartOfMonthIndexPath = IndexPath(item: indexPath.item - firstDayIndex, section: indexPath.section)
         
-        var eventsArray = [CalendarEvent]()
-        
-        if let eventsForDay = eventsByIndexPath[fromStartOfMonthIndexPath] {
-            eventsArray = eventsForDay;
+        if let eventsForDaySelected = eventsByIndexPath[fromStartOfMonthIndexPath] {
+            delegate?.calendar(self, didSelectDate: dateBeingSelectedByUser, withEvents: eventsForDaySelected)
+        } else {
+            delegate?.calendar(self, didSelectDate: dateBeingSelectedByUser, withEvents: [])
         }
-        
-        delegate?.calendar(self, didSelectDate: dateBeingSelectedByUser, withEvents: eventsArray)
         
         // Update model
         selectedIndexPaths.append(indexPath)

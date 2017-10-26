@@ -130,28 +130,20 @@ class CalendarView: UIView {
             
             for event in events {
                 
-                if event.isOneDay == false {
-                    return
-                }
-                let startDate = event.startDate.addingTimeInterval(secondsFromGMTDifference)
-                let endDate = event.endDate.addingTimeInterval(secondsFromGMTDifference)
+                if !event.isOneDay { continue }
                 
-                // Get the distance of the event from the start
-                let distanceFromStartComponent = self.gregorian.dateComponents([.month, .day], from:startOfMonthCache, to: startDate)
+                let calendarEvent = CalendarEvent(
+                    title:      event.title,
+                    startDate:  event.startDate.addingTimeInterval(secondsFromGMTDifference),
+                    endDate:    event.endDate.addingTimeInterval(secondsFromGMTDifference)
+                )
                 
-                guard let daysDistanceFromStart = distanceFromStartComponent.day,
-                    let monthsDistanceFromStart = distanceFromStartComponent.month else { return }
+                guard let indexPath = self.indexPathForDate(calendarEvent.startDate) else { continue }
                 
-                let calendarEvent = CalendarEvent(title: event.title, startDate: startDate, endDate: endDate)
+                var eventsForIndexPath = eventsByIndexPath[indexPath] ?? []
+                eventsForIndexPath.append(calendarEvent)
+                eventsByIndexPath[indexPath] = eventsForIndexPath
                 
-                let indexPath = IndexPath(item: daysDistanceFromStart, section: monthsDistanceFromStart)
-                
-                if eventsByIndexPath[indexPath] != nil {
-                    eventsByIndexPath[indexPath]!.append(calendarEvent)
-                }
-                else {
-                    eventsByIndexPath[indexPath] = [calendarEvent]
-                }
             }
             
             DispatchQueue.main.async { self.collectionView.reloadData() }
@@ -250,7 +242,7 @@ class CalendarView: UIView {
 
     func selectDate(_ date : Date) {
         
-        guard let indexPath = self.indexPathFromDate(date) else { return }
+        guard let indexPath = self.indexPathForDate(date) else { return }
         
         guard selectedIndexPaths.contains(indexPath) == false else { return }
         
@@ -263,7 +255,7 @@ class CalendarView: UIView {
     
     func deselectDate(_ date : Date) {
         
-        guard let indexPath = self.indexPathFromDate(date) else { return }
+        guard let indexPath = self.indexPathForDate(date) else { return }
         
         guard self.collectionView.indexPathsForSelectedItems?.contains(indexPath) == true else { return }
         
@@ -309,7 +301,7 @@ class CalendarView: UIView {
         
         var point = CGPoint.zero
         
-        guard let sections = self.indexPathFromDate(date)?.section else { return point }
+        guard let sections = self.indexPathForDate(date)?.section else { return point }
         
         switch self.direction {
         case .horizontal:   point.x = CGFloat(sections) * collectionView.frame.size.width
@@ -323,7 +315,7 @@ class CalendarView: UIView {
 
 extension CalendarView {
     
-    func indexPathFromDate(_ date : Date) -> IndexPath? {
+    func indexPathForDate(_ date : Date) -> IndexPath? {
         
         let distanceFromStartComponent = self.gregorian.dateComponents([.month, .day], from: startOfMonthCache, to: date)
         
