@@ -65,7 +65,7 @@ if let tomorrow = self.calendarView.calendar.date(byAdding: tomorrowComponents, 
 }
 ```
 
-#### Selecting and Deselecting Dates
+### Selecting and Deselecting Dates
 
 You can select dates either by clicking on a cell or by selecting a date programmatically
 
@@ -85,7 +85,16 @@ You can get all the dates that where selected, either manually or programaticall
 self.calendarView.selectedDates
 ```
 
-#### Styling
+### Layout
+
+The calendar supports the two basic layouts set inside the `direction` property as `.horizontal` or `.vertical`.
+
+```Swift
+calendarView.direction = .horizontal
+```
+
+
+### Styling
 
 The look of this calendar component is based on a small set of variables set in `CalanderView.Style`.
 
@@ -101,7 +110,7 @@ struct Style {
 }
 ```
 
-#### Loading Events
+### Loading Events
 
 This component has the ability to fetch events from the system's `EKEventStore` which is syncronised with the native calendar provided in iOS. 
 
