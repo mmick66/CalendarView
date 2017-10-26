@@ -100,16 +100,24 @@ The look of this calendar component is based on a small set of variables set in 
 
 ```Swift
 struct Style {
+    enum CellShapeOptions {
+        case Round
+        case Square
+        case Bevel(CGFloat)
+    }
     static var BackgroundColor  : UIColor 
     static var CellColorDefault : UIColor   
     static var CellColorToday   : UIColor 
     static var CellBorderColor  : UIColor 
     static var CellBorderWidth  : CGFloat
+    static var CellShape        : CellShapeOptions
     static var CellEventColor   : UIColor
     static var HeaderFontName   : String  
     static var HeaderTextColor  : UIColor        
 }
 ```
+
+The `CellShape` will define whether the dates are displayed in a circle or square with bevel or not.
 
 ### Loading Events
 
