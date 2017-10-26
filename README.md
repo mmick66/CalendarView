@@ -4,9 +4,11 @@ This is an implementation of a calendar component for iOS written in Swift 4.0. 
 
 ![Calendar Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/screenshot.png)
 
-## Installation
+## Installation and Setup
 
 The files needed to be included are in the CalendarView subfolder.
+
+#### Basic Setup
 
 The calendar is a `UIView` and can be added **either programmatically or via a XIB/Storyboard**. It needs a delegate and data source that comply with:
 
