@@ -8,7 +8,7 @@ This is an implementation of a calendar component for iOS written in Swift.
 
 The files needed to be included are in the CalendarView subfolder.
 
-The calendar is a UIView subview and can be added either programmatically or via a XIB/Storyboard. It needs a delegate and data source that comply with:
+The calendar is a `UIView` and can be added **either programmatically or via a XIB/Storyboard**. It needs a delegate and data source that comply with:
 
 ```Swift
 protocol CalendarViewDataSource {
@@ -16,14 +16,16 @@ protocol CalendarViewDataSource {
     func endDate() -> NSDate   // UTC Date
 }
 protocol CalendarViewDelegate {
-    optional func calendar(calendar : CalendarView, canSelectDate date : NSDate) -> Bool
-    func calendar(calendar : CalendarView, didScrollToMonth date : NSDate) -> Void
-    func calendar(calendar : CalendarView, didSelectDate date : NSDate, withEvents events: [EKEvent]) -> Void
-    optional func calendar(calendar : CalendarView, didDeselectDate date : NSDate) -> Void
+    /* optional */ func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool
+    func calendar(_ calendar : CalendarView, didScrollToMonth date : Date) -> Void
+    func calendar(_ calendar : CalendarView, didSelectDate date : Date, withEvents events: [CalendarEvent]) -> Void
+    /* optional */ func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void
 }
 ```
 
-The delegate will provide the start date and the end date of the calendar. The data source responds to events such as scroll and selection of specific dates.
+The data source will provide the **start date** and the **end date** of the calendar. The methods have a default implementation that will return today. 
+
+The delegate responds to events such as scroll and selection of specific dates.
 
 ### Basic Usage
 
@@ -51,8 +53,6 @@ You probably still want the calendar to open in today's date, so in this case do
 override func viewDidAppear(_ animated: Bool) {
 
     super.viewDidAppear(animated)
-
-    self.loadEventsInCalendar() // optional
 
     let today = Date()
     self.calendarView.setDisplayDate(today, animated: false)        
@@ -88,6 +88,22 @@ You can get all the dates that where selected, either manually or programaticall
 ```Swift
 self.calendarView.selectedDates
 ```
+
+### Adding Events
+
+This component has the ability to fetch events from the system's `EKEventStore` which is syncronised with the native calendar provided in iOS. 
+
+```Swift
+EventsLoader.load(from: self.startDate(), to: self.endDate()) { (granted:Bool, events:[EKEvent]) in
+    if granted {
+        self.calendarView.events = events
+    } else {
+        // notify that access was not granted
+    }
+}
+```
+
+The code will pop an alert view to ask the user if he will grant access to this app to access the calendar, if it is granted we can pass the events to the `CalendarView`.
 
 ### About Dates
 
