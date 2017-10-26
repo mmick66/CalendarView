@@ -16,14 +16,14 @@ protocol CalendarViewDataSource {
     func endDate() -> NSDate   // UTC Date
 }
 protocol CalendarViewDelegate {
-    /* optional */ func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool
+    func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool /* default implementation */ 
     func calendar(_ calendar : CalendarView, didScrollToMonth date : Date) -> Void
     func calendar(_ calendar : CalendarView, didSelectDate date : Date, withEvents events: [CalendarEvent]) -> Void
-    /* optional */ func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void
+    func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void /* default implementation */ 
 }
 ```
 
-The data source will provide the **start date** and the **end date** of the calendar. The methods have a default implementation that will return today. 
+The data source will provide the **start date** and the **end date** of the calendar. The methods have a default implementation that will return `Date()` resulting in a single-page calendar displaying the current month. 
 
 The delegate responds to events such as scroll and selection of specific dates.
 
@@ -81,6 +81,22 @@ You can get all the dates that where selected, either manually or programaticall
 
 ```Swift
 self.calendarView.selectedDates
+```
+
+### Styling
+
+The look of this calendar component is based on a small set of variables set in `CalanderView.Style`.
+
+```Swift
+struct Style {
+    static var BackgroundColor  : UIColor 
+    static var CellColorDefault : UIColor   
+    static var CellColorToday   : UIColor 
+    static var CellBorderColor  : UIColor 
+    static var CellBorderWidth  : CGFloat
+    static var HeaderFontName   : String  
+    static var HeaderTextColor  : UIColor        
+}
 ```
 
 ### Loading Events
