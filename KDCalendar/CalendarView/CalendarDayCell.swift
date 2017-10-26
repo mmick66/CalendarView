@@ -74,9 +74,7 @@ class CalendarDayCell: UICollectionViewCell {
         self.textLabel.textAlignment = NSTextAlignment.center
         self.textLabel.textColor = UIColor.darkGray
         
-        self.dotsView.backgroundColor = CalendarView.Style.CellBorderColor
-        
-        self.bgView.layer.cornerRadius = 4.0
+        self.dotsView.backgroundColor = CalendarView.Style.CellEventColor
         
         super.init(frame: frame)
         
@@ -96,7 +94,16 @@ class CalendarDayCell: UICollectionViewCell {
         
         super.layoutSubviews()
         
-        let elementsFrame           = self.bounds.insetBy(dx: 3.0, dy: 3.0)
+        var elementsFrame = self.bounds.insetBy(dx: 3.0, dy: 3.0)
+        
+        if CalendarView.Style.CellShape.isRound { // square of
+            let smallestSide = min(elementsFrame.width, elementsFrame.height)
+            elementsFrame = elementsFrame.insetBy(
+                dx: (elementsFrame.width - smallestSide) / 2.0,
+                dy: (elementsFrame.height - smallestSide) / 2.0
+            )
+        }
+        
         self.bgView.frame           = elementsFrame
         self.textLabel.frame        = elementsFrame
         
@@ -105,6 +112,14 @@ class CalendarDayCell: UICollectionViewCell {
         self.dotsView.center                = CGPoint(x: self.textLabel.center.x, y: self.bounds.height - (2.5 * size))
         self.dotsView.layer.cornerRadius    = size * 0.5 // round it
 
+        switch CalendarView.Style.CellShape {
+        case .Square:
+            self.bgView.layer.cornerRadius = 0.0
+        case .Round:
+            self.bgView.layer.cornerRadius = elementsFrame.width * 0.5
+        case .Bevel(let radius):
+            self.bgView.layer.cornerRadius = radius
+        }
         
         
     }

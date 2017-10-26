@@ -81,11 +81,31 @@ extension CalendarViewDelegate {
 class CalendarView: UIView {
     
     struct Style {
+        
+        enum CellShapeOptions {
+            case Round
+            case Square
+            case Bevel(CGFloat)
+            var isRound: Bool {
+                switch self {
+                case .Round:
+                    return true
+                default:
+                    return false
+                }
+            }
+        }
+        
         static var BackgroundColor          = UIColor(red:0.95, green:0.82, blue:0.89, alpha:1.00)
+        
         static var CellColorDefault         = UIColor(white: 0.0, alpha: 0.1)
         static var CellColorToday           = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.3)
         static var CellBorderColor          = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8)
         static var CellBorderWidth: CGFloat = 2.0
+        static var CellShape                = CellShapeOptions.Bevel(4.0)
+        
+        static var CellEventColor           = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8)
+        
         static var HeaderFontName: String   = "Helvetica"
         static var HeaderTextColor          = UIColor.gray
     }
