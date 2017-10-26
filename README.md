@@ -35,14 +35,10 @@ Say you want to be able to scroll 3 months in the past, then:
 
 ```Swift
 func startDate() -> Date {
-
     var dateComponents = DateComponents()
     dateComponents.month = -3
-
     let today = Date()
-
     let threeMonthsAgo = self.calendarView.calendar.date(byAdding: dateComponents, to: today)
-
     return threeMonthsAgo
 }
 ```
@@ -51,9 +47,7 @@ You probably still want the calendar to open in today's date, so in this case do
 
 ```Swift
 override func viewDidAppear(_ animated: Bool) {
-
     super.viewDidAppear(animated)
-
     let today = Date()
     self.calendarView.setDisplayDate(today, animated: false)        
 }
@@ -69,7 +63,7 @@ if let tomorrow = self.calendarView.calendar.date(byAdding: tomorrowComponents, 
 }
 ```
 
-### Selecting Dates
+### Selecting and Deselecting Dates
 
 You can select dates either by clicking on a cell or by selecting a date programmatically
 
