@@ -50,10 +50,10 @@
 		C7C16A6D1CBBE536004DC8CF /* CalendarFlowLayout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CalendarFlowLayout.swift; path = CalendarView/CalendarFlowLayout.swift; sourceTree = "<group>"; };
 		C7C16A6E1CBBE536004DC8CF /* CalendarHeaderView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CalendarHeaderView.swift; path = CalendarView/CalendarHeaderView.swift; sourceTree = "<group>"; };
 		C7C16A6F1CBBE536004DC8CF /* CalendarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CalendarView.swift; path = CalendarView/CalendarView.swift; sourceTree = "<group>"; };
-		C7EF3F451F9F846000C2DF2D /* CalendarView+DataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CalendarView+DataSource.swift"; sourceTree = "<group>"; };
-		C7EF3F471F9F84ED00C2DF2D /* CalendarView+Delegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CalendarView+Delegate.swift"; sourceTree = "<group>"; };
-		C7EF3F491F9F8DF800C2DF2D /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
-		C7EF3F4B1FA1D6F900C2DF2D /* EventsLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsLoader.swift; sourceTree = "<group>"; };
+		C7EF3F451F9F846000C2DF2D /* CalendarView+DataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "CalendarView+DataSource.swift"; path = "CalendarView/CalendarView+DataSource.swift"; sourceTree = "<group>"; };
+		C7EF3F471F9F84ED00C2DF2D /* CalendarView+Delegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "CalendarView+Delegate.swift"; path = "CalendarView/CalendarView+Delegate.swift"; sourceTree = "<group>"; };
+		C7EF3F491F9F8DF800C2DF2D /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Extensions.swift; path = CalendarView/Extensions.swift; sourceTree = "<group>"; };
+		C7EF3F4B1FA1D6F900C2DF2D /* EventsLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = EventsLoader.swift; path = CalendarView/EventsLoader.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
