@@ -16,14 +16,14 @@ protocol CalendarViewDataSource {
     func endDate() -> NSDate   // UTC Date
 }
 protocol CalendarViewDelegate {
-    /* optional */ func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool
+    /* default implementation */ func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool
     func calendar(_ calendar : CalendarView, didScrollToMonth date : Date) -> Void
     func calendar(_ calendar : CalendarView, didSelectDate date : Date, withEvents events: [CalendarEvent]) -> Void
-    /* optional */ func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void
+    /* default implementation */ func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void
 }
 ```
 
-The data source will provide the **start date** and the **end date** of the calendar. The methods have a default implementation that will return today. 
+The data source will provide the **start date** and the **end date** of the calendar. The methods have a default implementation that will return `Date()` resulting in a single-page calendar displaying the current month. 
 
 The delegate responds to events such as scroll and selection of specific dates.
 
