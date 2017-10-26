@@ -16,10 +16,10 @@ protocol CalendarViewDataSource {
     func endDate() -> NSDate   // UTC Date
 }
 protocol CalendarViewDelegate {
-    /* default implementation */ func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool
+    func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool /* default implementation */ 
     func calendar(_ calendar : CalendarView, didScrollToMonth date : Date) -> Void
     func calendar(_ calendar : CalendarView, didSelectDate date : Date, withEvents events: [CalendarEvent]) -> Void
-    /* default implementation */ func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void
+    func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void /* default implementation */ 
 }
 ```
 
