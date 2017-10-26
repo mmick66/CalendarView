@@ -112,11 +112,8 @@ extension CalendarView: UICollectionViewDataSource {
             dayCell.isToday = (idx.section == indexPath.section && idx.item + firstDayIndex == indexPath.item)
         }
         
-        
         if let eventsForDay = self.eventsByIndexPath[fromStartOfMonthIndexPath] {
-            
             dayCell.eventsCount = eventsForDay.count
-            
         } else {
             dayCell.eventsCount = 0
         }
