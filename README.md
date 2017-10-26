@@ -83,6 +83,22 @@ You can get all the dates that where selected, either manually or programaticall
 self.calendarView.selectedDates
 ```
 
+### Styling
+
+The look of this calendar component is based on a small set of variables set in `CalanderView.Style`.
+
+```Swift
+struct Style {
+    static var BackgroundColor  : UIColor 
+    static var CellColorDefault : UIColor   
+    static var CellColorToday   : UIColor 
+    static var CellBorderColor  : UIColor 
+    static var CellBorderWidth  : CGFloat
+    static var HeaderFontName   : String  
+    static var HeaderTextColor  : UIColor        
+}
+```
+
 ### Loading Events
 
 This component has the ability to fetch events from the system's `EKEventStore` which is syncronised with the native calendar provided in iOS. 
