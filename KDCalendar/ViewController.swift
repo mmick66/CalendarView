@@ -54,15 +54,14 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
             }
         }
         
-        self.calendarView.allowMultipleSelection = false
         
         var tomorrowComponents = DateComponents()
         tomorrowComponents.day = 1
         
         let today = Date()
         
-//        let tomorrow = self.calendarView.calendar.date(byAdding: tomorrowComponents, to: today)!
-//        self.calendarView.selectDate(tomorrow)
+        let tomorrow = self.calendarView.calendar.date(byAdding: tomorrowComponents, to: today)!
+        self.calendarView.selectDate(tomorrow)
         
         self.calendarView.setDisplayDate(today, animated: false)
         self.datePicker.setDate(today, animated: false)

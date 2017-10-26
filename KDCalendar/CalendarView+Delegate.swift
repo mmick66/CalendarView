@@ -27,50 +27,30 @@ import UIKit
 
 extension CalendarView: UICollectionViewDelegateFlowLayout {
     
-    func deselectAllSelected() {
-        if let indexPathsForSelectedItems = self.collectionView.indexPathsForSelectedItems {
-            for indexPath in indexPathsForSelectedItems {
-                self.collectionView.deselectItem(at: indexPath, animated: false)
-            }
-        }
-    }
-    
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
-        guard let dateBeingSelectedByUser = self.dateFromIndexPath(indexPath) else { return }
-        
-        if let eventsForDaySelected = eventsByIndexPath[indexPath] {
-            delegate?.calendar(self, didSelectDate: dateBeingSelectedByUser, withEvents: eventsForDaySelected)
-        } else {
-            delegate?.calendar(self, didSelectDate: dateBeingSelectedByUser, withEvents: [])
-        }
+        guard let date = self.dateFromIndexPath(indexPath) else { return }
         
         if let index = selectedIndexPaths.index(of: indexPath) {
+            
+            delegate?.calendar(self, didDeselectDate: date)
             
             selectedIndexPaths.remove(at: index)
             selectedDates.remove(at: index)
         }
         else {
+            
             selectedIndexPaths.append(indexPath)
-            selectedDates.append(dateBeingSelectedByUser)
+            selectedDates.append(date)
+            
+            let eventsForDaySelected = eventsByIndexPath[indexPath] ?? []
+            delegate?.calendar(self, didSelectDate: date, withEvents: eventsForDaySelected)
         }
         
         self.reloadData()
         
     }
     
-    func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
-        
-        guard let dateBeingSelectedByUser = self.dateFromIndexPath(indexPath) else { return }
-        
-        delegate?.calendar(self, didDeselectDate: dateBeingSelectedByUser)
-        
-        guard let index = selectedIndexPaths.index(of: indexPath) else { return }
-        
-        selectedIndexPaths.remove(at: index)
-        selectedDates.remove(at: index)
-
-    }
     
     func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
         

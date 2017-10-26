@@ -97,9 +97,9 @@
 		BEFD65511ACC072000ADE917 /* KDCalendar */ = {
 			isa = PBXGroup;
 			children = (
-				BEFD65741ACC074A00ADE917 /* CalendarView */,
 				BEFD65541ACC072000ADE917 /* AppDelegate.swift */,
 				BEFD65561ACC072000ADE917 /* ViewController.swift */,
+				BEFD65741ACC074A00ADE917 /* CalendarView */,
 				BEFD65581ACC072000ADE917 /* Main.storyboard */,
 				BEFD655B1ACC072000ADE917 /* Images.xcassets */,
 				BEFD655D1ACC072000ADE917 /* LaunchScreen.xib */,

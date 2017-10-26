@@ -113,14 +113,9 @@ class CalendarView: UIView {
     internal var todayIndexPath: IndexPath?
     public var displayDate: Date?
     
-    internal(set) var selectedIndexPaths : [IndexPath] = [IndexPath]()
-    internal(set) var selectedDates : [Date] = [Date]()
-    
-    var allowMultipleSelection : Bool = false {
-        didSet {
-            self.collectionView.allowsMultipleSelection = allowMultipleSelection
-        }
-    }
+    internal(set) var selectedIndexPaths    = [IndexPath]()
+    internal(set) var selectedDates         = [Date]()
+
     
     internal var eventsByIndexPath = [IndexPath:[CalendarEvent]]()
 
@@ -186,7 +181,7 @@ class CalendarView: UIView {
         self.collectionView.showsHorizontalScrollIndicator  = false
         self.collectionView.showsVerticalScrollIndicator    = false
         
-        self.collectionView.allowsMultipleSelection         = self.allowMultipleSelection
+        self.collectionView.allowsMultipleSelection         = false
         
         self.collectionView.register(CalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
         
@@ -236,12 +231,10 @@ class CalendarView: UIView {
         
         guard let indexPath = self.indexPathForDate(date) else { return }
         
-        guard !selectedIndexPaths.contains(indexPath) else { return }
-        
         self.collectionView.selectItem(at: indexPath, animated: false, scrollPosition: UICollectionViewScrollPosition())
         
-        selectedIndexPaths.append(indexPath)
-        selectedDates.append(date)
+        self.collectionView(collectionView, didSelectItemAt: indexPath)
+        
         
     }
     
@@ -249,14 +242,9 @@ class CalendarView: UIView {
         
         guard let indexPath = self.indexPathForDate(date) else { return }
         
-        guard self.collectionView.indexPathsForSelectedItems?.contains(indexPath) == true else { return }
-        
         self.collectionView.deselectItem(at: indexPath, animated: false)
         
-        guard let index = selectedIndexPaths.index(of: indexPath) else { return }
-        
-        selectedIndexPaths.remove(at: index)
-        selectedDates.remove(at: index)
+        self.collectionView(collectionView, didSelectItemAt: indexPath)
         
     }
     
