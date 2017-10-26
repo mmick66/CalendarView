@@ -45,14 +45,17 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
             delegate?.calendar(self, didSelectDate: dateBeingSelectedByUser, withEvents: [])
         }
         
-        if selectedIndexPaths.contains(indexPath) {
-            self.deselectDate(dateBeingSelectedByUser)
-            self.collectionView.deselectItem(at: indexPath, animated: false)
+        if let index = selectedIndexPaths.index(of: indexPath) {
+            
+            selectedIndexPaths.remove(at: index)
+            selectedDates.remove(at: index)
         }
         else {
             selectedIndexPaths.append(indexPath)
             selectedDates.append(dateBeingSelectedByUser)
         }
+        
+        self.reloadData()
         
     }
     
@@ -84,13 +87,11 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
     // MARK: UIScrollViewDelegate
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        
         self.updateAndNotifyScrolling()
         
     }
     
     func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-  
         self.updateAndNotifyScrolling()
     }
     
