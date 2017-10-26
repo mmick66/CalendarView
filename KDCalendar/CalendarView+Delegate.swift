@@ -82,7 +82,7 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         offsetComponents.month  = indexPath.section
         offsetComponents.day    = indexPath.item - firstDayInMonth
         
-        guard let dateUserSelected = self.gregorian.date(byAdding: offsetComponents, to: startOfMonthCache) else { return false }
+        guard let dateUserSelected = self.calendar.date(byAdding: offsetComponents, to: startOfMonthCache) else { return false }
         
         dateBeingSelectedByUser = dateUserSelected
         
@@ -131,17 +131,17 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         var monthsOffsetComponents = DateComponents()
         monthsOffsetComponents.month = page
         
-        return self.gregorian.date(byAdding: monthsOffsetComponents, to: self.startOfMonthCache);
+        return self.calendar.date(byAdding: monthsOffsetComponents, to: self.startOfMonthCache);
         
     }
     
     func displayDateOnHeader(_ date: Date) {
         
-        let month = self.gregorian.component(.month, from: date) // get month
+        let month = self.calendar.component(.month, from: date) // get month
         
         let monthName = DateFormatter().monthSymbols[(month-1) % 12] // 0 indexed array
         
-        let year = self.gregorian.component(.year, from: date)
+        let year = self.calendar.component(.year, from: date)
         
         
         self.headerView.monthLabel.text = monthName + " " + String(year)

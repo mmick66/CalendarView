@@ -36,10 +36,10 @@ extension CalendarView: UICollectionViewDataSource {
         
         guard self.startDateCache <= self.endDateCache  else { return 0 }
         
-        var firstDayOfStartMonth = self.gregorian.dateComponents([.era, .year, .month], from: startDateCache)
+        var firstDayOfStartMonth = self.calendar.dateComponents([.era, .year, .month], from: startDateCache)
         firstDayOfStartMonth.day = 1
         
-        let dateFromDayOneComponents = self.gregorian.date(from: firstDayOfStartMonth)!
+        let dateFromDayOneComponents = self.calendar.date(from: firstDayOfStartMonth)!
         
         self.startOfMonthCache = dateFromDayOneComponents
         
@@ -47,14 +47,14 @@ extension CalendarView: UICollectionViewDataSource {
         
         if (self.startOfMonthCache ... self.endDateCache).contains(today) {
             
-            let distanceFromTodayComponents = self.gregorian.dateComponents([.month, .day], from: self.startOfMonthCache, to: today)
+            let distanceFromTodayComponents = self.calendar.dateComponents([.month, .day], from: self.startOfMonthCache, to: today)
             
             self.todayIndexPath = IndexPath(item: distanceFromTodayComponents.day!, section: distanceFromTodayComponents.month!)
             
         }
         
         // if we are for example on the same month and the difference is 0 we still need 1 to display it
-        return self.gregorian.dateComponents([.month], from: startDateCache, to: endDateCache).month! + 1
+        return self.calendar.dateComponents([.month], from: startDateCache, to: endDateCache).month! + 1
         
     }
     
@@ -63,13 +63,13 @@ extension CalendarView: UICollectionViewDataSource {
         var monthOffsetComponents = DateComponents()
         monthOffsetComponents.month = section;
         
-        guard let correctMonthForSectionDate = self.gregorian.date(byAdding: monthOffsetComponents, to: startOfMonthCache) else { return 0 }
+        guard let correctMonthForSectionDate = self.calendar.date(byAdding: monthOffsetComponents, to: startOfMonthCache) else { return 0 }
         
-        var firstWeekdayOfMonthIndex    = self.gregorian.component(.weekday, from: correctMonthForSectionDate)
+        var firstWeekdayOfMonthIndex    = self.calendar.component(.weekday, from: correctMonthForSectionDate)
         firstWeekdayOfMonthIndex        = firstWeekdayOfMonthIndex - 1 // firstWeekdayOfMonthIndex should be 0-Indexed
         firstWeekdayOfMonthIndex        = (firstWeekdayOfMonthIndex + 6) % 7 // push it modularly to take it back one day where the first day is Monday instead of Sunday
         
-        guard let rangeOfDaysInMonth:Range<Int> = self.gregorian.range(of: .day, in: .month, for: correctMonthForSectionDate) else { return 0 }
+        guard let rangeOfDaysInMonth:Range<Int> = self.calendar.range(of: .day, in: .month, for: correctMonthForSectionDate) else { return 0 }
         
         // the format of the range returned is (1..<32) so subtract the lower to get the absolute
         let numberOfDaysInMonth         = rangeOfDaysInMonth.upperBound - rangeOfDaysInMonth.lowerBound

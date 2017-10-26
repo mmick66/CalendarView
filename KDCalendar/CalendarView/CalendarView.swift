@@ -81,27 +81,23 @@ extension CalendarViewDelegate {
 class CalendarView: UIView {
     
     struct Style {
-        static let BackgroundColor          = UIColor(red:0.95, green:0.82, blue:0.89, alpha:1.00)
-        static let CellColorDefault         = UIColor(white: 0.0, alpha: 0.1)
-        static let CellColorToday           = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.3)
-        static let CellBorderColor          = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8)
-        static let CellBorderWidth: CGFloat = 2.0
-        static let HeaderFontName: String   = "Helvetica"
-        static let HeaderTextColor          = UIColor.gray
+        static var BackgroundColor          = UIColor(red:0.95, green:0.82, blue:0.89, alpha:1.00)
+        static var CellColorDefault         = UIColor(white: 0.0, alpha: 0.1)
+        static var CellColorToday           = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.3)
+        static var CellBorderColor          = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8)
+        static var CellBorderWidth: CGFloat = 2.0
+        static var HeaderFontName: String   = "Helvetica"
+        static var HeaderTextColor          = UIColor.gray
     }
     
     var dataSource  : CalendarViewDataSource?
     var delegate    : CalendarViewDelegate?
     
-    lazy var gregorian : Calendar = {
-        var cal = Calendar(identifier: .gregorian)
-        cal.timeZone = TimeZone(abbreviation: "UTC")!
-        return cal
+    lazy var calendar : Calendar = {
+        var gregorian = Calendar(identifier: .gregorian)
+        gregorian.timeZone = TimeZone(abbreviation: "UTC")!
+        return gregorian
     }()
-    
-    var calendar : Calendar {
-        return self.gregorian
-    }
     
     var direction : UICollectionViewScrollDirection = .horizontal {
         didSet {
@@ -328,7 +324,7 @@ extension CalendarView {
     
     func indexPathForDate(_ date : Date) -> IndexPath? {
         
-        let distanceFromStartComponent = self.gregorian.dateComponents([.month, .day], from: startOfMonthCache, to: date)
+        let distanceFromStartComponent = self.calendar.dateComponents([.month, .day], from: startOfMonthCache, to: date)
         
         guard
             let month = distanceFromStartComponent.month,
