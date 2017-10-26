@@ -116,27 +116,25 @@ class CalendarView: UIView {
         }
     }
     
-    internal var eventsByIndexPath : [IndexPath:[CalendarEvent]] = [IndexPath:[CalendarEvent]]()
+    internal var eventsByIndexPath = [IndexPath:[CalendarEvent]]()
 
-    var events : [EKEvent]? {
+    var events: [EKEvent] = [] {
         
         didSet {
             
-            self.eventsByIndexPath = [IndexPath:[CalendarEvent]]()
-            
-            guard let events = events else { return }
+            self.eventsByIndexPath.removeAll()
             
             let secondsFromGMTDifference = TimeInterval(TimeZone.current.secondsFromGMT())
             
-            for event in events {
-                
-                if !event.isOneDay { continue }
-                
-                let calendarEvent = CalendarEvent(
-                    title:      event.title,
-                    startDate:  event.startDate.addingTimeInterval(secondsFromGMTDifference),
-                    endDate:    event.endDate.addingTimeInterval(secondsFromGMTDifference)
+            let calendarEvents = events.map {
+                return CalendarEvent(
+                    title:      $0.title,
+                    startDate:  $0.startDate.addingTimeInterval(secondsFromGMTDifference),
+                    endDate:    $0.endDate.addingTimeInterval(secondsFromGMTDifference)
                 )
+            }
+            
+            for calendarEvent in calendarEvents {
                 
                 guard let indexPath = self.indexPathForDate(calendarEvent.startDate) else { continue }
                 
@@ -149,6 +147,7 @@ class CalendarView: UIView {
             DispatchQueue.main.async { self.collectionView.reloadData() }
         }
     }
+    
     
     var headerView = CalendarHeaderView(frame:CGRect.zero)
     

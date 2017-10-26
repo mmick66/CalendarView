@@ -48,7 +48,11 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         super.viewDidAppear(animated)
         
-        self.loadEventsInCalendar()
+        EventsLoader.load(from: self.startDate(), to: self.endDate()) { (granted:Bool, events:[EKEvent]) in
+            if granted {
+                self.calendarView.events = events
+            }
+        }
         
         var tomorrowComponents = DateComponents()
         tomorrowComponents.day = 1
@@ -109,44 +113,6 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
     func calendar(_ calendar: CalendarView, didScrollToMonth date : Date) {
     
         self.datePicker.setDate(date, animated: true)
-    }
-    
-    
-
-    // MARK : Events
-    
-    @objc func loadEventsInCalendar() {
-        
-        let  startDate = self.startDate()
-        let endDate = self.endDate()
-        
-        let store = EKEventStore()
-        
-        let fetchEvents = { () -> Void in
-            
-            let predicate = store.predicateForEvents(withStart: startDate, end:endDate, calendars: nil)
-            
-            // if can return nil for no events between these dates
-            if let eventsBetweenDates = store.events(matching: predicate) as [EKEvent]? {
-                
-                self.calendarView.events = eventsBetweenDates
-                
-            }
-        }
-        
-        
-        if EKEventStore.authorizationStatus(for: .event) != .authorized {
-            
-            store.requestAccess(to: EKEntityType.event, completion: {(granted, error ) -> Void in
-                if granted {
-                    fetchEvents()
-                }
-            })
-        }
-        else {
-            fetchEvents()
-        }
-        
     }
     
     
