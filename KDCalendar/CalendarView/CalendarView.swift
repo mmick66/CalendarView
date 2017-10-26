@@ -247,28 +247,6 @@ class CalendarView: UIView {
     
     var monthInfo = [Int:(firstDay:Int, daysTotal:Int)]()
 
-    func selectDate(_ date : Date) {
-        
-        guard let indexPath = self.indexPathForDate(date) else { return }
-        
-        self.collectionView.selectItem(at: indexPath, animated: false, scrollPosition: UICollectionViewScrollPosition())
-        
-        self.collectionView(collectionView, didSelectItemAt: indexPath)
-        
-        
-    }
-    
-    func deselectDate(_ date : Date) {
-        
-        guard let indexPath = self.indexPathForDate(date) else { return }
-        
-        self.collectionView.deselectItem(at: indexPath, animated: false)
-        
-        self.collectionView(collectionView, didSelectItemAt: indexPath)
-        
-    }
-    
-    
     func reloadData() {
         self.collectionView.reloadData()
     }
@@ -313,20 +291,48 @@ class CalendarView: UIView {
 
 }
 
+// MARK: Selection of Dates
+extension CalendarView {
+    
+    func selectDate(_ date : Date) {
+        
+        guard let indexPath = self.indexPathForDate(date) else { return }
+        
+        self.collectionView.selectItem(at: indexPath, animated: false, scrollPosition: UICollectionViewScrollPosition())
+        
+        self.collectionView(collectionView, didSelectItemAt: indexPath)
+        
+        
+    }
+    
+    func deselectDate(_ date : Date) {
+        
+        guard let indexPath = self.indexPathForDate(date) else { return }
+        
+        self.collectionView.deselectItem(at: indexPath, animated: false)
+        
+        self.collectionView(collectionView, didSelectItemAt: indexPath)
+        
+    }
+    
+}
+
+// MARK: Convertion
 extension CalendarView {
     
     func indexPathForDate(_ date : Date) -> IndexPath? {
         
-        let distanceFromStartComponent = self.calendar.dateComponents([.month, .day], from: startOfMonthCache, to: date)
+        let distanceFromStartDate = self.calendar.dateComponents([.month, .day], from: self.startOfMonthCache, to: date)
         
         guard
-            let month = distanceFromStartComponent.month,
+            let day   = distanceFromStartDate.day,
+            let month = distanceFromStartDate.month,
             let (firstDayIndex, _) = monthInfo[month] else { return nil }
         
-        let item        = distanceFromStartComponent.day! + firstDayIndex
-        let indexPath   = IndexPath(item: item, section: month)
-        
-        return indexPath
+        return IndexPath(
+            item: day + firstDayIndex,
+            section: month
+        )
         
     }
     
@@ -344,7 +350,7 @@ extension CalendarView {
 
 extension CalendarView {
 
-    func goToMonthWithOffet(_ offset: Int){
+    func goToMonthWithOffet(_ offset: Int) {
         
         guard let displayDate = self.displayDate else { return }
         
