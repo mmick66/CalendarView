@@ -25,21 +25,19 @@
 
 import UIKit
 
-let cellColorDefault = UIColor(white: 0.0, alpha: 0.1)
-let cellColorToday = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.3)
-let borderColor = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8)
+
 
 class CalendarDayCell: UICollectionViewCell {
     
     override var description: String {
-        return "<DayCell (text:\"\(self.textLabel.text ?? " ")\"; size:\(self.frame.size))>"
+        let dayString = self.textLabel.text ?? " "
+        return "<DayCell (text:\"\(dayString)\")>"
     }
     
     var eventsCount = 0 {
         didSet {
-            self.dotsView.isHidden = eventsCount == 0
+            self.dotsView.isHidden = (eventsCount == 0)
             self.setNeedsLayout()
-            
         }
     }
     
@@ -48,10 +46,10 @@ class CalendarDayCell: UICollectionViewCell {
         
         didSet {
             if isToday == true {
-                self.bgView.backgroundColor = cellColorToday
+                self.bgView.backgroundColor = CalendarView.Style.CellColorToday
             }
             else {
-                self.bgView.backgroundColor = cellColorDefault
+                self.bgView.backgroundColor = CalendarView.Style.CellColorDefault
             }
         }
     }
@@ -60,8 +58,8 @@ class CalendarDayCell: UICollectionViewCell {
         
         didSet {
             if isSelected == true {
-                self.bgView.layer.borderColor = borderColor.cgColor
-                self.bgView.layer.borderWidth = 2.0
+                self.bgView.layer.borderColor = CalendarView.Style.CellBorderColor.cgColor
+                self.bgView.layer.borderWidth = CalendarView.Style.CellBorderWidth
             }
             else {
                 self.bgView.layer.borderColor = UIColor.clear.cgColor
@@ -81,7 +79,7 @@ class CalendarDayCell: UICollectionViewCell {
         self.textLabel.textAlignment = NSTextAlignment.center
         self.textLabel.textColor = UIColor.darkGray
         
-        self.dotsView.backgroundColor = borderColor
+        self.dotsView.backgroundColor = CalendarView.Style.CellBorderColor
         
         self.bgView.layer.cornerRadius = 4.0
         

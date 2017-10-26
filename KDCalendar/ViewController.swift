@@ -102,11 +102,10 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
    
     func calendar(_ calendar: CalendarView, didSelectDate date : Date, withEvents events: [CalendarEvent]) {
         
+        print("Did Select: \(date) with \(events.count) events")
         for event in events {
-            print("You have an event starting at \(event.startDate) : \(event.title)")
+            print("\t\"\(event.title)\" - Starting at:\(event.startDate)")
         }
-        print("Did Select: \(date) with Events: \(events.count)")
-        
         
     }
     

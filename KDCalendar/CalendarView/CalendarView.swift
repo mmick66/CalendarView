@@ -80,6 +80,16 @@ extension CalendarViewDelegate {
 
 class CalendarView: UIView {
     
+    struct Style {
+        static let BackgroundColor          = UIColor(red:0.95, green:0.82, blue:0.89, alpha:1.00)
+        static let CellColorDefault         = UIColor(white: 0.0, alpha: 0.1)
+        static let CellColorToday           = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.3)
+        static let CellBorderColor          = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8)
+        static let CellBorderWidth: CGFloat = 2.0
+        static let HeaderFontName: String   = "Helvetica"
+        static let HeaderTextColor          = UIColor.gray
+    }
+    
     var dataSource  : CalendarViewDataSource?
     var delegate    : CalendarViewDelegate?
     
@@ -154,6 +164,7 @@ class CalendarView: UIView {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
+        self.backgroundColor = CalendarView.Style.BackgroundColor
         self.createSubviews()
     }
     
@@ -165,6 +176,7 @@ class CalendarView: UIView {
         super.awakeFromNib()
         self.createSubviews()
     }
+    
     
     // MARK: Create Subviews
     var collectionView: UICollectionView!
