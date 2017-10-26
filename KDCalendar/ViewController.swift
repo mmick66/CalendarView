@@ -48,25 +48,24 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         super.viewDidAppear(animated)
         
-        EventsLoader.load(from: self.startDate(), to: self.endDate()) { (granted:Bool, events:[EKEvent]) in
+        EventsLoader.load(from: self.startDate(), to: self.endDate()) { (granted:Bool, events:[CalendarEvent]) in
             if granted {
                 self.calendarView.events = events
             }
         }
+        
+        self.calendarView.allowMultipleSelection = false
         
         var tomorrowComponents = DateComponents()
         tomorrowComponents.day = 1
         
         let today = Date()
         
-        
-        if let tomorrow = self.calendarView.calendar.date(byAdding: tomorrowComponents, to: today) {
-            self.calendarView.selectDate(tomorrow)
-        }
+//        let tomorrow = self.calendarView.calendar.date(byAdding: tomorrowComponents, to: today)!
+//        self.calendarView.selectDate(tomorrow)
         
         self.calendarView.setDisplayDate(today, animated: false)
         self.datePicker.setDate(today, animated: false)
-        
         
     }
 

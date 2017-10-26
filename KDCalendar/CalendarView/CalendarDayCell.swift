@@ -25,8 +25,6 @@
 
 import UIKit
 
-
-
 class CalendarDayCell: UICollectionViewCell {
     
     override var description: String {
@@ -43,29 +41,26 @@ class CalendarDayCell: UICollectionViewCell {
     
     
     var isToday : Bool = false {
-        
         didSet {
-            if isToday == true {
+            switch isToday {
+            case true:
                 self.bgView.backgroundColor = CalendarView.Style.CellColorToday
-            }
-            else {
+            case false:
                 self.bgView.backgroundColor = CalendarView.Style.CellColorDefault
             }
         }
     }
     
     override var isSelected : Bool {
-        
         didSet {
-            if isSelected == true {
+            switch isSelected {
+            case true:
                 self.bgView.layer.borderColor = CalendarView.Style.CellBorderColor.cgColor
                 self.bgView.layer.borderWidth = CalendarView.Style.CellBorderWidth
-            }
-            else {
+            case false:
                 self.bgView.layer.borderColor = UIColor.clear.cgColor
                 self.bgView.layer.borderWidth = 0.0
             }
-            
         }
     }
     
@@ -101,14 +96,14 @@ class CalendarDayCell: UICollectionViewCell {
         
         super.layoutSubviews()
         
-        let elementsFrame = self.bounds.insetBy(dx: 3.0, dy: 3.0)
-        self.bgView.frame = elementsFrame
-        self.textLabel.frame = elementsFrame
+        let elementsFrame           = self.bounds.insetBy(dx: 3.0, dy: 3.0)
+        self.bgView.frame           = elementsFrame
+        self.textLabel.frame        = elementsFrame
         
-        let size = self.bounds.height * 0.08 // always a percentage of the whole cell
-        self.dotsView.frame = CGRect(x: 0, y: 0, width: size, height: size)
-        self.dotsView.center = CGPoint(x: self.textLabel.center.x, y: self.bounds.height - (2.5 * size))
-        self.dotsView.layer.cornerRadius = size * 0.5 // round it
+        let size                            = self.bounds.height * 0.08 // always a percentage of the whole cell
+        self.dotsView.frame                 = CGRect(x: 0, y: 0, width: size, height: size)
+        self.dotsView.center                = CGPoint(x: self.textLabel.center.x, y: self.bounds.height - (2.5 * size))
+        self.dotsView.layer.cornerRadius    = size * 0.5 // round it
 
         
         

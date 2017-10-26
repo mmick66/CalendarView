@@ -37,27 +37,28 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
-        guard
-            let dateBeingSelectedByUser = self.dateBeingSelectedByUser,
-            let (firstDayIndex, _) = self.monthInfo[indexPath.section] else { return }
+        guard let dateBeingSelectedByUser = self.dateFromIndexPath(indexPath) else { return }
         
-        // indexPath.item might be 26 (the number of the cell from top left) while the 'fromStart...' 20, the index from the cell with 1rst of month
-        let fromStartOfMonthIndexPath = IndexPath(item: indexPath.item - firstDayIndex, section: indexPath.section)
-        
-        if let eventsForDaySelected = eventsByIndexPath[fromStartOfMonthIndexPath] {
+        if let eventsForDaySelected = eventsByIndexPath[indexPath] {
             delegate?.calendar(self, didSelectDate: dateBeingSelectedByUser, withEvents: eventsForDaySelected)
         } else {
             delegate?.calendar(self, didSelectDate: dateBeingSelectedByUser, withEvents: [])
         }
         
-        // Update model
-        selectedIndexPaths.append(indexPath)
-        selectedDates.append(dateBeingSelectedByUser)
+        if selectedIndexPaths.contains(indexPath) {
+            self.deselectDate(dateBeingSelectedByUser)
+            self.collectionView.deselectItem(at: indexPath, animated: false)
+        }
+        else {
+            selectedIndexPaths.append(indexPath)
+            selectedDates.append(dateBeingSelectedByUser)
+        }
+        
     }
     
     func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
         
-        guard let dateBeingSelectedByUser = dateBeingSelectedByUser else { return }
+        guard let dateBeingSelectedByUser = self.dateFromIndexPath(indexPath) else { return }
         
         delegate?.calendar(self, didDeselectDate: dateBeingSelectedByUser)
         
@@ -65,29 +66,15 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         
         selectedIndexPaths.remove(at: index)
         selectedDates.remove(at: index)
-        
-        if self.collectionView.allowsMultipleSelection {
-            self.dateBeingSelectedByUser = selectedDates.last
-        } else {
-            self.dateBeingSelectedByUser = nil
-            
-        }
+
     }
     
     func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
         
-        guard let (firstDayInMonth, _) = self.monthInfo[indexPath.section] else { return false }
-        
-        var offsetComponents    = DateComponents()
-        offsetComponents.month  = indexPath.section
-        offsetComponents.day    = indexPath.item - firstDayInMonth
-        
-        guard let dateUserSelected = self.calendar.date(byAdding: offsetComponents, to: startOfMonthCache) else { return false }
-        
-        dateBeingSelectedByUser = dateUserSelected
+        guard let dateBeingSelected = self.dateFromIndexPath(indexPath) else { return false }
         
         if let delegate = self.delegate {
-            return delegate.calendar(self, canSelectDate: dateUserSelected)
+            return delegate.calendar(self, canSelectDate: dateBeingSelected)
         }
    
         return true // default

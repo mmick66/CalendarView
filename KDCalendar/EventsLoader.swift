@@ -13,30 +13,42 @@ class EventsLoader {
     
     private static let store = EKEventStore()
     
-    static func load(from fromDate: Date, to toDate: Date, complete onComplete: @escaping (Bool, [EKEvent]) -> Void) {
+    static func load(from fromDate: Date, to toDate: Date, complete onComplete: @escaping (Bool, [CalendarEvent]) -> Void) {
         
-        if EKEventStore.authorizationStatus(for: .event) != .authorized {
+        let q = DispatchQueue.main
+        guard EKEventStore.authorizationStatus(for: .event) == .authorized else {
             
-            EventsLoader.store.requestAccess(to: EKEntityType.event, completion: {(granted, error) -> Void in
+            return EventsLoader.store.requestAccess(to: EKEntityType.event, completion: {(granted, error) -> Void in
                 guard granted else {
-                    DispatchQueue.main.async { onComplete(false, []) }
-                    return
+                    return q.async { onComplete(false, []) }
                 }
-                EventsLoader.fetchEvents(from: fromDate, to: toDate) { eventsFetched in DispatchQueue.main.async { onComplete(true, eventsFetched) } }
+                EventsLoader.fetch(from: fromDate, to: toDate) { events in
+                    q.async { onComplete(true, events) }
+                }
             })
         }
-        else {
-            EventsLoader.fetchEvents(from: fromDate, to: toDate) { eventsFetched in DispatchQueue.main.async { onComplete(true, eventsFetched) } }
+        
+        EventsLoader.fetch(from: fromDate, to: toDate) { events in
+            q.async { onComplete(true, events) }
         }
         
     }
     
-    private static func fetchEvents(from fromDate: Date, to toDate: Date, complete onComplete: @escaping ([EKEvent]) -> Void) {
+    private static func fetch(from fromDate: Date, to toDate: Date, complete onComplete: @escaping ([CalendarEvent]) -> Void) {
         
         let predicate = store.predicateForEvents(withStart: fromDate, end: toDate, calendars: nil)
         
-        let eventsBetweenDates = store.events(matching: predicate)
-        onComplete(eventsBetweenDates)
+        let secondsFromGMTDifference = TimeInterval(TimeZone.current.secondsFromGMT())
+        
+        let events = store.events(matching: predicate).map {
+            return CalendarEvent(
+                title:      $0.title,
+                startDate:  $0.startDate.addingTimeInterval(secondsFromGMTDifference),
+                endDate:    $0.endDate.addingTimeInterval(secondsFromGMTDifference)
+            )
+        }
+        
+        onComplete(events)
         
     }
 }

@@ -124,28 +124,18 @@ class CalendarView: UIView {
     
     internal var eventsByIndexPath = [IndexPath:[CalendarEvent]]()
 
-    var events: [EKEvent] = [] {
+    var events: [CalendarEvent] = [] {
         
         didSet {
             
             self.eventsByIndexPath.removeAll()
             
-            let secondsFromGMTDifference = TimeInterval(TimeZone.current.secondsFromGMT())
-            
-            let calendarEvents = events.map {
-                return CalendarEvent(
-                    title:      $0.title,
-                    startDate:  $0.startDate.addingTimeInterval(secondsFromGMTDifference),
-                    endDate:    $0.endDate.addingTimeInterval(secondsFromGMTDifference)
-                )
-            }
-            
-            for calendarEvent in calendarEvents {
+            for event in events {
                 
-                guard let indexPath = self.indexPathForDate(calendarEvent.startDate) else { continue }
+                guard let indexPath = self.indexPathForDate(event.startDate) else { continue }
                 
                 var eventsForIndexPath = eventsByIndexPath[indexPath] ?? []
-                eventsForIndexPath.append(calendarEvent)
+                eventsForIndexPath.append(event)
                 eventsByIndexPath[indexPath] = eventsForIndexPath
                 
             }
@@ -241,17 +231,12 @@ class CalendarView: UIView {
     
     
     var monthInfo = [Int:(firstDay:Int, daysTotal:Int)]()
-    
-    
-    // MARK: UICollectionViewDelegate
-    
-    internal var dateBeingSelectedByUser : Date?
 
     func selectDate(_ date : Date) {
         
         guard let indexPath = self.indexPathForDate(date) else { return }
         
-        guard selectedIndexPaths.contains(indexPath) == false else { return }
+        guard !selectedIndexPaths.contains(indexPath) else { return }
         
         self.collectionView.selectItem(at: indexPath, animated: false, scrollPosition: UICollectionViewScrollPosition())
         
