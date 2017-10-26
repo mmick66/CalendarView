@@ -6,7 +6,7 @@ This is an implementation of a calendar component for iOS written in Swift 4.0. 
 
 ## Installation and Setup
 
-The files needed to be included are in the CalendarView subfolder.
+The files needed to be included are in the **CalendarView** subfolder of this project.
 
 #### Basic Setup
 
