@@ -245,7 +245,7 @@ class CalendarView: UIView {
     }
     
     
-    var monthInfo = [Int:(firstDay:Int, daysTotal:Int)]()
+    internal var monthInfoForSection = [Int:(firstDay:Int, daysTotal:Int)]()
 
     func reloadData() {
         self.collectionView.reloadData()
@@ -327,7 +327,7 @@ extension CalendarView {
         guard
             let day   = distanceFromStartDate.day,
             let month = distanceFromStartDate.month,
-            let (firstDayIndex, _) = monthInfo[month] else { return nil }
+            let (firstDayIndex, _) = monthInfoForSection[month] else { return nil }
         
         return IndexPath(
             item: day + firstDayIndex,

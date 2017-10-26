@@ -34,7 +34,7 @@ extension CalendarView: UICollectionViewDataSource {
         self.startDateCache = dateSource.startDate()
         self.endDateCache   = dateSource.endDate()
         
-        guard self.startDateCache <= self.endDateCache  else { return 0 }
+        guard self.startDateCache <= self.endDateCache else { fatalError("Start date cannot be later than end date.") }
         
         var firstDayOfStartMonth = self.calendar.dateComponents([.era, .year, .month], from: startDateCache)
         firstDayOfStartMonth.day = 1
@@ -58,23 +58,30 @@ extension CalendarView: UICollectionViewDataSource {
         
     }
     
+    internal func getMonthInfo(for date: Date) -> (firstDay: Int, daysTotal: Int)? {
+    
+        var firstWeekdayOfMonthIndex    = self.calendar.component(.weekday, from: date)
+        firstWeekdayOfMonthIndex        = firstWeekdayOfMonthIndex - 1 // firstWeekdayOfMonthIndex should be 0-Indexed
+        firstWeekdayOfMonthIndex        = (firstWeekdayOfMonthIndex + 6) % 7 // push it modularly to take it back one day where the first day is Monday instead of Sunday
+        
+        guard let rangeOfDaysInMonth:Range<Int> = self.calendar.range(of: .day, in: .month, for: date) else { return nil }
+        
+        // the format of the range returned is (1..<32) so subtract the lower to get the absolute
+        let numberOfDaysInMonth         = rangeOfDaysInMonth.upperBound - rangeOfDaysInMonth.lowerBound
+        
+        return (firstDay: firstWeekdayOfMonthIndex, daysTotal: numberOfDaysInMonth)
+    }
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         
         var monthOffsetComponents = DateComponents()
         monthOffsetComponents.month = section;
         
-        guard let correctMonthForSectionDate = self.calendar.date(byAdding: monthOffsetComponents, to: startOfMonthCache) else { return 0 }
+        guard
+            let correctMonthForSectionDate = self.calendar.date(byAdding: monthOffsetComponents, to: startOfMonthCache),
+            let info = self.getMonthInfo(for: correctMonthForSectionDate) else { return 0 }
         
-        var firstWeekdayOfMonthIndex    = self.calendar.component(.weekday, from: correctMonthForSectionDate)
-        firstWeekdayOfMonthIndex        = firstWeekdayOfMonthIndex - 1 // firstWeekdayOfMonthIndex should be 0-Indexed
-        firstWeekdayOfMonthIndex        = (firstWeekdayOfMonthIndex + 6) % 7 // push it modularly to take it back one day where the first day is Monday instead of Sunday
-        
-        guard let rangeOfDaysInMonth:Range<Int> = self.calendar.range(of: .day, in: .month, for: correctMonthForSectionDate) else { return 0 }
-        
-        // the format of the range returned is (1..<32) so subtract the lower to get the absolute
-        let numberOfDaysInMonth         = rangeOfDaysInMonth.upperBound - rangeOfDaysInMonth.lowerBound
-        
-        self.monthInfo[section]         = (firstDay: firstWeekdayOfMonthIndex, daysTotal: numberOfDaysInMonth)
+        self.monthInfoForSection[section] = info
         
         return NUMBER_OF_DAYS_IN_WEEK * MAXIMUM_NUMBER_OF_ROWS // 7 x 6 = 42
         
@@ -85,7 +92,7 @@ extension CalendarView: UICollectionViewDataSource {
         
         let dayCell = collectionView.dequeueReusableCell(withReuseIdentifier: cellReuseIdentifier, for: indexPath) as! CalendarDayCell
         
-        guard let (firstDayIndex, numberOfDaysTotal) = self.monthInfo[indexPath.section] else { return dayCell }
+        guard let (firstDayIndex, numberOfDaysTotal) = self.monthInfoForSection[indexPath.section] else { return dayCell }
         
         let fromStartOfMonthIndexPath = IndexPath(item: indexPath.item - firstDayIndex, section: indexPath.section) // if the first is wednesday, add 2
         
