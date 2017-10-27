@@ -26,35 +26,6 @@
 import UIKit
 import EventKit
 
-
-extension Date {
-    static func ==(lhs:Date, rhs:Date) -> Bool {
-        return lhs.compare(rhs) == .orderedSame
-    }
-    
-    static func <(lhs:Date, rhs:Date) -> Bool {
-        return lhs.compare(rhs) == .orderedAscending
-    }
-    
-    static func >(lhs:Date, rhs:Date) -> Bool {
-        return lhs.compare(rhs) == .orderedDescending
-    }
-    
-    static func <=(lhs:Date, rhs:Date) -> Bool {
-        return lhs < rhs || lhs == rhs
-    }
-    
-    static func >=(lhs:Date, rhs:Date) -> Bool {
-        return lhs > rhs || lhs == rhs
-    }
-    
-    static func !=(lhs:Date, rhs:Date) -> Bool {
-        return lhs.compare(rhs) != .orderedSame
-    }
-}
-
-
-
 extension EKEvent {
     var isOneDay : Bool {
         let components = Calendar.current.dateComponents([.era, .year, .month, .day], from: self.startDate, to: self.endDate)
