@@ -4,6 +4,12 @@ This is an implementation of a calendar component for iOS written in Swift 4.0. 
 
 ![Calendar Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/screenshot.png)
 
+## Requirements
+
+* iOS 8.0+
+* XCode 9.0+
+* Swift 4.0 +
+
 ## Installation and Setup
 
 The files needed to be included are in the **CalendarView** subfolder of this project.
