@@ -63,7 +63,7 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         let tomorrow = self.calendarView.calendar.date(byAdding: tomorrowComponents, to: today)!
         self.calendarView.selectDate(tomorrow)
         
-        self.calendarView.setDisplayDate(today, animated: false)
+        self.calendarView.setDisplayDate(today)
         self.datePicker.setDate(today, animated: false)
         
     }

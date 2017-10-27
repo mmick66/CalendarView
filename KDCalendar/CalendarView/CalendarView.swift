@@ -252,12 +252,12 @@ class CalendarView: UIView {
     }
     
     
-    func setDisplayDate(_ date : Date, animated: Bool) {
+    func setDisplayDate(_ date : Date, animated: Bool = false) {
         
         guard (date > startDateCache) && (date < endDateCache) else { return }
         
         self.collectionView.setContentOffset(
-            self.scrollViewOffset(in: self.collectionView, for: date),
+            self.scrollViewOffset(for: date),
             animated: animated
         )
         
@@ -270,20 +270,20 @@ class CalendarView: UIView {
         guard let displayDate = self.displayDate else { return }
         
         self.collectionView.setContentOffset(
-            self.scrollViewOffset(in: self.collectionView, for: displayDate),
+            self.scrollViewOffset(for: displayDate),
             animated: false
         )
     }
     
-    func scrollViewOffset(in collectionView: UICollectionView, for date: Date) -> CGPoint {
+    func scrollViewOffset(for date: Date) -> CGPoint {
         
         var point = CGPoint.zero
         
         guard let sections = self.indexPathForDate(date)?.section else { return point }
         
         switch self.direction {
-        case .horizontal:   point.x = CGFloat(sections) * collectionView.frame.size.width
-        case .vertical:     point.y = CGFloat(sections) * collectionView.frame.size.height
+        case .horizontal:   point.x = CGFloat(sections) * self.collectionView.frame.size.width
+        case .vertical:     point.y = CGFloat(sections) * self.collectionView.frame.size.height
         }
         
         return point
