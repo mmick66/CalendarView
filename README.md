@@ -124,16 +124,16 @@ The `CellShape` will define whether the dates are displayed in a circle or squar
 This component has the ability to fetch events from the system's `EKEventStore` which is syncronised with the native calendar provided in iOS. 
 
 ```Swift
-EventsLoader.load(from: self.startDate(), to: self.endDate()) { (granted:Bool, events:[CalendarEvent]) in
-    if granted {
+EventsLoader.load(from: self.startDate(), to: self.endDate()) { // (events:[CalendarEvent]?) in
+    if events = $0 {
         self.calendarView.events = events
     } else {
-        // notify that access was not granted
+        // notify that access was not access not granted
     }
 }
 ```
 
-The code will pop an alert view to ask the user if he will grant access to this app to access the calendar, if it is granted we can pass the events to the `CalendarView`.
+The code will pop an alert view to ask the user if he will grant access to this app to access the calendar, if it is granted we can pass the events to the `CalendarView`, otherwise we get a nil and notify the app about the denial.
 
 ## About Dates
 
