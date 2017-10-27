@@ -48,9 +48,11 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         super.viewDidAppear(animated)
         
-        EventsLoader.load(from: self.startDate(), to: self.endDate()) { (granted:Bool, events:[CalendarEvent]) in
-            if granted {
+        EventsLoader.load(from: self.startDate(), to: self.endDate()) { // (events:[CalendarEvent]?) in
+            if let events = $0 {
                 self.calendarView.events = events
+            } else {
+                // notify for access not access not granted
             }
         }
         

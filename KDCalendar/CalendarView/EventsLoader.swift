@@ -30,23 +30,23 @@ class EventsLoader {
     
     private static let store = EKEventStore()
     
-    static func load(from fromDate: Date, to toDate: Date, complete onComplete: @escaping (Bool, [CalendarEvent]) -> Void) {
+    static func load(from fromDate: Date, to toDate: Date, complete onComplete: @escaping ([CalendarEvent]?) -> Void) {
         
         let q = DispatchQueue.main
         guard EKEventStore.authorizationStatus(for: .event) == .authorized else {
             
             return EventsLoader.store.requestAccess(to: EKEntityType.event, completion: {(granted, error) -> Void in
                 guard granted else {
-                    return q.async { onComplete(false, []) }
+                    return q.async { onComplete(nil) }
                 }
                 EventsLoader.fetch(from: fromDate, to: toDate) { events in
-                    q.async { onComplete(true, events) }
+                    q.async { onComplete(events) }
                 }
             })
         }
         
         EventsLoader.fetch(from: fromDate, to: toDate) { events in
-            q.async { onComplete(true, events) }
+            q.async { onComplete(events) }
         }
         
     }
