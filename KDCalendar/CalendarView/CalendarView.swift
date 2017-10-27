@@ -357,17 +357,17 @@ extension CalendarView {
         var dateComponents = DateComponents()
         dateComponents.month = offset;
         
-        if let newDate = self.calendar.date(byAdding: dateComponents, to: displayDate) {
-            self.setDisplayDate(newDate, animated: true)
-        }
+        guard let newDate = self.calendar.date(byAdding: dateComponents, to: displayDate) else { return }
+        
+        self.setDisplayDate(newDate, animated: true)
     }
     
-    func goToNextMonth(){
+    func goToNextMonth() {
         goToMonthWithOffet(1)
     }
-    func goToPreviousMonth(){
+    
+    func goToPreviousMonth() {
         goToMonthWithOffet(-1)
     }
     
-
 }
