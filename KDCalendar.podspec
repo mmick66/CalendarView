@@ -15,7 +15,7 @@ Pod::Spec.new do |s|
   #  summary should be tweet-length, and the description more in depth.
   #
 
-  s.name         = "kd-calendar-view"
+  s.name         = "KDCalendar"
   s.version      = "1.0"
   s.summary      = "A calendar component with native events support."
 
@@ -29,7 +29,7 @@ Pod::Spec.new do |s|
                    DESC
 
   s.homepage     = "http://blog.karmadust.com/lets-create-a-calendar-using-a-uicollectionview/"
-  s.screenshots  = "Assets/screenshot.png"
+  s.screenshots  = "https://image.ibb.co/eiDPnb/screenshot.png"
 
 
   # ―――  Spec License  ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
@@ -76,7 +76,7 @@ Pod::Spec.new do |s|
   #  Supports git, hg, bzr, svn and HTTP.
   #
 
-  s.source       = { :git => "git@github.com:mmick66/CalendarView.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://github.com/mmick66/CalendarView.git", :tag => "#{s.version}" }
 
 
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
