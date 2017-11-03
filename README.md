@@ -10,11 +10,19 @@ This is an implementation of a calendar component for iOS written in Swift 4.0. 
 * XCode 9.0+
 * Swift 4.0 +
 
-## Installation and Setup
+## Installation
+
+#### CocoaPods
+
+```
+pod 'KDCalendar', '~> 1.0'
+```
+
+#### Manual
 
 The files needed to be included are in the **CalendarView** subfolder of this project.
 
-#### Basic Setup
+## Setup
 
 The calendar is a `UIView` and can be added **either programmatically or via a XIB/Storyboard**. 
 
