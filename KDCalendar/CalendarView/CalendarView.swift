@@ -23,17 +23,12 @@
  *
  */
 
+
+
 import UIKit
 import EventKit
 
 let cellReuseIdentifier = "CalendarDayCell"
-
-let NUMBER_OF_DAYS_IN_WEEK = 7
-let MAXIMUM_NUMBER_OF_ROWS = 6
-
-let HEADER_DEFAULT_HEIGHT : CGFloat = 80.0
-
-let DATE_SELECTED_INDEX = 2
 
 struct EventLocation {
     let title: String
@@ -108,6 +103,8 @@ class CalendarView: UIView {
         
         static var HeaderFontName: String   = "Helvetica"
         static var HeaderTextColor          = UIColor.gray
+        
+        static var HeaderHeight: CGFloat    = 80.0
     }
     
     var dataSource  : CalendarViewDataSource?
@@ -160,7 +157,7 @@ class CalendarView: UIView {
     }
     
     
-    var headerView = CalendarHeaderView(frame:CGRect.zero)
+    
     
     
     override init(frame: CGRect) {
@@ -178,13 +175,18 @@ class CalendarView: UIView {
         self.createSubviews()
     }
     
-    
     // MARK: Create Subviews
+    var headerView: CalendarHeaderView!
     var collectionView: UICollectionView!
     private func createSubviews() {
         
         self.clipsToBounds = true
         
+        /* Header View */
+        self.headerView = CalendarHeaderView(frame:CGRect.zero)
+        self.addSubview(self.headerView)
+        
+        /* Layout */
         let layout = CalendarFlowLayout()
         layout.scrollDirection = self.direction;
         layout.sectionInset = UIEdgeInsets.zero
@@ -192,21 +194,18 @@ class CalendarView: UIView {
         layout.minimumLineSpacing = 0
         layout.itemSize = self.cellSize(in: self.bounds)
         
+        /* Collection View */
         self.collectionView                     = UICollectionView(frame: CGRect.zero, collectionViewLayout: layout)
         self.collectionView.dataSource          = self
         self.collectionView.delegate            = self
         self.collectionView.isPagingEnabled     = true
         self.collectionView.backgroundColor     = UIColor.clear
-        
         self.collectionView.showsHorizontalScrollIndicator  = false
         self.collectionView.showsVerticalScrollIndicator    = false
-        
         self.collectionView.allowsMultipleSelection         = false
-        
         self.collectionView.register(CalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
-        
-        self.addSubview(self.headerView)
         self.addSubview(self.collectionView)
+        
     }
     
     var flowLayout: CalendarFlowLayout {
@@ -221,14 +220,14 @@ class CalendarView: UIView {
             x:0.0,
             y:0.0,
             width: self.frame.size.width,
-            height: HEADER_DEFAULT_HEIGHT
+            height: CalendarView.Style.HeaderHeight
         )
         
         self.collectionView.frame = CGRect(
-            x:0.0,
-            y:HEADER_DEFAULT_HEIGHT,
+            x: 0.0,
+            y: CalendarView.Style.HeaderHeight,
             width: self.frame.size.width,
-            height: self.frame.size.height - HEADER_DEFAULT_HEIGHT
+            height: self.frame.size.height - CalendarView.Style.HeaderHeight
         )
         
         flowLayout.itemSize = self.cellSize(in: self.bounds)
@@ -239,8 +238,8 @@ class CalendarView: UIView {
     
     private func cellSize(in bounds: CGRect) -> CGSize {
         return CGSize(
-            width:   frame.size.width / CGFloat(NUMBER_OF_DAYS_IN_WEEK),
-            height: (frame.size.height - HEADER_DEFAULT_HEIGHT) / CGFloat(MAXIMUM_NUMBER_OF_ROWS)
+            width:   frame.size.width / 7.0,                                    // number of days in week
+            height: (frame.size.height - CalendarView.Style.HeaderHeight) / 6.0 // maximum number of rows
         )
     }
     
@@ -371,3 +370,5 @@ extension CalendarView {
     }
     
 }
+
+

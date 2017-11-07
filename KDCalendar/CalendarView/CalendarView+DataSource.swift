@@ -83,7 +83,7 @@ extension CalendarView: UICollectionViewDataSource {
         
         self.monthInfoForSection[section] = info
         
-        return NUMBER_OF_DAYS_IN_WEEK * MAXIMUM_NUMBER_OF_ROWS // 7 x 6 = 42
+        return 42 // 7 x 6
         
     }
     
@@ -129,3 +129,5 @@ extension CalendarView: UICollectionViewDataSource {
     }
     
 }
+
+
