@@ -337,11 +337,15 @@ extension CalendarView {
     
     func dateFromIndexPath(_ indexPath: IndexPath) -> Date? {
         
-        var components      = DateComponents()
-        components.month    = indexPath.section
-        components.day      = indexPath.item
+        let month = indexPath.section
         
-        return self.calendar.date(byAdding: components, to: self.startDateCache)
+        guard let monthInfo = monthInfoForSection[month] else { return nil }
+        
+        var components      = DateComponents()
+        components.month    = month
+        components.day      = indexPath.item - monthInfo.firstDay
+        
+        return self.calendar.date(byAdding: components, to: self.startOfMonthCache)
         
     }
     
