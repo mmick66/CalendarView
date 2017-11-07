@@ -1,5 +1,8 @@
 # Calendar View #
 
+[![Language](https://img.shields.io/badge/Swift-4.0-orange.svg?style=flat)](https://swift.org)
+[![Licence](https://img.shields.io/dub/l/vibe-d.svg?maxAge=2592000)](https://opensource.org/licenses/MIT)
+
 This is an implementation of a calendar component for iOS written in Swift 4.0. It features both vertical and horizontal layout (and scrolling) and the display of native calendar events.
 
 ![Calendar Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/screenshot.png)
@@ -10,11 +13,19 @@ This is an implementation of a calendar component for iOS written in Swift 4.0. 
 * XCode 9.0+
 * Swift 4.0 +
 
-## Installation and Setup
+## Installation
+
+#### CocoaPods
+
+```
+pod 'KDCalendar', '~> 1.0'
+```
+
+#### Manual
 
 The files needed to be included are in the **CalendarView** subfolder of this project.
 
-#### Basic Setup
+## Setup
 
 The calendar is a `UIView` and can be added **either programmatically or via a XIB/Storyboard**. 
 
