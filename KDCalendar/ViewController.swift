@@ -37,10 +37,22 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         super.viewDidLoad()
         
+        CalendarView.Style.CellShape = .Bevel(8.0)
+        CalendarView.Style.CellColorDefault = UIColor.clear
+        CalendarView.Style.CellColorToday = UIColor(red:1.00, green:0.84, blue:0.64, alpha:1.00)
+        CalendarView.Style.CellBorderColor = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
+        CalendarView.Style.CellEventColor = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
+        CalendarView.Style.HeaderTextColor = UIColor.white
+        CalendarView.Style.CellTextColorDefault = UIColor.white
+        CalendarView.Style.CellTextColorToday = UIColor(red:0.31, green:0.44, blue:0.47, alpha:1.00)
+        
         calendarView.dataSource = self
         calendarView.delegate = self
         
         calendarView.direction = .horizontal
+        
+        calendarView.backgroundColor = UIColor(red:0.31, green:0.44, blue:0.47, alpha:1.00)
+        
         
     }
     

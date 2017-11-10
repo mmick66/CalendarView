@@ -91,9 +91,9 @@ class CalendarView: UIView {
             }
         }
         
-        static var BackgroundColor          = UIColor(red:0.95, green:0.82, blue:0.89, alpha:1.00)
-        
         static var CellColorDefault         = UIColor(white: 0.0, alpha: 0.1)
+        static var CellTextColorDefault     = UIColor.gray
+        static var CellTextColorToday       = UIColor.gray
         static var CellColorToday           = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.3)
         static var CellBorderColor          = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8)
         static var CellBorderWidth: CGFloat = 2.0
@@ -162,8 +162,7 @@ class CalendarView: UIView {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        self.backgroundColor = CalendarView.Style.BackgroundColor
-        self.createSubviews()
+        self.setup()
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -172,13 +171,14 @@ class CalendarView: UIView {
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        self.createSubviews()
+        self.setup()
     }
+    
     
     // MARK: Create Subviews
     var headerView: CalendarHeaderView!
     var collectionView: UICollectionView!
-    private func createSubviews() {
+    private func setup() {
         
         self.clipsToBounds = true
         
