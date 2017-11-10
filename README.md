@@ -128,15 +128,16 @@ struct Style {
         case Square
         case Bevel(CGFloat)
     }
-    static var BackgroundColor  : UIColor 
-    static var CellColorDefault : UIColor   
-    static var CellColorToday   : UIColor 
-    static var CellBorderColor  : UIColor 
-    static var CellBorderWidth  : CGFloat
-    static var CellShape        : CellShapeOptions
-    static var CellEventColor   : UIColor
-    static var HeaderFontName   : String  
-    static var HeaderTextColor  : UIColor        
+    static var CellColorDefault     : UIColor   
+    static var CellColorToday       : UIColor
+    static var CellTextColorDefault : UIColor
+    static var CellTextColorToday   : UIColor
+    static var CellBorderColor      : UIColor 
+    static var CellBorderWidth      : CGFloat
+    static var CellShape            : CellShapeOptions
+    static var CellEventColor       : UIColor
+    static var HeaderFontName       : String  
+    static var HeaderTextColor      : UIColor        
 }
 ```
 
