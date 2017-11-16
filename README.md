@@ -1,4 +1,4 @@
-# Karmadust Calendar View #
+# Karmadust Calendar #
 
 [![Language](https://img.shields.io/badge/Swift-4.0-orange.svg?style=flat)](https://swift.org)
 [![Licence](https://img.shields.io/dub/l/vibe-d.svg?maxAge=2592000)](https://opensource.org/licenses/MIT)
