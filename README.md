@@ -20,7 +20,7 @@ This is an implementation of a calendar component for iOS written in Swift 4.0. 
 #### CocoaPods
 
 ```
-pod 'KDCalendar', '~> 1.0'
+pod 'KDCalendar', '~> 1.2'
 ```
 
 #### Manual
