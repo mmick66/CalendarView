@@ -50,8 +50,7 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         self.reloadData()
         
     }
-    
-    
+
     func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
         
         guard let dateBeingSelected = self.dateFromIndexPath(indexPath) else { return false }

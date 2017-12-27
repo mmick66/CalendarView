@@ -69,5 +69,4 @@ class CalendarFlowLayout: UICollectionViewFlowLayout {
             height: self.itemSize.height
         )
     }
-    
 }
