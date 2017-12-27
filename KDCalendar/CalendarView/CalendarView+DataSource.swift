@@ -28,7 +28,6 @@ import UIKit
 extension CalendarView: UICollectionViewDataSource {
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        
         guard let dateSource = self.dataSource else { return 0 }
 
         self.startDateCache = dateSource.startDate()
@@ -50,12 +49,10 @@ extension CalendarView: UICollectionViewDataSource {
             let distanceFromTodayComponents = self.calendar.dateComponents([.month, .day], from: self.startOfMonthCache, to: today)
             
             self.todayIndexPath = IndexPath(item: distanceFromTodayComponents.day!, section: distanceFromTodayComponents.month!)
-            
         }
         
         // if we are for example on the same month and the difference is 0 we still need 1 to display it
         return self.calendar.dateComponents([.month], from: startDateCache, to: endDateCache).month! + 1
-        
     }
     
     internal func getMonthInfo(for date: Date) -> (firstDay: Int, daysTotal: Int)? {
@@ -86,8 +83,7 @@ extension CalendarView: UICollectionViewDataSource {
         return 42 // 7 x 6
         
     }
-    
-    
+
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
         let dayCell = collectionView.dequeueReusableCell(withReuseIdentifier: cellReuseIdentifier, for: indexPath) as! CalendarDayCell
@@ -127,7 +123,4 @@ extension CalendarView: UICollectionViewDataSource {
         
         return dayCell
     }
-    
 }
-
-

@@ -38,17 +38,16 @@ class CalendarDayCell: UICollectionViewCell {
             self.setNeedsLayout()
         }
     }
-    
-    
+
     var isToday : Bool = false {
         didSet {
             switch isToday {
             case true:
-                self.bgView.backgroundColor = CalendarView.Style.CellColorToday
-                self.textLabel.textColor = CalendarView.Style.CellTextColorToday
+                self.bgView.backgroundColor = CalendarView.Style.cellColorToday
+                self.textLabel.textColor = CalendarView.Style.cellTextColorToday
             case false:
-                self.bgView.backgroundColor = CalendarView.Style.CellColorDefault
-                self.textLabel.textColor = CalendarView.Style.CellTextColorDefault
+                self.bgView.backgroundColor = CalendarView.Style.cellColorDefault
+                self.textLabel.textColor = CalendarView.Style.cellTextColorDefault
             }
         }
     }
@@ -57,48 +56,40 @@ class CalendarDayCell: UICollectionViewCell {
         didSet {
             switch isSelected {
             case true:
-                self.bgView.layer.borderColor = CalendarView.Style.CellBorderColor.cgColor
-                self.bgView.layer.borderWidth = CalendarView.Style.CellBorderWidth
+                self.bgView.layer.borderColor = CalendarView.Style.cellBorderColor.cgColor
+                self.bgView.layer.borderWidth = CalendarView.Style.cellBorderWidth
             case false:
                 self.bgView.layer.borderColor = UIColor.clear.cgColor
                 self.bgView.layer.borderWidth = 0.0
             }
         }
     }
-    
 
     let textLabel   = UILabel()
     let dotsView    = UIView()
     let bgView      = UIView()
     
     override init(frame: CGRect) {
-        
         self.textLabel.textAlignment = NSTextAlignment.center
-        
-        
-        self.dotsView.backgroundColor = CalendarView.Style.CellEventColor
+        self.dotsView.backgroundColor = CalendarView.Style.cellEventColor
         
         super.init(frame: frame)
         
         self.addSubview(self.bgView)
         self.addSubview(self.textLabel)
-        
         self.addSubview(self.dotsView)
-        
     }
-
 
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
     
     override func layoutSubviews() {
-        
         super.layoutSubviews()
         
         var elementsFrame = self.bounds.insetBy(dx: 3.0, dy: 3.0)
         
-        if CalendarView.Style.CellShape.isRound { // square of
+        if CalendarView.Style.cellShape.isRound { // square of
             let smallestSide = min(elementsFrame.width, elementsFrame.height)
             elementsFrame = elementsFrame.insetBy(
                 dx: (elementsFrame.width - smallestSide) / 2.0,
@@ -114,17 +105,13 @@ class CalendarDayCell: UICollectionViewCell {
         self.dotsView.center                = CGPoint(x: self.textLabel.center.x, y: self.bounds.height - (2.5 * size))
         self.dotsView.layer.cornerRadius    = size * 0.5 // round it
 
-        switch CalendarView.Style.CellShape {
-        case .Square:
+        switch CalendarView.Style.cellShape {
+        case .square:
             self.bgView.layer.cornerRadius = 0.0
-        case .Round:
+        case .round:
             self.bgView.layer.cornerRadius = elementsFrame.width * 0.5
-        case .Bevel(let radius):
+        case .bevel(let radius):
             self.bgView.layer.cornerRadius = radius
         }
-        
-        
     }
-    
 }
-

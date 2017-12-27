@@ -66,6 +66,5 @@ class EventsLoader {
         }
         
         onComplete(events)
-        
     }
 }
