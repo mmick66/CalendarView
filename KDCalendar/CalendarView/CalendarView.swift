@@ -73,7 +73,7 @@ extension CalendarViewDelegate {
 }
 
 
-class CalendarView: UIView {
+open class CalendarView: UIView {
     
     struct Style {
         
@@ -156,20 +156,16 @@ class CalendarView: UIView {
         }
     }
     
-    
-    
-    
-    
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.setup()
     }
     
-    required init?(coder aDecoder: NSCoder) {
+    required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
     
-    override func awakeFromNib() {
+    override open func awakeFromNib() {
         super.awakeFromNib()
         self.setup()
     }
@@ -212,7 +208,7 @@ class CalendarView: UIView {
         return self.collectionView.collectionViewLayout as! CalendarFlowLayout
     }
     
-    override func layoutSubviews() {
+    override open func layoutSubviews() {
         
         super.layoutSubviews()
         

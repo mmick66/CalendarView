@@ -25,10 +25,10 @@
 
 import UIKit
 
-class CalendarFlowLayout: UICollectionViewFlowLayout {
+open class CalendarFlowLayout: UICollectionViewFlowLayout {
     
     
-    override func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
+    override open func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
         
         return super.layoutAttributesForElements(in: rect)?.map { attrs in
             let attrscp = attrs.copy() as! UICollectionViewLayoutAttributes
@@ -38,7 +38,7 @@ class CalendarFlowLayout: UICollectionViewFlowLayout {
         
     }
     
-    override func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+    override open func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
         
         if let attrs = super.layoutAttributesForItem(at: indexPath) {
             let attrscp = attrs.copy() as! UICollectionViewLayoutAttributes

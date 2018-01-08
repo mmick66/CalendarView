@@ -27,7 +27,7 @@ import UIKit
 
 extension CalendarView: UICollectionViewDelegateFlowLayout {
     
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
         guard let date = self.dateFromIndexPath(indexPath) else { return }
         
@@ -52,7 +52,7 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
     }
     
     
-    func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+    public func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
         
         guard let dateBeingSelected = self.dateFromIndexPath(indexPath) else { return false }
         
@@ -66,12 +66,12 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
     
     // MARK: UIScrollViewDelegate
     
-    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+    public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         self.updateAndNotifyScrolling()
         
     }
     
-    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+    public func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
         self.updateAndNotifyScrolling()
     }
     

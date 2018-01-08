@@ -26,7 +26,7 @@
 import Foundation
 import EventKit
 
-class EventsLoader {
+open class EventsLoader {
     
     private static let store = EKEventStore()
     
