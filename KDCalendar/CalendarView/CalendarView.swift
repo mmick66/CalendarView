@@ -66,7 +66,7 @@ extension CalendarViewDelegate {
     func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void { return }
 }
 
-class CalendarView: UIView {
+open class CalendarView: UIView {
     
     struct Style {
 
@@ -151,11 +151,11 @@ class CalendarView: UIView {
         self.setup()
     }
     
-    required init?(coder aDecoder: NSCoder) {
+    required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
     
-    override func awakeFromNib() {
+    override open func awakeFromNib() {
         super.awakeFromNib()
         self.setup()
     }
@@ -196,7 +196,8 @@ class CalendarView: UIView {
         return self.collectionView.collectionViewLayout as! CalendarFlowLayout
     }
     
-    override func layoutSubviews() {
+    override open func layoutSubviews() {
+       
         super.layoutSubviews()
         
         self.headerView.frame = CGRect(

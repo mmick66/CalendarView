@@ -25,7 +25,7 @@
 
 import UIKit
 
-class CalendarHeaderView: UIView {
+open class CalendarHeaderView: UIView {
     
     lazy var monthLabel : UILabel = {
         let lbl = UILabel()
@@ -62,7 +62,8 @@ class CalendarHeaderView: UIView {
         
     }()
     
-    override func layoutSubviews() {
+    override open func layoutSubviews() {
+        
         super.layoutSubviews()
         
         var frm = self.bounds

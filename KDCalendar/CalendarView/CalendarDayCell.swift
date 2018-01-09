@@ -25,9 +25,9 @@
 
 import UIKit
 
-class CalendarDayCell: UICollectionViewCell {
+open class CalendarDayCell: UICollectionViewCell {
     
-    override var description: String {
+    override open var description: String {
         let dayString = self.textLabel.text ?? " "
         return "<DayCell (text:\"\(dayString)\")>"
     }
@@ -52,7 +52,7 @@ class CalendarDayCell: UICollectionViewCell {
         }
     }
     
-    override var isSelected : Bool {
+    override open var isSelected : Bool {
         didSet {
             switch isSelected {
             case true:
@@ -80,11 +80,12 @@ class CalendarDayCell: UICollectionViewCell {
         self.addSubview(self.dotsView)
     }
 
-    required init?(coder aDecoder: NSCoder) {
+    required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
     
-    override func layoutSubviews() {
+    override open func layoutSubviews() {
+        
         super.layoutSubviews()
         
         var elementsFrame = self.bounds.insetBy(dx: 3.0, dy: 3.0)
