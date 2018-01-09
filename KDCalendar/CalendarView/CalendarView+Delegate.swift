@@ -51,7 +51,6 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         
     }
     
-    
     public func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
         
         guard let dateBeingSelected = self.dateFromIndexPath(indexPath) else { return false }
@@ -62,7 +61,6 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
    
         return true // default
     }
-    
     
     // MARK: UIScrollViewDelegate
     
@@ -86,7 +84,6 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
 
     @discardableResult
     func dateFromScrollViewPosition() -> Date? {
-        
         var page: Int = 0
         
         switch self.direction {
@@ -100,18 +97,15 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         monthsOffsetComponents.month = page
         
         return self.calendar.date(byAdding: monthsOffsetComponents, to: self.startOfMonthCache);
-        
     }
     
     func displayDateOnHeader(_ date: Date) {
-        
         let month = self.calendar.component(.month, from: date) // get month
         
         let monthName = DateFormatter().monthSymbols[(month-1) % 12] // 0 indexed array
         
         let year = self.calendar.component(.year, from: date)
-        
-        
+
         self.headerView.monthLabel.text = monthName + " " + String(year)
         
         self.displayDate = date

@@ -48,7 +48,6 @@ open class EventsLoader {
         EventsLoader.fetch(from: fromDate, to: toDate) { events in
             q.async { onComplete(events) }
         }
-        
     }
     
     private static func fetch(from fromDate: Date, to toDate: Date, complete onComplete: @escaping ([CalendarEvent]) -> Void) {
@@ -66,6 +65,5 @@ open class EventsLoader {
         }
         
         onComplete(events)
-        
     }
 }

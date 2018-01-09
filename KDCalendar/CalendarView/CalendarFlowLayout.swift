@@ -35,7 +35,6 @@ open class CalendarFlowLayout: UICollectionViewFlowLayout {
             self.applyLayoutAttributes(attrscp)
             return attrscp
         }
-        
     }
     
     override open func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
@@ -46,12 +45,9 @@ open class CalendarFlowLayout: UICollectionViewFlowLayout {
             return attrscp
         }
         return nil
-        
     }
     
-    
     func applyLayoutAttributes(_ attributes : UICollectionViewLayoutAttributes) {
-        
         guard attributes.representedElementKind == nil else { return }
         
         guard let collectionView = self.collectionView else { return }
@@ -73,7 +69,5 @@ open class CalendarFlowLayout: UICollectionViewFlowLayout {
             width: self.itemSize.width,
             height: self.itemSize.height
         )
-        
     }
-    
 }

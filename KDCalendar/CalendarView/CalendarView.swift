@@ -23,12 +23,8 @@
  *
  */
 
-
-
 import UIKit
 import EventKit
-
-let cellReuseIdentifier = "CalendarDayCell"
 
 struct EventLocation {
     let title: String
@@ -41,8 +37,6 @@ struct CalendarEvent {
     let startDate: Date
     let endDate:Date
 }
-
-
 
 protocol CalendarViewDataSource {
     func startDate() -> Date
@@ -72,18 +66,17 @@ extension CalendarViewDelegate {
     func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void { return }
 }
 
-
 open class CalendarView: UIView {
     
     struct Style {
-        
+
         enum CellShapeOptions {
-            case Round
-            case Square
-            case Bevel(CGFloat)
+            case round
+            case square
+            case bevel(CGFloat)
             var isRound: Bool {
                 switch self {
-                case .Round:
+                case .round:
                     return true
                 default:
                     return false
@@ -91,22 +84,24 @@ open class CalendarView: UIView {
             }
         }
         
-        static var CellColorDefault         = UIColor(white: 0.0, alpha: 0.1)
-        static var CellTextColorDefault     = UIColor.gray
-        static var CellTextColorToday       = UIColor.gray
-        static var CellColorToday           = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.3)
-        static var CellBorderColor          = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8)
-        static var CellBorderWidth: CGFloat = 2.0
-        static var CellShape                = CellShapeOptions.Bevel(4.0)
+        static var cellColorDefault         = UIColor(white: 0.0, alpha: 0.1)
+        static var cellTextColorDefault     = UIColor.gray
+        static var cellTextColorToday       = UIColor.gray
+        static var cellColorToday           = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.3)
+        static var cellBorderColor          = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8)
+        static var cellBorderWidth: CGFloat = 2.0
+        static var cellShape                = CellShapeOptions.bevel(4.0)
         
-        static var CellEventColor           = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8)
+        static var cellEventColor           = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8)
         
-        static var HeaderFontName: String   = "Helvetica"
-        static var HeaderTextColor          = UIColor.gray
+        static var headerFontName: String   = "Helvetica"
+        static var headerTextColor          = UIColor.gray
         
-        static var HeaderHeight: CGFloat    = 80.0
+        static var headerHeight: CGFloat    = 80.0
     }
-    
+
+    let cellReuseIdentifier = "CalendarDayCell"
+
     var dataSource  : CalendarViewDataSource?
     var delegate    : CalendarViewDelegate?
     
@@ -133,29 +128,24 @@ open class CalendarView: UIView {
     internal(set) var selectedIndexPaths    = [IndexPath]()
     internal(set) var selectedDates         = [Date]()
 
-    
     internal var eventsByIndexPath = [IndexPath:[CalendarEvent]]()
 
     var events: [CalendarEvent] = [] {
-        
         didSet {
-            
             self.eventsByIndexPath.removeAll()
             
             for event in events {
-                
                 guard let indexPath = self.indexPathForDate(event.startDate) else { continue }
                 
                 var eventsForIndexPath = eventsByIndexPath[indexPath] ?? []
                 eventsForIndexPath.append(event)
                 eventsByIndexPath[indexPath] = eventsForIndexPath
-                
             }
             
             DispatchQueue.main.async { self.collectionView.reloadData() }
         }
     }
-    
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.setup()
@@ -169,7 +159,6 @@ open class CalendarView: UIView {
         super.awakeFromNib()
         self.setup()
     }
-    
     
     // MARK: Create Subviews
     var headerView: CalendarHeaderView!
@@ -201,7 +190,6 @@ open class CalendarView: UIView {
         self.collectionView.allowsMultipleSelection         = false
         self.collectionView.register(CalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
         self.addSubview(self.collectionView)
-        
     }
     
     var flowLayout: CalendarFlowLayout {
@@ -209,44 +197,41 @@ open class CalendarView: UIView {
     }
     
     override open func layoutSubviews() {
-        
+       
         super.layoutSubviews()
         
         self.headerView.frame = CGRect(
             x:0.0,
             y:0.0,
             width: self.frame.size.width,
-            height: CalendarView.Style.HeaderHeight
+            height: CalendarView.Style.headerHeight
         )
         
         self.collectionView.frame = CGRect(
             x: 0.0,
-            y: CalendarView.Style.HeaderHeight,
+            y: CalendarView.Style.headerHeight,
             width: self.frame.size.width,
-            height: self.frame.size.height - CalendarView.Style.HeaderHeight
+            height: self.frame.size.height - CalendarView.Style.headerHeight
         )
         
         flowLayout.itemSize = self.cellSize(in: self.bounds)
         
         self.resetDisplayDate()
-        
     }
     
     private func cellSize(in bounds: CGRect) -> CGSize {
         return CGSize(
             width:   frame.size.width / 7.0,                                    // number of days in week
-            height: (frame.size.height - CalendarView.Style.HeaderHeight) / 6.0 // maximum number of rows
+            height: (frame.size.height - CalendarView.Style.headerHeight) / 6.0 // maximum number of rows
         )
     }
-    
-    
+
     internal var monthInfoForSection = [Int:(firstDay:Int, daysTotal:Int)]()
 
     func reloadData() {
         self.collectionView.reloadData()
     }
-    
-    
+
     func setDisplayDate(_ date : Date, animated: Bool = false) {
         
         guard (date > startDateCache) && (date < endDateCache) else { return }
@@ -257,11 +242,9 @@ open class CalendarView: UIView {
         )
         
         self.displayDateOnHeader(date)
-        
     }
     
     internal func resetDisplayDate() {
-        
         guard let displayDate = self.displayDate else { return }
         
         self.collectionView.setContentOffset(
@@ -271,7 +254,6 @@ open class CalendarView: UIView {
     }
     
     func scrollViewOffset(for date: Date) -> CGPoint {
-        
         var point = CGPoint.zero
         
         guard let sections = self.indexPathForDate(date)?.section else { return point }
@@ -283,14 +265,13 @@ open class CalendarView: UIView {
         
         return point
     }
-
 }
 
 // MARK: Selection of Dates
+
 extension CalendarView {
     
     func selectDate(_ date : Date) {
-        
         guard let indexPath = self.indexPathForDate(date) else { return }
         
         self.collectionView.selectItem(at: indexPath, animated: false, scrollPosition: UICollectionViewScrollPosition())
@@ -301,7 +282,6 @@ extension CalendarView {
     }
     
     func deselectDate(_ date : Date) {
-        
         guard let indexPath = self.indexPathForDate(date) else { return }
         
         self.collectionView.deselectItem(at: indexPath, animated: false)
@@ -313,8 +293,9 @@ extension CalendarView {
 }
 
 // MARK: Convertion
+
 extension CalendarView {
-    
+
     func indexPathForDate(_ date : Date) -> IndexPath? {
         
         let distanceFromStartDate = self.calendar.dateComponents([.month, .day], from: self.startOfMonthCache, to: date)
@@ -342,9 +323,7 @@ extension CalendarView {
         components.day      = indexPath.item - monthInfo.firstDay
         
         return self.calendar.date(byAdding: components, to: self.startOfMonthCache)
-        
     }
-    
 }
 
 extension CalendarView {
@@ -368,7 +347,4 @@ extension CalendarView {
     func goToPreviousMonth() {
         goToMonthWithOffet(-1)
     }
-    
 }
-
-
