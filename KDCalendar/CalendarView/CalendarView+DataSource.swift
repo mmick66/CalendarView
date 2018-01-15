@@ -27,6 +27,7 @@ import UIKit
 
 extension CalendarView: UICollectionViewDataSource {
     
+    
     public func numberOfSections(in collectionView: UICollectionView) -> Int {
         
         guard let dateSource = self.dataSource else { return 0 }
@@ -36,16 +37,22 @@ extension CalendarView: UICollectionViewDataSource {
         
         guard self.startDateCache <= self.endDateCache else { fatalError("Start date cannot be later than end date.") }
         
-        var firstDayOfStartMonth = self.calendar.dateComponents([.era, .year, .month], from: startDateCache)
-        firstDayOfStartMonth.day = 1
+        var firstDayOfStartMonthComponents = self.calendar.dateComponents([.era, .year, .month], from: self.startDateCache)
+        firstDayOfStartMonthComponents.day = 1
         
-        let dateFromDayOneComponents = self.calendar.date(from: firstDayOfStartMonth)!
+        let firstDayOfStartMonthDate = self.calendar.date(from: firstDayOfStartMonthComponents)!
         
-        self.startOfMonthCache = dateFromDayOneComponents
+        self.startOfMonthCache = firstDayOfStartMonthDate
+        
+        var lastDayOfEndMonthComponents = self.calendar.dateComponents([.era, .year, .month], from: self.endDateCache)
+        let range = self.calendar.range(of: .day, in: .month, for: self.endDateCache)!
+        lastDayOfEndMonthComponents.day = range.count
+        
+        self.endOfMonthCache = self.calendar.date(from: lastDayOfEndMonthComponents)!
         
         let today = Date()
         
-        if (self.startOfMonthCache ... self.endDateCache).contains(today) {
+        if (self.startOfMonthCache ... self.endOfMonthCache).contains(today) {
             
             let distanceFromTodayComponents = self.calendar.dateComponents([.month, .day], from: self.startOfMonthCache, to: today)
             
@@ -53,7 +60,7 @@ extension CalendarView: UICollectionViewDataSource {
         }
         
         // if we are for example on the same month and the difference is 0 we still need 1 to display it
-        return self.calendar.dateComponents([.month], from: startDateCache, to: endDateCache).month! + 1
+        return self.calendar.dateComponents([.month], from: startOfMonthCache, to: endOfMonthCache).month! + 1
     }
     
     public func getMonthInfo(for date: Date) -> (firstDay: Int, daysTotal: Int)? {
@@ -62,12 +69,9 @@ extension CalendarView: UICollectionViewDataSource {
         firstWeekdayOfMonthIndex        = firstWeekdayOfMonthIndex - 1 // firstWeekdayOfMonthIndex should be 0-Indexed
         firstWeekdayOfMonthIndex        = (firstWeekdayOfMonthIndex + 6) % 7 // push it modularly to take it back one day where the first day is Monday instead of Sunday
         
-        guard let rangeOfDaysInMonth:Range<Int> = self.calendar.range(of: .day, in: .month, for: date) else { return nil }
+        guard let rangeOfDaysInMonth = self.calendar.range(of: .day, in: .month, for: date) else { return nil }
         
-        // the format of the range returned is (1..<32) so subtract the lower to get the absolute
-        let numberOfDaysInMonth         = rangeOfDaysInMonth.upperBound - rangeOfDaysInMonth.lowerBound
-        
-        return (firstDay: firstWeekdayOfMonthIndex, daysTotal: numberOfDaysInMonth)
+        return (firstDay: firstWeekdayOfMonthIndex, daysTotal: rangeOfDaysInMonth.count)
     }
     
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -81,7 +85,7 @@ extension CalendarView: UICollectionViewDataSource {
         
         self.monthInfoForSection[section] = info
         
-        return 42 // 7 x 6
+        return 42 // rows:7 x cols:6
         
     }
     

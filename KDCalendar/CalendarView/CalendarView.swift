@@ -121,6 +121,7 @@ open class CalendarView: UIView {
     internal var startDateCache     = Date()
     internal var endDateCache       = Date()
     internal var startOfMonthCache  = Date()
+    internal var endOfMonthCache    = Date()
     
     internal var todayIndexPath: IndexPath?
     public var displayDate: Date?
