@@ -95,16 +95,15 @@ extension CalendarDayCell {
     
     func manageStyle(isToday: Bool, isSelected: Bool, isBeforeToday: Bool) {
         
-        if isToday {
-            bgView.backgroundColor = CalendarView.Style.cellColorToday
-            textLabel.textColor = CalendarView.Style.cellTextColorToday
-            
-        } else if isSelected {
-            
+        if isSelected {
             textLabel.textColor = CalendarView.Style.cellSelectedTextColor
             bgView.backgroundColor = CalendarView.Style.cellSelectedColor
             bgView.layer.borderWidth = CalendarView.Style.cellSelectedBorderWidth
             bgView.layer.borderColor = CalendarView.Style.cellSelectedBorderColor.cgColor
+            
+        } else if isToday {
+            bgView.backgroundColor = CalendarView.Style.cellColorToday
+            textLabel.textColor = CalendarView.Style.cellTextColorToday
             
         } else if isBeforeToday {
             
