@@ -349,3 +349,14 @@ extension CalendarView {
         goToMonthWithOffet(-1)
     }
 }
+
+extension CalendarView {
+    
+    func setDelegate(delegate: CalendarViewDelegate) {
+        self.delegate = delegate
+    }
+    
+    func setDataSource(dataSource: CalendarViewDataSource) {
+        self.dataSource = dataSource
+    }
+}
