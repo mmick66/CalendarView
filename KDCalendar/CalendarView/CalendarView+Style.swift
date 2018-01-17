@@ -50,5 +50,8 @@ extension CalendarView {
         public static var cellSelectedBorderWidth: CGFloat = 1
         public static var cellSelectedColor = UIColor.clear
         public static var cellSelectedTextColor = UIColor.black
+        
+        //Before Today Style
+        public static var cellBeforeTodayTextColor = cellTextColorDefault
     }
 }

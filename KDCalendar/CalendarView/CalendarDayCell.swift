@@ -27,10 +27,9 @@ import UIKit
 
 open class CalendarDayCell: UICollectionViewCell {
     
-    override open var description: String {
-        let dayString = self.textLabel.text ?? " "
-        return "<DayCell (text:\"\(dayString)\")>"
-    }
+    let textLabel   = UILabel()
+    private let dotsView    = UIView()
+    private let bgView      = UIView()
     
     var eventsCount = 0 {
         didSet {
@@ -39,42 +38,10 @@ open class CalendarDayCell: UICollectionViewCell {
         }
     }
     
-    var isToday : Bool = false {
-        didSet {
-            switch isToday {
-            case true:
-                self.bgView.backgroundColor = CalendarView.Style.cellColorToday
-                self.textLabel.textColor = CalendarView.Style.cellTextColorToday
-            case false:
-                self.bgView.backgroundColor = CalendarView.Style.cellColorDefault
-                self.textLabel.textColor = CalendarView.Style.cellTextColorDefault
-            }
-        }
+    override open var description: String {
+        let dayString = self.textLabel.text ?? " "
+        return "<DayCell (text:\"\(dayString)\")>"
     }
-    
-    override open var isSelected : Bool {
-        didSet {
-            switch isSelected {
-            case true:
-                self.bgView.layer.borderColor = CalendarView.Style.cellSelectedBorderColor.cgColor
-                self.bgView.layer.borderWidth = CalendarView.Style.cellSelectedBorderWidth
-                self.bgView.backgroundColor = CalendarView.Style.cellSelectedColor
-                self.textLabel.textColor = CalendarView.Style.cellSelectedTextColor
-                
-            case false:
-                if !isToday {
-                    self.bgView.layer.borderColor = UIColor.clear.cgColor
-                    self.bgView.layer.borderWidth = 0.0
-                    self.bgView.backgroundColor = .clear
-                    self.textLabel.textColor = CalendarView.Style.cellTextColorDefault
-                }
-            }
-        }
-    }
-    
-    let textLabel   = UILabel()
-    let dotsView    = UIView()
-    let bgView      = UIView()
     
     override init(frame: CGRect) {
         self.textLabel.textAlignment = NSTextAlignment.center
@@ -120,6 +87,37 @@ open class CalendarDayCell: UICollectionViewCell {
             self.bgView.layer.cornerRadius = elementsFrame.width * 0.5
         case .bevel(let radius):
             self.bgView.layer.cornerRadius = radius
+        }
+    }
+}
+
+extension CalendarDayCell {
+    
+    func manageStyle(isToday: Bool, isSelected: Bool, isBeforeToday: Bool) {
+        
+        if isToday {
+            bgView.backgroundColor = CalendarView.Style.cellColorToday
+            textLabel.textColor = CalendarView.Style.cellTextColorToday
+            
+        } else if isSelected {
+            
+            textLabel.textColor = CalendarView.Style.cellSelectedTextColor
+            bgView.backgroundColor = CalendarView.Style.cellSelectedColor
+            bgView.layer.borderWidth = CalendarView.Style.cellSelectedBorderWidth
+            bgView.layer.borderColor = CalendarView.Style.cellSelectedBorderColor.cgColor
+            
+        } else if isBeforeToday {
+            
+            bgView.layer.borderWidth = 0.0
+            bgView.layer.borderColor = UIColor.clear.cgColor
+            bgView.backgroundColor = .clear
+            textLabel.textColor = CalendarView.Style.cellBeforeTodayTextColor
+            
+        } else {
+            bgView.layer.borderWidth = 0.0
+            bgView.backgroundColor = .clear
+            bgView.layer.borderColor = UIColor.clear.cgColor
+            textLabel.textColor = CalendarView.Style.cellTextColorDefault
         }
     }
 }
