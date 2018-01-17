@@ -32,13 +32,13 @@ struct EventLocation {
     let longitude: Double
 }
 
-struct CalendarEvent {
+public struct CalendarEvent {
     let title: String
     let startDate: Date
     let endDate:Date
 }
 
-protocol CalendarViewDataSource {
+public protocol CalendarViewDataSource {
     func startDate() -> Date
     func endDate() -> Date
 }
@@ -53,7 +53,7 @@ extension CalendarViewDataSource {
     }
 }
 
-protocol CalendarViewDelegate {
+public protocol CalendarViewDelegate {
     
     /* optional */ func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool
     func calendar(_ calendar : CalendarView, didScrollToMonth date : Date) -> Void
@@ -66,7 +66,7 @@ extension CalendarViewDelegate {
     func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void { return }
 }
 
-open class CalendarView: UIView {
+public class CalendarView: UIView {
     
     struct Style {
 
@@ -102,8 +102,8 @@ open class CalendarView: UIView {
 
     let cellReuseIdentifier = "CalendarDayCell"
 
-    var dataSource  : CalendarViewDataSource?
-    var delegate    : CalendarViewDelegate?
+    public var dataSource  : CalendarViewDataSource?
+    public var delegate    : CalendarViewDelegate?
     
     lazy var calendar : Calendar = {
         var gregorian = Calendar(identifier: .gregorian)
@@ -347,16 +347,5 @@ extension CalendarView {
     
     func goToPreviousMonth() {
         goToMonthWithOffet(-1)
-    }
-}
-
-extension CalendarView {
-    
-    func setDelegate(delegate: CalendarViewDelegate) {
-        self.delegate = delegate
-    }
-    
-    func setDataSource(dataSource: CalendarViewDataSource) {
-        self.dataSource = dataSource
     }
 }
