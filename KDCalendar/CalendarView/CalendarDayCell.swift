@@ -38,7 +38,7 @@ open class CalendarDayCell: UICollectionViewCell {
             self.setNeedsLayout()
         }
     }
-
+    
     var isToday : Bool = false {
         didSet {
             switch isToday {
@@ -56,15 +56,22 @@ open class CalendarDayCell: UICollectionViewCell {
         didSet {
             switch isSelected {
             case true:
-                self.bgView.layer.borderColor = CalendarView.Style.cellBorderColor.cgColor
-                self.bgView.layer.borderWidth = CalendarView.Style.cellBorderWidth
+                self.bgView.layer.borderColor = CalendarView.Style.cellSelectedBorderColor.cgColor
+                self.bgView.layer.borderWidth = CalendarView.Style.cellSelectedBorderWidth
+                self.bgView.backgroundColor = CalendarView.Style.cellSelectedColor
+                self.textLabel.textColor = CalendarView.Style.cellSelectedTextColor
+                
             case false:
-                self.bgView.layer.borderColor = UIColor.clear.cgColor
-                self.bgView.layer.borderWidth = 0.0
+                if !isToday {
+                    self.bgView.layer.borderColor = UIColor.clear.cgColor
+                    self.bgView.layer.borderWidth = 0.0
+                    self.bgView.backgroundColor = .clear
+                    self.textLabel.textColor = CalendarView.Style.cellTextColorDefault
+                }
             }
         }
     }
-
+    
     let textLabel   = UILabel()
     let dotsView    = UIView()
     let bgView      = UIView()
@@ -79,7 +86,7 @@ open class CalendarDayCell: UICollectionViewCell {
         self.addSubview(self.textLabel)
         self.addSubview(self.dotsView)
     }
-
+    
     required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
@@ -105,7 +112,7 @@ open class CalendarDayCell: UICollectionViewCell {
         self.dotsView.frame                 = CGRect(x: 0, y: 0, width: size, height: size)
         self.dotsView.center                = CGPoint(x: self.textLabel.center.x, y: self.bounds.height - (2.5 * size))
         self.dotsView.layer.cornerRadius    = size * 0.5 // round it
-
+        
         switch CalendarView.Style.cellShape {
         case .square:
             self.bgView.layer.cornerRadius = 0.0

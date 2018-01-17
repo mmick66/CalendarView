@@ -68,43 +68,10 @@ extension CalendarViewDelegate {
 
 public class CalendarView: UIView {
     
-    public struct Style {
-
-        public enum CellShapeOptions {
-            case round
-            case square
-            case bevel(CGFloat)
-            var isRound: Bool {
-                switch self {
-                case .round:
-                    return true
-                default:
-                    return false
-                }
-            }
-        }
-        
-        public static var cellColorDefault         = UIColor(white: 0.0, alpha: 0.1)
-        public static var cellTextColorDefault     = UIColor.gray
-        public static var cellTextColorToday       = UIColor.gray
-        public static var cellColorToday           = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.3)
-        public static var cellBorderColor          = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8)
-        public static var cellBorderWidth: CGFloat = 2.0
-        public static var cellShape                = CellShapeOptions.bevel(4.0)
-        
-        public static var cellEventColor           = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8)
-        
-        public static var headerFontName: String   = "Helvetica"
-        public static var headerTextColor          = UIColor.gray
-        
-        public static var headerHeight: CGFloat    = 80.0
-    }
-
     let cellReuseIdentifier = "CalendarDayCell"
-
-    public var dataSource  : CalendarViewDataSource?
-    public var delegate    : CalendarViewDelegate?
-    public var multipleSelectionEnable = true
+    
+    var headerView: CalendarHeaderView!
+    var collectionView: UICollectionView!
     
     lazy var calendar : Calendar = {
         var gregorian = Calendar(identifier: .gregorian)
@@ -112,26 +79,19 @@ public class CalendarView: UIView {
         return gregorian
     }()
     
-    var direction : UICollectionViewScrollDirection = .horizontal {
-        didSet {
-            flowLayout.scrollDirection = direction
-            self.collectionView.reloadData()
-        }
-    }
-    
     internal var startDateCache     = Date()
     internal var endDateCache       = Date()
     internal var startOfMonthCache  = Date()
     internal var endOfMonthCache    = Date()
     
     internal var todayIndexPath: IndexPath?
-    public var displayDate: Date?
-    
+
     internal(set) var selectedIndexPaths    = [IndexPath]()
     internal(set) var selectedDates         = [Date]()
-
-    internal var eventsByIndexPath = [IndexPath:[CalendarEvent]]()
-
+    
+    internal var monthInfoForSection = [Int:(firstDay: Int, daysTotal: Int)]()
+    internal var eventsByIndexPath = [IndexPath: [CalendarEvent]]()
+    
     var events: [CalendarEvent] = [] {
         didSet {
             self.eventsByIndexPath.removeAll()
@@ -147,7 +107,26 @@ public class CalendarView: UIView {
             DispatchQueue.main.async { self.collectionView.reloadData() }
         }
     }
-
+    
+    var flowLayout: CalendarFlowLayout {
+        return self.collectionView.collectionViewLayout as! CalendarFlowLayout
+    }
+    
+    // MARK: - public
+    
+    public var displayDate: Date?
+    public var multipleSelectionEnable = true
+    
+    public var delegate: CalendarViewDelegate?
+    public var dataSource: CalendarViewDataSource?
+    
+    public var direction : UICollectionViewScrollDirection = .horizontal {
+        didSet {
+            flowLayout.scrollDirection = direction
+            self.collectionView.reloadData()
+        }
+    }
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.setup()
@@ -163,8 +142,6 @@ public class CalendarView: UIView {
     }
     
     // MARK: Create Subviews
-    var headerView: CalendarHeaderView!
-    var collectionView: UICollectionView!
     private func setup() {
         
         self.clipsToBounds = true
@@ -192,10 +169,6 @@ public class CalendarView: UIView {
         self.collectionView.allowsMultipleSelection         = false
         self.collectionView.register(CalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
         self.addSubview(self.collectionView)
-    }
-    
-    var flowLayout: CalendarFlowLayout {
-        return self.collectionView.collectionViewLayout as! CalendarFlowLayout
     }
     
     override open func layoutSubviews() {
@@ -227,8 +200,6 @@ public class CalendarView: UIView {
             height: (frame.size.height - CalendarView.Style.headerHeight) / 6.0 // maximum number of rows
         )
     }
-
-    internal var monthInfoForSection = [Int:(firstDay:Int, daysTotal:Int)]()
 
     func reloadData() {
         self.collectionView.reloadData()

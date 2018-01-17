@@ -53,7 +53,6 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         }
         
         self.reloadData()
-        
     }
     
     public func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {

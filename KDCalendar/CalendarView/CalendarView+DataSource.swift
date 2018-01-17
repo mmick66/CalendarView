@@ -104,13 +104,10 @@ extension CalendarView: UICollectionViewDataSource {
             dayCell.textLabel.text = String(fromStartOfMonthIndexPath.item + 1)
             dayCell.isHidden = false
             
-        }
-        else {
+        } else {
             dayCell.textLabel.text = ""
             dayCell.isHidden = true
         }
-        
-        dayCell.isSelected = selectedIndexPaths.contains(indexPath)
         
         if indexPath.section == 0 && indexPath.item == 0 {
             self.scrollViewDidEndDecelerating(collectionView)
@@ -126,6 +123,8 @@ extension CalendarView: UICollectionViewDataSource {
             dayCell.eventsCount = 0
         }
         
+        dayCell.isSelected = selectedIndexPaths.contains(indexPath)
+    
         return dayCell
     }
 }
