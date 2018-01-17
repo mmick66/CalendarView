@@ -104,6 +104,7 @@ public class CalendarView: UIView {
 
     public var dataSource  : CalendarViewDataSource?
     public var delegate    : CalendarViewDelegate?
+    public var multipleSelectionEnable = true
     
     lazy var calendar : Calendar = {
         var gregorian = Calendar(identifier: .gregorian)
