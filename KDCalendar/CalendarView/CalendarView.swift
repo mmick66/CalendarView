@@ -68,9 +68,9 @@ extension CalendarViewDelegate {
 
 public class CalendarView: UIView {
     
-    struct Style {
+    public struct Style {
 
-        enum CellShapeOptions {
+        public enum CellShapeOptions {
             case round
             case square
             case bevel(CGFloat)
@@ -291,7 +291,6 @@ extension CalendarView {
         self.collectionView(collectionView, didSelectItemAt: indexPath)
         
     }
-    
 }
 
 // MARK: Convertion
