@@ -27,10 +27,9 @@ import UIKit
 
 open class CalendarDayCell: UICollectionViewCell {
     
-    override open var description: String {
-        let dayString = self.textLabel.text ?? " "
-        return "<DayCell (text:\"\(dayString)\")>"
-    }
+    let textLabel   = UILabel()
+    private let dotsView    = UIView()
+    private let bgView      = UIView()
     
     var eventsCount = 0 {
         didSet {
@@ -38,36 +37,11 @@ open class CalendarDayCell: UICollectionViewCell {
             self.setNeedsLayout()
         }
     }
-
-    var isToday : Bool = false {
-        didSet {
-            switch isToday {
-            case true:
-                self.bgView.backgroundColor = CalendarView.Style.cellColorToday
-                self.textLabel.textColor = CalendarView.Style.cellTextColorToday
-            case false:
-                self.bgView.backgroundColor = CalendarView.Style.cellColorDefault
-                self.textLabel.textColor = CalendarView.Style.cellTextColorDefault
-            }
-        }
-    }
     
-    override open var isSelected : Bool {
-        didSet {
-            switch isSelected {
-            case true:
-                self.bgView.layer.borderColor = CalendarView.Style.cellBorderColor.cgColor
-                self.bgView.layer.borderWidth = CalendarView.Style.cellBorderWidth
-            case false:
-                self.bgView.layer.borderColor = UIColor.clear.cgColor
-                self.bgView.layer.borderWidth = 0.0
-            }
-        }
+    override open var description: String {
+        let dayString = self.textLabel.text ?? " "
+        return "<DayCell (text:\"\(dayString)\")>"
     }
-
-    let textLabel   = UILabel()
-    let dotsView    = UIView()
-    let bgView      = UIView()
     
     override init(frame: CGRect) {
         self.textLabel.textAlignment = NSTextAlignment.center
@@ -79,7 +53,7 @@ open class CalendarDayCell: UICollectionViewCell {
         self.addSubview(self.textLabel)
         self.addSubview(self.dotsView)
     }
-
+    
     required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
@@ -105,7 +79,7 @@ open class CalendarDayCell: UICollectionViewCell {
         self.dotsView.frame                 = CGRect(x: 0, y: 0, width: size, height: size)
         self.dotsView.center                = CGPoint(x: self.textLabel.center.x, y: self.bounds.height - (2.5 * size))
         self.dotsView.layer.cornerRadius    = size * 0.5 // round it
-
+        
         switch CalendarView.Style.cellShape {
         case .square:
             self.bgView.layer.cornerRadius = 0.0
@@ -113,6 +87,36 @@ open class CalendarDayCell: UICollectionViewCell {
             self.bgView.layer.cornerRadius = elementsFrame.width * 0.5
         case .bevel(let radius):
             self.bgView.layer.cornerRadius = radius
+        }
+    }
+}
+
+extension CalendarDayCell {
+    
+    func manageStyle(isToday: Bool, isSelected: Bool, isBeforeToday: Bool) {
+        
+        if isSelected {
+            textLabel.textColor = CalendarView.Style.cellSelectedTextColor
+            bgView.backgroundColor = CalendarView.Style.cellSelectedColor
+            bgView.layer.borderWidth = CalendarView.Style.cellSelectedBorderWidth
+            bgView.layer.borderColor = CalendarView.Style.cellSelectedBorderColor.cgColor
+            
+        } else if isToday {
+            bgView.backgroundColor = CalendarView.Style.cellColorToday
+            textLabel.textColor = CalendarView.Style.cellTextColorToday
+            
+        } else if isBeforeToday {
+            
+            bgView.layer.borderWidth = 0.0
+            bgView.layer.borderColor = UIColor.clear.cgColor
+            bgView.backgroundColor = .clear
+            textLabel.textColor = CalendarView.Style.cellBeforeTodayTextColor
+            
+        } else {
+            bgView.layer.borderWidth = 0.0
+            bgView.backgroundColor = .clear
+            bgView.layer.borderColor = UIColor.clear.cgColor
+            textLabel.textColor = CalendarView.Style.cellTextColorDefault
         }
     }
 }

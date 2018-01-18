@@ -31,7 +31,7 @@ extension CalendarView: UICollectionViewDataSource {
     public func numberOfSections(in collectionView: UICollectionView) -> Int {
         
         guard let dateSource = self.dataSource else { return 0 }
-
+        
         self.startDateCache = dateSource.startDate()
         self.endDateCache   = dateSource.endDate()
         
@@ -64,7 +64,7 @@ extension CalendarView: UICollectionViewDataSource {
     }
     
     public func getMonthInfo(for date: Date) -> (firstDay: Int, daysTotal: Int)? {
-    
+        
         var firstWeekdayOfMonthIndex    = self.calendar.component(.weekday, from: date)
         firstWeekdayOfMonthIndex        = firstWeekdayOfMonthIndex - 1 // firstWeekdayOfMonthIndex should be 0-Indexed
         firstWeekdayOfMonthIndex        = (firstWeekdayOfMonthIndex + 6) % 7 // push it modularly to take it back one day where the first day is Monday instead of Sunday
@@ -79,8 +79,7 @@ extension CalendarView: UICollectionViewDataSource {
         var monthOffsetComponents = DateComponents()
         monthOffsetComponents.month = section;
         
-        guard
-            let correctMonthForSectionDate = self.calendar.date(byAdding: monthOffsetComponents, to: startOfMonthCache),
+        guard let correctMonthForSectionDate = self.calendar.date(byAdding: monthOffsetComponents, to: startOfMonthCache),
             let info = self.getMonthInfo(for: correctMonthForSectionDate) else { return 0 }
         
         self.monthInfoForSection[section] = info
@@ -100,25 +99,23 @@ extension CalendarView: UICollectionViewDataSource {
         let lastDayIndex = firstDayIndex + numberOfDaysTotal
         
         if (firstDayIndex..<lastDayIndex).contains(indexPath.item) { // item within range from first to last day
-            
             dayCell.textLabel.text = String(fromStartOfMonthIndexPath.item + 1)
             dayCell.isHidden = false
             
-        }
-        else {
+        } else {
             dayCell.textLabel.text = ""
             dayCell.isHidden = true
         }
-        
-        dayCell.isSelected = selectedIndexPaths.contains(indexPath)
         
         if indexPath.section == 0 && indexPath.item == 0 {
             self.scrollViewDidEndDecelerating(collectionView)
         }
         
-        if let idx = todayIndexPath {
-            dayCell.isToday = (idx.section == indexPath.section && idx.item + firstDayIndex == indexPath.item)
-        }
+        let isToday = (todayIndexPath != nil) ? (todayIndexPath!.section == indexPath.section && todayIndexPath!.item + firstDayIndex == indexPath.item) : false
+        let isSelected = selectedIndexPaths.contains(indexPath)
+        let isBeforeToday = todayIndexPath != nil ? indexPath < todayIndexPath! : false
+        
+        dayCell.manageStyle(isToday: isToday, isSelected: isSelected, isBeforeToday: isBeforeToday)
         
         if let eventsForDay = self.eventsByIndexPath[indexPath] {
             dayCell.eventsCount = eventsForDay.count

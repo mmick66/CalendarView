@@ -37,8 +37,13 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
             
             selectedIndexPaths.remove(at: index)
             selectedDates.remove(at: index)
-        }
-        else {
+            
+        } else {
+            
+            if !multipleSelectionEnable {
+                selectedIndexPaths.removeAll()
+                selectedDates.removeAll()
+            }
             
             selectedIndexPaths.append(indexPath)
             selectedDates.append(date)
@@ -48,7 +53,6 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         }
         
         self.reloadData()
-        
     }
     
     public func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
