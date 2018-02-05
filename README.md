@@ -148,7 +148,7 @@ CalendarView.Style.cellTextColorWeekend = UIColor.red
 calendarView.marksWeekends = true
 ```
 
-![IB Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/Screen%20Shot%202017-10-30%20at%2014.45.28.png)
+![IB Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/Screen%20Shot%202018-02-05%20at%2012.17.38.png)
 
 The `CellShape` will define whether the dates are displayed in a circle or square with bevel or not.
 
