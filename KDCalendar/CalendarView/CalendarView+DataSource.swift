@@ -111,11 +111,16 @@ extension CalendarView: UICollectionViewDataSource {
             self.scrollViewDidEndDecelerating(collectionView)
         }
         
-        let isToday = (todayIndexPath != nil) ? (todayIndexPath!.section == indexPath.section && todayIndexPath!.item + firstDayIndex == indexPath.item) : false
-        let isSelected = selectedIndexPaths.contains(indexPath)
-        let isBeforeToday = todayIndexPath != nil ? indexPath < todayIndexPath! : false
+        if let idx = todayIndexPath {
+            dayCell.isToday = (idx.section == indexPath.section && idx.item + firstDayIndex == indexPath.item)
+        }
         
-        dayCell.manageStyle(isToday: isToday, isSelected: isSelected, isBeforeToday: isBeforeToday)
+        dayCell.isSelected = selectedIndexPaths.contains(indexPath)
+        
+        if self.marksWeekends {
+            let we = indexPath.item % 7
+            dayCell.isWeekend = we == 5 || we == 6
+        }
         
         if let eventsForDay = self.eventsByIndexPath[indexPath] {
             dayCell.eventsCount = eventsForDay.count

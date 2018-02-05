@@ -27,9 +27,10 @@ import UIKit
 
 open class CalendarDayCell: UICollectionViewCell {
     
-    let textLabel   = UILabel()
-    private let dotsView    = UIView()
-    private let bgView      = UIView()
+    override open var description: String {
+        let dayString = self.textLabel.text ?? " "
+        return "<DayCell (text:\"\(dayString)\")>"
+    }
     
     var eventsCount = 0 {
         didSet {
@@ -38,21 +39,68 @@ open class CalendarDayCell: UICollectionViewCell {
         }
     }
     
-    override open var description: String {
-        let dayString = self.textLabel.text ?? " "
-        return "<DayCell (text:\"\(dayString)\")>"
+    
+    var isToday : Bool = false {
+        didSet {
+            switch isToday {
+            case true:
+                self.bgView.backgroundColor = CalendarView.Style.cellColorToday
+                self.textLabel.textColor    = CalendarView.Style.cellTextColorToday
+            case false:
+                self.bgView.backgroundColor = CalendarView.Style.cellColorDefault
+                self.textLabel.textColor = CalendarView.Style.cellTextColorDefault
+            }
+        }
     }
     
+    var isWeekend: Bool = false {
+        didSet {
+            if self.isToday { return }
+            switch isWeekend {
+            case true:
+                self.textLabel.textColor = CalendarView.Style.cellTextColorWeekend
+            case false:
+                self.textLabel.textColor = CalendarView.Style.cellTextColorDefault
+            }
+        }
+    }
+    
+    override open var isSelected : Bool {
+        didSet {
+            switch isSelected {
+            case true:
+                self.bgView.layer.borderColor = CalendarView.Style.cellSelectedBorderColor.cgColor
+                self.bgView.layer.borderWidth = CalendarView.Style.cellSelectedBorderWidth
+            case false:
+                self.bgView.layer.borderColor = CalendarView.Style.cellBorderColor.cgColor
+                self.bgView.layer.borderWidth = CalendarView.Style.cellBorderWidth
+            }
+        }
+    }
+    
+    
+    
+    
+    let textLabel   = UILabel()
+    let dotsView    = UIView()
+    let bgView      = UIView()
+    
     override init(frame: CGRect) {
+        
         self.textLabel.textAlignment = NSTextAlignment.center
+        
+        
         self.dotsView.backgroundColor = CalendarView.Style.cellEventColor
         
         super.init(frame: frame)
         
         self.addSubview(self.bgView)
         self.addSubview(self.textLabel)
+        
         self.addSubview(self.dotsView)
+        
     }
+    
     
     required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
@@ -88,35 +136,10 @@ open class CalendarDayCell: UICollectionViewCell {
         case .bevel(let radius):
             self.bgView.layer.cornerRadius = radius
         }
+        
+        
     }
+    
 }
 
-extension CalendarDayCell {
-    
-    func manageStyle(isToday: Bool, isSelected: Bool, isBeforeToday: Bool) {
-        
-        if isSelected {
-            textLabel.textColor = CalendarView.Style.cellSelectedTextColor
-            bgView.backgroundColor = CalendarView.Style.cellSelectedColor
-            bgView.layer.borderWidth = CalendarView.Style.cellSelectedBorderWidth
-            bgView.layer.borderColor = CalendarView.Style.cellSelectedBorderColor.cgColor
-            
-        } else if isToday {
-            bgView.backgroundColor = CalendarView.Style.cellColorToday
-            textLabel.textColor = CalendarView.Style.cellTextColorToday
-            
-        } else if isBeforeToday {
-            
-            bgView.layer.borderWidth = 0.0
-            bgView.layer.borderColor = UIColor.clear.cgColor
-            bgView.backgroundColor = .clear
-            textLabel.textColor = CalendarView.Style.cellBeforeTodayTextColor
-            
-        } else {
-            bgView.layer.borderWidth = 0.0
-            bgView.backgroundColor = .clear
-            bgView.layer.borderColor = UIColor.clear.cgColor
-            textLabel.textColor = CalendarView.Style.cellTextColorDefault
-        }
-    }
-}
+

@@ -37,21 +37,21 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         super.viewDidLoad()
         
-        CalendarView.Style.cellShape = .bevel(8.0)
-        CalendarView.Style.cellColorDefault = UIColor.clear
-        CalendarView.Style.cellColorToday = UIColor(red:1.00, green:0.84, blue:0.64, alpha:1.00)
-        CalendarView.Style.cellSelectedBorderColor = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
-        CalendarView.Style.cellEventColor = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
-        CalendarView.Style.headerTextColor = UIColor.white
-        CalendarView.Style.cellTextColorDefault = UIColor.white
-        CalendarView.Style.cellTextColorToday = UIColor(red:0.31, green:0.44, blue:0.47, alpha:1.00)
-        CalendarView.Style.cellBeforeTodayTextColor = UIColor(white: 0, alpha: 0.3)
+        CalendarView.Style.cellShape                = .bevel(8.0)
+        CalendarView.Style.cellColorDefault         = UIColor.clear
+        CalendarView.Style.cellColorToday           = UIColor(red:1.00, green:0.84, blue:0.64, alpha:1.00)
+        CalendarView.Style.cellSelectedBorderColor  = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
+        CalendarView.Style.cellEventColor           = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
+        CalendarView.Style.headerTextColor          = UIColor.white
+        CalendarView.Style.cellTextColorDefault     = UIColor.white
+        CalendarView.Style.cellTextColorToday       = UIColor(red:0.31, green:0.44, blue:0.47, alpha:1.00)
         
         calendarView.dataSource = self
         calendarView.delegate = self
         
         calendarView.direction = .horizontal
         calendarView.multipleSelectionEnable = false
+        calendarView.marksWeekends = true
         
         calendarView.backgroundColor = UIColor(red:0.31, green:0.44, blue:0.47, alpha:1.00)
         
