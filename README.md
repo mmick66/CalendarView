@@ -119,27 +119,36 @@ calendarView.direction = .horizontal
 
 ### Styling
 
-The look of this calendar component is based on a small set of variables set in `CalanderView.Style`.
+The look of this calendar component is based on a small set of static variables defined in the `CalendarView+Style.swift` file and in the `CalanderView.Style` structure. Set values for these variables anywhere in your code, before the CalendarView gets rendered on screen, for example on the viewDidLoad() of the controller that owns it. One of the styles seen above is defined like so
 
 ```Swift
-struct Style {
-    enum CellShapeOptions {
-        case Round
-        case Square
-        case Bevel(CGFloat)
-    }
-    static var cellColorDefault     : UIColor   
-    static var cellColorToday       : UIColor
-    static var cellTextColorDefault : UIColor
-    static var cellTextColorToday   : UIColor
-    static var cellBorderColor      : UIColor 
-    static var cellBorderWidth      : CGFloat
-    static var cellShape            : CellShapeOptions
-    static var cellEventColor       : UIColor
-    static var headerFontName       : String  
-    static var headerTextColor      : UIColor        
+override func viewDidLoad() {
+    
+    super.viewDidLoad()
+    
+    CalendarView.Style.cellShape                = .bevel(8.0)
+    CalendarView.Style.cellColorDefault         = UIColor.clear
+    CalendarView.Style.cellColorToday           = UIColor(red:1.00, green:0.84, blue:0.64, alpha:1.00)
+    CalendarView.Style.cellSelectedBorderColor  = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
+    CalendarView.Style.cellEventColor           = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
+    CalendarView.Style.headerTextColor          = UIColor.white
+    CalendarView.Style.cellTextColorDefault     = UIColor.white
+    CalendarView.Style.cellTextColorToday       = UIColor(red:0.31, green:0.44, blue:0.47, alpha:1.00)
+    
+    // complete init
 }
 ```
+
+#### Marking Weekends
+
+Some calendars will want to display weekends as special and mark them with a different text color. To do that, first selt the marksWeekends variable on the calendarView itself and (optionally) define the color to use.
+
+```Swift
+CalendarView.Style.cellTextColorWeekend = UIColor.red
+calendarView.marksWeekends = true
+```
+
+![IB Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/Screen%20Shot%202017-10-30%20at%2014.45.28.png)
 
 The `CellShape` will define whether the dates are displayed in a circle or square with bevel or not.
 
