@@ -171,3 +171,7 @@ The code will pop an alert view to ask the user if he will grant access to this 
 ## About Dates
 
 Calculating calendar dates can be pretty complicated. This is because time is an absolute scalar value while dates are a fluid human construct. Timezones are arbitrary geopolitical areas and daylight savings times can change according to government decision. The best way out of this is to calculate everything in UTC (which is the same as GTM for what we are concerned). So, the startDate and the endDatet comming from the delegate should all be in UTC (+0000) time.
+
+## Help Needed
+
+If you want to contribute there are always some open issues marked as enhancements in the issues tab. Any help is welcome.
