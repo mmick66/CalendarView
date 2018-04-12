@@ -170,6 +170,7 @@ public class CalendarView: UIView {
         self.collectionView.showsVerticalScrollIndicator    = false
         self.collectionView.allowsMultipleSelection         = false
         self.collectionView.register(CalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
+        self.collectionView.semanticContentAttribute = .forceLeftToRight
         self.addSubview(self.collectionView)
     }
     
