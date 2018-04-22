@@ -220,9 +220,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		ADC21D7A208C5DE400200022 /* CalendarView iOS */ = {
+		ADC21D7A208C5DE400200022 /* CalendarView_iOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = ADC21D86208C5DE400200022 /* Build configuration list for PBXNativeTarget "CalendarView iOS" */;
+			buildConfigurationList = ADC21D86208C5DE400200022 /* Build configuration list for PBXNativeTarget "CalendarView_iOS" */;
 			buildPhases = (
 				ADC21D76208C5DE400200022 /* Sources */,
 				ADC21D77208C5DE400200022 /* Frameworks */,
@@ -233,7 +233,7 @@
 			);
 			dependencies = (
 			);
-			name = "CalendarView iOS";
+			name = CalendarView_iOS;
 			productName = "CalendarView iOS";
 			productReference = ADC21D7B208C5DE400200022 /* CalendarView_iOS.framework */;
 			productType = "com.apple.product-type.framework";
@@ -317,7 +317,7 @@
 			targets = (
 				BEFD654E1ACC072000ADE917 /* CalendarView */,
 				BEFD65631ACC072000ADE917 /* CalendarViewTests */,
-				ADC21D7A208C5DE400200022 /* CalendarView iOS */,
+				ADC21D7A208C5DE400200022 /* CalendarView_iOS */,
 			);
 		};
 /* End PBXProject section */
@@ -397,7 +397,7 @@
 /* Begin PBXTargetDependency section */
 		ADC21D81208C5DE400200022 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = ADC21D7A208C5DE400200022 /* CalendarView iOS */;
+			target = ADC21D7A208C5DE400200022 /* CalendarView_iOS */;
 			targetProxy = ADC21D80208C5DE400200022 /* PBXContainerItemProxy */;
 		};
 		BEFD65661ACC072000ADE917 /* PBXTargetDependency */ = {
@@ -666,7 +666,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		ADC21D86208C5DE400200022 /* Build configuration list for PBXNativeTarget "CalendarView iOS" */ = {
+		ADC21D86208C5DE400200022 /* Build configuration list for PBXNativeTarget "CalendarView_iOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				ADC21D84208C5DE400200022 /* Debug */,
