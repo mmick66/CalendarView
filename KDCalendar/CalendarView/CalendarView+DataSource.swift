@@ -66,7 +66,7 @@ extension CalendarView: UICollectionViewDataSource {
     public func getMonthInfo(for date: Date) -> (firstDay: Int, daysTotal: Int)? {
         
         var firstWeekdayOfMonthIndex    = self.calendar.component(.weekday, from: date)
-        firstWeekdayOfMonthIndex        = firstWeekdayOfMonthIndex - 1 // firstWeekdayOfMonthIndex should be 0-Indexed
+        firstWeekdayOfMonthIndex       -= CalendarView.Style.firstWeekday == .monday ? 1 : 0 
         firstWeekdayOfMonthIndex        = (firstWeekdayOfMonthIndex + 6) % 7 // push it modularly to take it back one day where the first day is Monday instead of Sunday
         
         guard let rangeOfDaysInMonth = self.calendar.range(of: .day, in: .month, for: date) else { return nil }
@@ -79,7 +79,8 @@ extension CalendarView: UICollectionViewDataSource {
         var monthOffsetComponents = DateComponents()
         monthOffsetComponents.month = section;
         
-        guard let correctMonthForSectionDate = self.calendar.date(byAdding: monthOffsetComponents, to: startOfMonthCache),
+        guard
+            let correctMonthForSectionDate = self.calendar.date(byAdding: monthOffsetComponents, to: startOfMonthCache),
             let info = self.getMonthInfo(for: correctMonthForSectionDate) else { return 0 }
         
         self.monthInfoForSection[section] = info

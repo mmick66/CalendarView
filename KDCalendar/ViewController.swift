@@ -46,12 +46,15 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         CalendarView.Style.cellTextColorDefault     = UIColor.white
         CalendarView.Style.cellTextColorToday       = UIColor(red:0.31, green:0.44, blue:0.47, alpha:1.00)
         
+        CalendarView.Style.firstWeekday             = .monday
+        
         calendarView.dataSource = self
         calendarView.delegate = self
         
         calendarView.direction = .horizontal
         calendarView.multipleSelectionEnable = false
         calendarView.marksWeekends = true
+        
         
         calendarView.backgroundColor = UIColor(red:0.31, green:0.44, blue:0.47, alpha:1.00)
         
