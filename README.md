@@ -160,6 +160,16 @@ calendarView.marksWeekends = true
 
 The `CellShape` will define whether the dates are displayed in a circle or square with bevel or not.
 
+#### First Day of the Week
+
+Depending on the culture weeks are considered to start either on a Monday or on a Sunday. To change the way the days are displayed use:
+
+```Swift
+CalendarView.Style.firstWeekday = .sunday
+```
+
+The calendar defaults to Monday which is standard in Europe.
+
 ### Loading Events
 
 This component has the ability to fetch events from the system's `EKEventStore` which is syncronised with the native calendar provided in iOS. 
