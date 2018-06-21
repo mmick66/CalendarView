@@ -69,12 +69,12 @@ extension CalendarViewDelegate {
 
 public class CalendarView: UIView {
     
-    let cellReuseIdentifier = "CalendarDayCell"
+    public let cellReuseIdentifier = "CalendarDayCell"
     
     var headerView: CalendarHeaderView!
     var collectionView: UICollectionView!
     
-    lazy var calendar : Calendar = {
+    public lazy var calendar : Calendar = {
         var gregorian = Calendar(identifier: .gregorian)
         gregorian.timeZone = TimeZone(abbreviation: "UTC")!
         return gregorian
