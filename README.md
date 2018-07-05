@@ -6,7 +6,8 @@
 [![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/vsouza/awesome-ios)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 
-This is an implementation of a calendar component for iOS written in Swift 4.0. It features both vertical and horizontal layout (and scrolling) and the display of native calendar events.
+This is an implementation of a calendar component for iOS written in Swift 4.0. 
+It features both vertical and horizontal layout (and scrolling) and the display of native calendar events.
 
 ![Calendar Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/screenshots.png)
 
@@ -58,13 +59,13 @@ protocol CalendarViewDelegate {
 
 The data source will provide the **start date** and the **end date** of the calendar. The methods have a default implementation that will return `Date()` resulting in a single-page calendar displaying the current month. 
 
-The delegate responds to events such as scroll and selection of specific dates.
+The delegate responds to events such as scrolling and the selection of specific dates.
 
 ## How to Use
 
-You would want to implement the delegate functions inside your view controller and as they appear in the example project.
+You would want to implement the delegate functions inside your view controller as they appear in the example project.
 
-Say you want to be able to scroll 3 months in the past, then:
+Say you want to be able to scroll 3 months into the past, then:
 
 ```Swift
 func startDate() -> Date {
@@ -104,13 +105,13 @@ The calendar supports the selection of multiple dates. You can select a date eit
 self.calendarView.selectDate(date)
 ```
 
-Similarly you can deselect
+Similarly you can deselect:
 
 ```Swift
 self.calendarView.deselectDate(date)
 ```
 
-You can get all the dates that where selected, either manually or programatically by
+You can get all the dates that were selected, either manually or programatically using:
 
 ```Swift
 self.calendarView.selectedDates
@@ -118,7 +119,7 @@ self.calendarView.selectedDates
 
 ### Layout
 
-The calendar supports the two basic layouts set inside the `direction` property as `.horizontal` or `.vertical`.
+The calendar supports two basic layouts. Set the `direction` property to `.horizontal` or `.vertical`:
 
 ```Swift
 calendarView.direction = .horizontal
@@ -127,7 +128,7 @@ calendarView.direction = .horizontal
 
 ### Styling
 
-The look of this calendar component is based on a small set of static variables defined in the `CalendarView+Style.swift` file and in the `CalanderView.Style` structure. Set values for these variables anywhere in your code, before the CalendarView gets rendered on screen, for example on the viewDidLoad() of the controller that owns it. One of the styles seen above is defined like so
+The look of this calendar component is based on a small set of static variables defined in the `CalendarView+Style.swift` file and in the `CalanderView.Style` structure. Set values for these variables anywhere in your code, before the CalendarView gets rendered on screen, for example on the viewDidLoad() of the controller that owns it. One of the styles seen above is defined like so:
 
 ```Swift
 override func viewDidLoad() {
@@ -149,7 +150,7 @@ override func viewDidLoad() {
 
 #### Marking Weekends
 
-Some calendars will want to display weekends as special and mark them with a different text color. To do that, first selt the marksWeekends variable on the calendarView itself and (optionally) define the color to use.
+Some calendars will want to display weekends as special and mark them with a different text color. To do that, first set the marksWeekends variable on the calendarView itself and (optionally) define the color to use.
 
 ```Swift
 CalendarView.Style.cellTextColorWeekend = UIColor.red
@@ -186,7 +187,7 @@ EventsLoader.load(from: self.startDate(), to: self.endDate()) { // (events:[Cale
 }
 ```
 
-The code will pop an alert view to ask the user if he will grant access to this app to access the calendar, if it is granted we can pass the events to the `CalendarView`, otherwise we get a nil and notify the app about the denial.
+The code will pop up an alert view to ask the user if he will allow this app to access the calendar. If access is granted we can pass the events to the `CalendarView`, otherwise we get a nil and notify the app about the denial.
 
 ## About Dates
 
@@ -194,4 +195,4 @@ Calculating calendar dates can be pretty complicated. This is because time is an
 
 ## Help Needed
 
-If you want to contribute there are always some open issues marked as enhancements in the issues tab. Any help is welcome.
+If you want to contribute there are always some open issues marked as [enhancements](https://github.com/mmick66/CalendarView/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement) in the issues tab. Any help is welcome.
