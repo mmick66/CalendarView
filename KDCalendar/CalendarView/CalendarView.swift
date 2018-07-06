@@ -170,8 +170,10 @@ public class CalendarView: UIView {
         self.collectionView.showsVerticalScrollIndicator    = false
         self.collectionView.allowsMultipleSelection         = false
         self.collectionView.register(CalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
-        self.collectionView.semanticContentAttribute = .forceLeftToRight
+        self.collectionView.semanticContentAttribute = .forceLeftToRight // forces western style language orientation
         self.addSubview(self.collectionView)
+        
+        
     }
     
     override open func layoutSubviews() {
@@ -297,7 +299,10 @@ extension CalendarView {
     }
     
     /*
-     TODO
+     method: - selectDate
+     params:
+     - date: Date to select;
+     function: - mark date as selected and add it to the array of selected dates
      */
     public func selectDate(_ date : Date) {
         guard let indexPath = self.indexPathForDate(date) else { return }
@@ -306,7 +311,10 @@ extension CalendarView {
     }
     
     /*
-     TODO
+     method: - deselectDate
+     params:
+     - date: Date to deselect;
+     function: - unmark date as selected and remove it from the array of selected dates
      */
     public func deselectDate(_ date : Date) {
         guard let indexPath = self.indexPathForDate(date) else { return }
@@ -315,14 +323,16 @@ extension CalendarView {
     }
     
     /*
-     TODO
+     method: - goToNextMonth
+     function: - scroll the calendar by one month in the future
      */
     public func goToNextMonth() {
         goToMonthWithOffet(1)
     }
     
     /*
-     TODO
+     method: - goToPreviousMonth
+     function: - scroll the calendar by one month in the past
      */
     public func goToPreviousMonth() {
         goToMonthWithOffet(-1)
