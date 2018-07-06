@@ -65,22 +65,28 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         super.viewDidAppear(animated)
         
-        EventsLoader.load(from: self.startDate(), to: self.endDate()) { // (events:[CalendarEvent]?) in
+        let today = Date()
+        
+        var tomorrowComponents = DateComponents()
+        tomorrowComponents.day = 1
+        
+        
+        let tomorrow = self.calendarView.calendar.date(byAdding: tomorrowComponents, to: today)!
+        self.calendarView.selectDate(tomorrow)
+        
+        
+        
+        EventsManager.load(from: self.startDate(), to: self.endDate()) { // (events:[CalendarEvent]?) in
+            
             if let events = $0 {
                 self.calendarView.events = events
             } else {
                 // notify for access not access not granted
             }
+            
+            
         }
         
-        
-        var tomorrowComponents = DateComponents()
-        tomorrowComponents.day = 1
-        
-        let today = Date()
-        
-        let tomorrow = self.calendarView.calendar.date(byAdding: tomorrowComponents, to: today)!
-        self.calendarView.selectDate(tomorrow)
         
         self.calendarView.setDisplayDate(today)
         self.datePicker.setDate(today, animated: false)
@@ -127,8 +133,30 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
     }
     
     func calendar(_ calendar: CalendarView, didScrollToMonth date : Date) {
-    
+        
         self.datePicker.setDate(date, animated: true)
+    }
+    
+    
+    func calendar(_ calendar: CalendarView, didLongPressDate date : Date) {
+        
+        print("Adding Event")
+        
+        let now = Date()
+        
+        var components = DateComponents()
+        components.day = 0
+        components.hour = 1
+        
+        let inOneHour = self.calendarView.calendar.date(byAdding: components, to: now)!
+        
+        let event = CalendarEvent(title: "Test Event", startDate: now, endDate: inOneHour)
+        let res = EventsManager.add(event: event)
+        
+        if !res {
+            print("Failed to add event")
+        }
+        
     }
     
     

@@ -26,27 +26,47 @@
 import Foundation
 import EventKit
 
-open class EventsLoader {
+open class EventsManager {
     
     private static let store = EKEventStore()
     
     static func load(from fromDate: Date, to toDate: Date, complete onComplete: @escaping ([CalendarEvent]?) -> Void) {
         
         let q = DispatchQueue.main
+        
         guard EKEventStore.authorizationStatus(for: .event) == .authorized else {
             
-            return EventsLoader.store.requestAccess(to: EKEntityType.event, completion: {(granted, error) -> Void in
+            return EventsManager.store.requestAccess(to: EKEntityType.event, completion: {(granted, error) -> Void in
                 guard granted else {
                     return q.async { onComplete(nil) }
                 }
-                EventsLoader.fetch(from: fromDate, to: toDate) { events in
+                EventsManager.fetch(from: fromDate, to: toDate) { events in
                     q.async { onComplete(events) }
                 }
             })
         }
         
-        EventsLoader.fetch(from: fromDate, to: toDate) { events in
+        EventsManager.fetch(from: fromDate, to: toDate) { events in
             q.async { onComplete(events) }
+        }
+    }
+    
+    @discardableResult
+    static func add(event calendarEvent: CalendarEvent) -> Bool {
+        
+        guard EKEventStore.authorizationStatus(for: .event) == .authorized else {
+            return false
+        }
+        let event = EKEvent(eventStore: store)
+        event.title = calendarEvent.title
+        event.startDate = calendarEvent.startDate
+        event.endDate = calendarEvent.endDate
+        event.calendar = store.defaultCalendarForNewEvents
+        do {
+            try store.save(event, span: .thisEvent)
+            return true
+        } catch {
+            return false
         }
     }
     

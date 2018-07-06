@@ -60,11 +60,13 @@ public protocol CalendarViewDelegate {
     /* optional */
     func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool
     func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void
+    func calendar(_ calendar : CalendarView, didLongPressDate date : Date) -> Void
 }
 
 extension CalendarViewDelegate {
     func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool { return true }
     func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void { return }
+    func calendar(_ calendar : CalendarView, didLongPressDate date : Date) -> Void { return }
 }
 
 public class CalendarView: UIView {
@@ -173,7 +175,27 @@ public class CalendarView: UIView {
         self.collectionView.semanticContentAttribute = .forceLeftToRight // forces western style language orientation
         self.addSubview(self.collectionView)
         
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(CalendarView.handleLongPress))
+        self.collectionView.addGestureRecognizer(longPress)
         
+    }
+    
+    
+    @objc func handleLongPress(gesture: UILongPressGestureRecognizer) {
+        
+        guard gesture.state == UIGestureRecognizerState.began else {
+            return
+        }
+        
+        let point = gesture.location(in: collectionView)
+        
+        guard
+            let indexPath = collectionView.indexPathForItem(at: point),
+            let date = self.dateFromIndexPath(indexPath) else {
+            return
+        }
+        
+        self.delegate?.calendar(self, didLongPressDate: date)
     }
     
     override open func layoutSubviews() {
