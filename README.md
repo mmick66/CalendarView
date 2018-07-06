@@ -50,10 +50,11 @@ protocol CalendarViewDataSource {
     func endDate() -> NSDate   // UTC Date
 }
 protocol CalendarViewDelegate {
-    func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool /* default implementation */ 
+    func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool /* optional */ 
     func calendar(_ calendar : CalendarView, didScrollToMonth date : Date) -> Void
     func calendar(_ calendar : CalendarView, didSelectDate date : Date, withEvents events: [CalendarEvent]) -> Void
-    func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void /* default implementation */ 
+    func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void /* optional */ 
+    func calendar(_ calendar : CalendarView, didLongPressDate date : Date) -> Void /* optional */ 
 }
 ```
 
@@ -186,6 +187,16 @@ EventsLoader.load(from: self.startDate(), to: self.endDate()) { // (events:[Cale
     }
 }
 ```
+
+### Adding Events
+
+There is a function that allows you to add a new event in the calendar. It is currently restrictred to a single day (like the rest of the calendar)
+
+```Swift
+func addEvent(_ title: String, date: Date, duration hours: NSInteger = 1) -> Bool
+```
+
+To detect when the user wants to add a new date, the delegate can implement the `didLongPressDate` method will notify the controller for a long press and the `addEvent` function is usually used in conjuction with this delegate method
 
 The code will pop up an alert view to ask the user if he will allow this app to access the calendar. If access is granted we can pass the events to the `CalendarView`, otherwise we get a nil and notify the app about the denial.
 
