@@ -84,7 +84,6 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
                 // notify for access not access not granted
             }
             
-            
         }
         
         
@@ -142,22 +141,11 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         print("Adding Event")
         
-        let now = Date()
-        
-        var components = DateComponents()
-        components.day = 0
-        components.hour = 1
-        
-        let inOneHour = self.calendarView.calendar.date(byAdding: components, to: now)!
-        
-        let event = CalendarEvent(title: "Test Event", startDate: now, endDate: inOneHour)
-        let res = EventsManager.add(event: event)
-        
-        if !res {
-            print("Failed to add event")
-        }
+        self.calendarView.addEvent("Test Event", date: date)
         
     }
+    
+    
     
     
     // MARK : Events

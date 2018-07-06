@@ -51,7 +51,6 @@ open class EventsManager {
         }
     }
     
-    @discardableResult
     static func add(event calendarEvent: CalendarEvent) -> Bool {
         
         guard EKEventStore.authorizationStatus(for: .event) == .authorized else {
