@@ -202,7 +202,7 @@ The code will pop up an alert view to ask the user if he will allow this app to 
 
 ## About Dates
 
-Calculating calendar dates can be pretty complicated. This is because time is an absolute scalar value while dates are a fluid human construct. Timezones are arbitrary geopolitical areas and daylight savings times can change according to government decision. The best way out of this is to calculate everything in UTC (which is the same as GTM for what we are concerned). So, the startDate and the endDatet comming from the delegate should all be in UTC (+0000) time.
+Calculating dates can somewhat complicated, because while time is an absolute value, dates are a construct of culture: timezones are  geopolitical areas and daylight savings times change according to government decision. The best way out of this is to calculate everything in UTC (same as GTM for what we are concerned) and so the `startDate` and `endDate` returned from the delegate should all be in UTC (+0000) time.
 
 ## Help Needed
 
