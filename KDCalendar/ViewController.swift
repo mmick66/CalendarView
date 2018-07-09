@@ -139,9 +139,25 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
     
     func calendar(_ calendar: CalendarView, didLongPressDate date : Date) {
         
-        print("Adding Event")
+        let alert = UIAlertController(title: "Create New Event", message: "Message", preferredStyle: .alert)
         
-        self.calendarView.addEvent("Test Event", date: date)
+        alert.addTextField { (textField: UITextField) in
+            textField.placeholder = "Event Title"
+        }
+        
+        let addEventAction = UIAlertAction(title: "Create", style: .default, handler: { (action) -> Void in
+            let title = alert.textFields?.first?.text
+            self.calendarView.addEvent(title!, date: date)
+        })
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .destructive, handler: nil)
+        
+        alert.addAction(addEventAction)
+        alert.addAction(cancelAction)
+        
+        self.present(alert, animated: true, completion: nil)
+        
+        
         
     }
     
