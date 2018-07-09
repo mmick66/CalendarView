@@ -188,7 +188,9 @@ EventsLoader.load(from: self.startDate(), to: self.endDate()) { // (events:[Cale
 }
 ```
 
-### Adding Events
+The code will pop up an alert view to ask the user if he will allow this app to access the calendar. If access is granted we can pass the events to the `CalendarView`, otherwise we get a nil and notify the app about the denial.
+
+### Creating (Adding) New Events
 
 There is a function that allows you to add a new event in the calendar. It is currently restrictred to a single day (like the rest of the calendar)
 
@@ -196,9 +198,11 @@ There is a function that allows you to add a new event in the calendar. It is cu
 func addEvent(_ title: String, date: Date, duration hours: NSInteger = 1) -> Bool
 ```
 
-To detect when the user wants to add a new date, the delegate can implement the `didLongPressDate` method will notify the controller for a long press and the `addEvent` function is usually used in conjuction with this delegate method
+To detect when the user wants to add a new date, the delegate can implement the `didLongPressDate` method will notify the controller for a long press and the `addEvent` function is usually used in conjuction with this delegate method.
 
-The code will pop up an alert view to ask the user if he will allow this app to access the calendar. If access is granted we can pass the events to the `CalendarView`, otherwise we get a nil and notify the app about the denial.
+Currently, the example implementation of this repo will open an alert view that will prompt the user for a title to the event and set it for the duration of an hour. Custom controls could be added to further refine the selection.
+
+As with the loading of the events we need to give persmissions to the app.
 
 ## About Dates
 
