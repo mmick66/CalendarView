@@ -52,6 +52,7 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         calendarView.delegate = self
         
         calendarView.direction = .horizontal
+        calendarView.multipleSelectionEnable = false
         calendarView.marksWeekends = true
         
         
