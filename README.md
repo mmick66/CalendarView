@@ -11,13 +11,13 @@ It features both vertical and horizontal layout (and scrolling) and the display 
 
 ![Calendar Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/screenshots.png)
 
-## Requirements
+# Requirements
 
 * iOS 8.0+
 * XCode 9.0+
 * Swift 4.0 +
 
-## Installation
+# Installation
 
 #### CocoaPods
 
@@ -36,7 +36,7 @@ github "mmick66/CalendarView" "master"
 
 The files needed to be included are in the **CalendarView** subfolder of this project.
 
-## Setup
+# Setup
 
 The calendar is a `UIView` and can be added **either programmatically or via a XIB/Storyboard**. 
 
@@ -62,7 +62,9 @@ The data source will provide the **start date** and the **end date** of the cale
 
 The delegate responds to events such as scrolling and the selection of specific dates.
 
-## How to Use
+Note: The dates should be in UTC (same as GMT)
+
+# How to Use
 
 You would want to implement the delegate functions inside your view controller as they appear in the example project.
 
@@ -174,7 +176,7 @@ CalendarView.Style.firstWeekday = .sunday
 
 The calendar defaults to Monday which is standard in Europe.
 
-### Events
+# Events
 
 This component has the ability to sync events from the system's `EKEventStore` which is common with the native calendar provided in iOS. 
 
