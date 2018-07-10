@@ -179,11 +179,15 @@ The calendar defaults to Monday which is standard in Europe.
 This component has the ability to fetch events from the system's `EKEventStore` which is syncronised with the native calendar provided in iOS. 
 
 ```Swift
-EventsLoader.load(from: self.startDate(), to: self.endDate()) { // (events:[CalendarEvent]?) in
-    if events = $0 {
-        self.calendarView.events = events
-    } else {
-        // notify that access was not access not granted
+self.calendarView.loadEvents()
+```
+
+Optionally, a complete handler can be added in case an error is returned
+
+```Swift
+self.calendarView.loadEvents() { error in
+    if error != nil {
+        // handle error
     }
 }
 ```
