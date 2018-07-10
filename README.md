@@ -174,9 +174,13 @@ CalendarView.Style.firstWeekday = .sunday
 
 The calendar defaults to Monday which is standard in Europe.
 
-### Loading Events
+### Events
 
-This component has the ability to fetch events from the system's `EKEventStore` which is syncronised with the native calendar provided in iOS. 
+This component has the ability to sync events from the system's `EKEventStore` which is common with the native calendar provided in iOS. 
+
+#### Loading Events
+
+To load events from the system's calendar call the followint method:
 
 ```Swift
 self.calendarView.loadEvents()
@@ -194,7 +198,7 @@ self.calendarView.loadEvents() { error in
 
 The code will pop up an alert view to ask the user if he will allow this app to access the calendar. If access is granted we can pass the events to the `CalendarView`, otherwise we get a nil and notify the app about the denial.
 
-### Creating (Adding) New Events
+#### Creating (Adding) New Events
 
 There is a function that allows you to add a new event in the calendar. It is currently restrictred to a single day (like the rest of the calendar)
 
