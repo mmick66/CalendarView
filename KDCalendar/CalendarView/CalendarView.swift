@@ -360,6 +360,20 @@ extension CalendarView {
         goToMonthWithOffet(-1)
     }
     
+    func loadEvents(onComplete: ((Error?) -> Void)? = nil) {
+        
+        EventsManager.load(from: self.startDateCache, to: self.endDateCache) { // (events:[CalendarEvent]?) in
+            
+            if let events = $0 {
+                self.events = events
+                onComplete?(nil)
+            } else {
+                onComplete?(EventsManagerError.Authorization)
+            }
+            
+        }
+    }
+    
     @discardableResult public func addEvent(_ title: String, date: Date, duration hours: NSInteger = 1) -> Bool {
         
         var components = DateComponents()

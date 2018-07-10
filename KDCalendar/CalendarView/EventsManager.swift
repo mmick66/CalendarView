@@ -26,6 +26,10 @@
 import Foundation
 import EventKit
 
+enum EventsManagerError: Error {
+    case Authorization
+}
+
 open class EventsManager {
     
     private static let store = EKEventStore()

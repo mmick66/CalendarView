@@ -74,16 +74,13 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         let tomorrow = self.calendarView.calendar.date(byAdding: tomorrowComponents, to: today)!
         self.calendarView.selectDate(tomorrow)
         
-        
-        
-        EventsManager.load(from: self.startDate(), to: self.endDate()) { // (events:[CalendarEvent]?) in
-            
-            if let events = $0 {
-                self.calendarView.events = events
-            } else {
-                // notify for access not access not granted
+        self.calendarView.loadEvents() { error in
+            if error != nil {
+                let message = "The karmadust calender could not load system events. It is possibly a problem with permissions"
+                let alert = UIAlertController(title: "Events Loading Error", message: message, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: nil))
+                self.present(alert, animated: true, completion: nil)
             }
-            
         }
         
         
@@ -157,8 +154,6 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         self.present(alert, animated: true, completion: nil)
         
-        
-        
     }
     
     
@@ -183,6 +178,7 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
     }
     
 }
+
 
 
 
