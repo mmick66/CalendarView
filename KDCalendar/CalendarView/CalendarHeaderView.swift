@@ -71,7 +71,7 @@ open class CalendarHeaderView: UIView {
         
         var frm = self.bounds
         frm.origin.y += 5.0
-        frm.size.height = 40.0
+        frm.size.height = self.bounds.size.height / 2.0 - 5.0
         
         self.monthLabel.frame = frm
         
