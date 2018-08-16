@@ -30,7 +30,7 @@ open class CalendarHeaderView: UIView {
     lazy var monthLabel : UILabel = {
         let lbl = UILabel()
         lbl.textAlignment = NSTextAlignment.center
-        lbl.font = UIFont(name: CalendarView.Style.headerFontName, size: 20.0)
+        lbl.font = UIFont(name: CalendarView.Style.headerFontName, size: CalendarView.Style.headerFontSize)
         lbl.textColor = CalendarView.Style.headerTextColor
         
         self.addSubview(lbl)
@@ -71,7 +71,7 @@ open class CalendarHeaderView: UIView {
         
         var frm = self.bounds
         frm.origin.y += 5.0
-        frm.size.height = 40.0
+        frm.size.height = self.bounds.size.height / 2.0 - 5.0
         
         self.monthLabel.frame = frm
         

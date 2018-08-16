@@ -36,6 +36,12 @@ public struct CalendarEvent {
     let title: String
     let startDate: Date
     let endDate:Date
+    
+    public init(title: String, startDate: Date, endDate: Date) {
+        self.title = title;
+        self.startDate = startDate;
+        self.endDate = endDate;
+    }
 }
 
 public protocol CalendarViewDataSource {
@@ -95,7 +101,7 @@ public class CalendarView: UIView {
     internal var monthInfoForSection = [Int:(firstDay: Int, daysTotal: Int)]()
     internal var eventsByIndexPath = [IndexPath: [CalendarEvent]]()
     
-    var events: [CalendarEvent] = [] {
+    public var events: [CalendarEvent] = [] {
         didSet {
             self.eventsByIndexPath.removeAll()
             
@@ -315,7 +321,7 @@ extension CalendarView {
      */
     public func setDisplayDate(_ date : Date, animated: Bool = false) {
         
-        guard (date > startDateCache) && (date < endDateCache) else { return }
+        guard (date >= startDateCache) && (date <= endDateCache) else { return }
         self.collectionView.setContentOffset(self.scrollViewOffset(for: date), animated: animated)
         self.displayDateOnHeader(date)
     }
