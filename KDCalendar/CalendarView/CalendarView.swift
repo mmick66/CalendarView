@@ -33,9 +33,9 @@ struct EventLocation {
 }
 
 public struct CalendarEvent {
-    let title: String
-    let startDate: Date
-    let endDate:Date
+    public let title: String
+    public let startDate: Date
+    public let endDate:Date
     
     public init(title: String, startDate: Date, endDate: Date) {
         self.title = title;
@@ -366,7 +366,7 @@ extension CalendarView {
         goToMonthWithOffet(-1)
     }
     
-    func loadEvents(onComplete: ((Error?) -> Void)? = nil) {
+    public func loadEvents(onComplete: ((Error?) -> Void)? = nil) {
         
         EventsManager.load(from: self.startDateCache, to: self.endDateCache) { // (events:[CalendarEvent]?) in
             
