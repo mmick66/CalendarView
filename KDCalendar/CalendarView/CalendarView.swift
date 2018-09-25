@@ -130,12 +130,21 @@ public class CalendarView: UIView {
     public var delegate: CalendarViewDelegate?
     public var dataSource: CalendarViewDataSource?
     
+    #if swift(>=4.2)
+    public var direction : UICollectionView.ScrollDirection = .horizontal {
+        didSet {
+            flowLayout.scrollDirection = direction
+            self.collectionView.reloadData()
+        }
+    }
+    #else
     public var direction : UICollectionViewScrollDirection = .horizontal {
         didSet {
             flowLayout.scrollDirection = direction
             self.collectionView.reloadData()
         }
     }
+    #endif
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -189,9 +198,15 @@ public class CalendarView: UIView {
     
     @objc func handleLongPress(gesture: UILongPressGestureRecognizer) {
         
+        #if swift(>=4.2)
+        guard gesture.state == UIGestureRecognizer.State.began else {
+            return
+        }
+        #else
         guard gesture.state == UIGestureRecognizerState.began else {
             return
         }
+        #endif
         
         let point = gesture.location(in: collectionView)
         
@@ -334,7 +349,12 @@ extension CalendarView {
      */
     public func selectDate(_ date : Date) {
         guard let indexPath = self.indexPathForDate(date) else { return }
-        self.collectionView.selectItem(at: indexPath, animated: false, scrollPosition: UICollectionViewScrollPosition())
+        
+        #if swift(>=4.2)
+        self.collectionView.selectItem(at: indexPath, animated: false, scrollPosition: UICollectionView.ScrollPosition())
+        #else
+            self.collectionView.selectItem(at: indexPath, animated: false, scrollPosition: UICollectionViewScrollPosition())
+        #endif
         self.collectionView(collectionView, didSelectItemAt: indexPath)
     }
     
