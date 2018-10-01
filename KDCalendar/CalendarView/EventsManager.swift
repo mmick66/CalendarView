@@ -60,10 +60,13 @@ open class EventsManager {
         guard EKEventStore.authorizationStatus(for: .event) == .authorized else {
             return false
         }
+        
+        let secondsFromGMTDifference = TimeInterval(TimeZone.current.secondsFromGMT()) * -1
+        
         let event = EKEvent(eventStore: store)
         event.title = calendarEvent.title
-        event.startDate = calendarEvent.startDate
-        event.endDate = calendarEvent.endDate
+        event.startDate = calendarEvent.startDate.addingTimeInterval(secondsFromGMTDifference)
+        event.endDate = calendarEvent.endDate.addingTimeInterval(secondsFromGMTDifference)
         event.calendar = store.defaultCalendarForNewEvents
         do {
             try store.save(event, span: .thisEvent)
