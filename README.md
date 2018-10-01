@@ -15,7 +15,7 @@ It features both vertical and horizontal layout (and scrolling) and the display 
 
 * iOS 8.0+
 * XCode 9.0+
-* Swift 4.0 +
+* Swift 4.2
 
 # Installation
 
