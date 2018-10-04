@@ -22,7 +22,7 @@ It features both vertical and horizontal layout (and scrolling) and the display 
 #### CocoaPods
 
 ```
-pod 'KDCalendar', '~> 1.6.2'
+pod 'KDCalendar', '~> 1.6.5'
 ```
 
 #### Carthage
