@@ -38,7 +38,7 @@ The files needed to be included are in the **CalendarView** subfolder of this pr
 
 # Setup
 
-The calendar is a `UIView` and can be added **either programmatically or via a XIB/Storyboard**. 
+The calendar is a `UIView` and can be added **either programmatically or via a XIB/Storyboard**. If doing the latter, make sure that the Module is selected to be **KDCalendar**.
 
 ![IB Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/Screenshot.png)
 
