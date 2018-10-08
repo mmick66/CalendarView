@@ -40,7 +40,7 @@ The files needed to be included are in the **CalendarView** subfolder of this pr
 
 The calendar is a `UIView` and can be added **either programmatically or via a XIB/Storyboard**. 
 
-![IB Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/Screen%20Shot%202017-10-30%20at%2014.45.28.png)
+![IB Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/Screenshot.png)
 
 It needs a delegate and data source that comply with:
 
