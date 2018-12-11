@@ -31,16 +31,16 @@ enum EventsManagerError: Error {
 }
 
 open class EventsManager {
-    
+
     private static let store = EKEventStore()
-    
+
     static func load(from fromDate: Date, to toDate: Date, complete onComplete: @escaping ([CalendarEvent]?) -> Void) {
-        
+
         let q = DispatchQueue.main
-        
+
         guard EKEventStore.authorizationStatus(for: .event) == .authorized else {
-            
-            return EventsManager.store.requestAccess(to: EKEntityType.event, completion: {(granted, error) -> Void in
+
+            return EventsManager.store.requestAccess(to: EKEntityType.event, completion: {(granted, _) -> Void in
                 guard granted else {
                     return q.async { onComplete(nil) }
                 }
@@ -49,20 +49,20 @@ open class EventsManager {
                 }
             })
         }
-        
+
         EventsManager.fetch(from: fromDate, to: toDate) { events in
             q.async { onComplete(events) }
         }
     }
-    
+
     static func add(event calendarEvent: CalendarEvent) -> Bool {
-        
+
         guard EKEventStore.authorizationStatus(for: .event) == .authorized else {
             return false
         }
-        
+
         let secondsFromGMTDifference = TimeInterval(TimeZone.current.secondsFromGMT()) * -1
-        
+
         let event = EKEvent(eventStore: store)
         event.title = calendarEvent.title
         event.startDate = calendarEvent.startDate.addingTimeInterval(secondsFromGMTDifference)
@@ -75,13 +75,13 @@ open class EventsManager {
             return false
         }
     }
-    
+
     private static func fetch(from fromDate: Date, to toDate: Date, complete onComplete: @escaping ([CalendarEvent]) -> Void) {
-        
+
         let predicate = store.predicateForEvents(withStart: fromDate, end: toDate, calendars: nil)
-        
+
         let secondsFromGMTDifference = TimeInterval(TimeZone.current.secondsFromGMT())
-        
+
         let events = store.events(matching: predicate).map {
             return CalendarEvent(
                 title:      $0.title,
@@ -89,7 +89,7 @@ open class EventsManager {
                 endDate:    $0.endDate.addingTimeInterval(secondsFromGMTDifference)
             )
         }
-        
+
         onComplete(events)
     }
 }

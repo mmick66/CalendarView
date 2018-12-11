@@ -26,64 +26,64 @@
 import UIKit
 
 open class CalendarHeaderView: UIView {
-    
-    lazy var monthLabel : UILabel = {
+
+    lazy var monthLabel: UILabel = {
         let lbl = UILabel()
         lbl.textAlignment = NSTextAlignment.center
         lbl.font = UIFont(name: CalendarView.Style.headerFontName, size: CalendarView.Style.headerFontSize)
         lbl.textColor = CalendarView.Style.headerTextColor
-        
+
         self.addSubview(lbl)
-        
+
         return lbl
     }()
-    
-    lazy var dayLabelContainerView : UIView = {
+
+    lazy var dayLabelContainerView: UIView = {
         let v = UIView()
-        
+
         let formatter = DateFormatter()
-        
+
         var start = CalendarView.Style.firstWeekday == .sunday ? 0 : 1
-        
+
         for index in start..<(start+7) {
-            
+
             let weekdayLabel = UILabel()
-            
+
             weekdayLabel.font = UIFont(name: CalendarView.Style.headerFontName, size: 14.0)
-            
+
             weekdayLabel.text = formatter.shortWeekdaySymbols[(index % 7)]
-            
+
             weekdayLabel.textColor = CalendarView.Style.headerTextColor
             weekdayLabel.textAlignment = NSTextAlignment.center
-            
+
             v.addSubview(weekdayLabel)
         }
-        
+
         self.addSubview(v)
-        
+
         return v
-        
+
     }()
-    
+
     override open func layoutSubviews() {
-        
+
         super.layoutSubviews()
-        
+
         var frm = self.bounds
         frm.origin.y += 5.0
         frm.size.height = self.bounds.size.height / 2.0 - 5.0
-        
+
         self.monthLabel.frame = frm
-        
+
         var labelFrame = CGRect(
             x: 0.0,
             y: self.bounds.size.height / 2.0,
             width: self.bounds.size.width / 7.0,
             height: self.bounds.size.height / 2.0
         )
-        
+
         for lbl in self.dayLabelContainerView.subviews {
-            
+
             lbl.frame = labelFrame
             labelFrame.origin.x += labelFrame.size.width
         }
