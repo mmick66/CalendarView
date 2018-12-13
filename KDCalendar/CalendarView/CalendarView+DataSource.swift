@@ -117,7 +117,7 @@ extension CalendarView: UICollectionViewDataSource {
         }
         if let delegate = self.delegate, let dateBeingSelected = self.dateFromIndexPath(indexPath) {
             if delegate.calendar(self, canSelectDate: dateBeingSelected) == false {
-                dayCell.isWeekend = true
+                dayCell.isBlackout = true
             }
         }
         if let eventsForDay = self.eventsByIndexPath[indexPath] {
