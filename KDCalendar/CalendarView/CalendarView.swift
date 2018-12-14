@@ -118,6 +118,17 @@ public class CalendarView: UIView {
         return calFlowLayout
     }
 
+//    var startOfMonth = {
+//        let startDate = dataSource?.startDate()
+//
+//        var firstDayOfStartMonthComponents = self.calendar.dateComponents([.era, .year, .month], from: startDate)
+//        firstDayOfStartMonthComponents.day = 1
+//
+//        let firstDayOfStartMonthDate = self.calendar.date(from: firstDayOfStartMonthComponents)!
+//
+//        self.startOfMonthCache = firstDayOfStartMonthDate
+//    }
+
     // MARK: - public
 
     public var displayDate: Date?
@@ -329,8 +340,10 @@ extension CalendarView {
      function: - scroll calendar at date (month/year) passed as parameter.
      */
     public func setDisplayDate(_ date: Date, animated: Bool = false) {
-
-        guard (date >= startDateCache) && (date <= endDateCache) else { return }
+        print("startOfMonthCache = \(startOfMonthCache)")
+        print("endDateCache = \(endDateCache)")
+        guard (date >= startOfMonthCache) && (date <= endDateCache) else { return }
+        print("in range")
         self.collectionView.setContentOffset(self.scrollViewOffset(for: date), animated: animated)
         self.displayDateOnHeader(date)
     }
@@ -372,12 +385,39 @@ extension CalendarView {
         goToMonthWithOffet(1)
     }
 
+    public func isLastMonth() -> Bool {
+        var dateComponents = DateComponents()
+        dateComponents.month = 1
+        print("isLastMonth")
+        guard let displayDate = self.displayDate else { return true }
+        print("has display date")
+        guard let newDate = self.calendar.date(byAdding: dateComponents, to: displayDate) else { return true }
+        print("able to test next month")
+        if newDate <= endDateCache {
+            return false
+        } else {
+            return true
+        }
+    }
+
     /*
      method: - goToPreviousMonth
      function: - scroll the calendar by one month in the past
      */
     public func goToPreviousMonth() {
         goToMonthWithOffet(-1)
+    }
+
+    public func isFirstMonth() -> Bool {
+        var dateComponents = DateComponents()
+        dateComponents.month = -1
+        guard let displayDate = self.displayDate else { return true }
+        guard let newDate = self.calendar.date(byAdding: dateComponents, to: displayDate) else { return true }
+        if newDate >= startOfMonthCache {
+            return false
+        } else {
+            return true
+        }
     }
 
     public func loadEvents(onComplete: ((Error?) -> Void)? = nil) {
