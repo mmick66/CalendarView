@@ -32,11 +32,10 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         guard let date = self.dateFromIndexPath(indexPath) else { return }
 
         if let index = selectedIndexPaths.index(of: indexPath) {
-
-            delegate?.calendar(self, didDeselectDate: date)
-
-            selectedIndexPaths.remove(at: index)
-            selectedDates.remove(at: index)
+            // We want to prevent deselecting ship date
+//            delegate?.calendar(self, didDeselectDate: date)
+//            selectedIndexPaths.remove(at: index)
+//            selectedDates.remove(at: index)
 
         } else {
 

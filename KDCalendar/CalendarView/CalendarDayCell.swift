@@ -70,7 +70,6 @@ open class CalendarDayCell: UICollectionViewCell {
 
     var isBlackout: Bool = false {
         didSet {
-            if self.isToday { return }
             switch isBlackout {
             case true:
                 self.textLabel.textColor = CalendarView.Style.cellTextColorBlackout
