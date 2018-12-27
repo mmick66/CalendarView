@@ -47,6 +47,8 @@ public struct CalendarEvent {
 public protocol CalendarViewDataSource {
     func startDate() -> Date
     func endDate() -> Date
+    /* optional */
+    func headerString(_ date: Date) -> String?
 }
 
 extension CalendarViewDataSource {
@@ -56,6 +58,10 @@ extension CalendarViewDataSource {
     }
     func endDate() -> Date {
         return Date()
+    }
+    
+    func headerString(_ date: Date) -> String? {
+        return nil
     }
 }
 
