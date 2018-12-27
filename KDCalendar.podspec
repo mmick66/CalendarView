@@ -15,7 +15,7 @@ Pod::Spec.new do |s|
 
   s.author       = "Michael Michailidis"
 
-  s.platform     = :ios, "9.0"
+  s.platform     = :ios, "8.0"
 
   s.source       = { :git => "https://github.com/mmick66/CalendarView.git", :tag => s.version }
 
