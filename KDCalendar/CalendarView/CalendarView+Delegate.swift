@@ -110,7 +110,7 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         
         let year = self.calendar.component(.year, from: date)
 
-        self.headerView.monthLabel.text = monthName + " " + String(year)
+        self.headerView.monthLabel.text = dataSource?.headerString(date) ?? monthName + " " + String(year)
         
         self.displayDate = date
     }
