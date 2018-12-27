@@ -187,7 +187,9 @@ public class CalendarView: UIView {
         self.collectionView.showsVerticalScrollIndicator    = false
         self.collectionView.allowsMultipleSelection         = false
         self.collectionView.register(CalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
-        self.collectionView.semanticContentAttribute = .forceLeftToRight // forces western style language orientation
+        if #available(iOS 9.0, *) {
+            self.collectionView.semanticContentAttribute = .forceLeftToRight // forces western style language orientation
+        }
         self.addSubview(self.collectionView)
         
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(CalendarView.handleLongPress))
