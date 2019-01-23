@@ -144,7 +144,7 @@ public class CalendarView: UIView {
         }
     }
     #else
-    public var direction : UICollectionViewScrollDirection = .horizontal {
+    public var direction : UICollectionView.ScrollDirection = .horizontal {
         didSet {
             flowLayout.scrollDirection = direction
             self.collectionView.reloadData()
@@ -211,7 +211,7 @@ public class CalendarView: UIView {
             return
         }
         #else
-        guard gesture.state == UIGestureRecognizerState.began else {
+        guard gesture.state == UIGestureRecognizer.State.began else {
             return
         }
         #endif
@@ -361,7 +361,7 @@ extension CalendarView {
         #if swift(>=4.2)
         self.collectionView.selectItem(at: indexPath, animated: false, scrollPosition: UICollectionView.ScrollPosition())
         #else
-            self.collectionView.selectItem(at: indexPath, animated: false, scrollPosition: UICollectionViewScrollPosition())
+            self.collectionView.selectItem(at: indexPath, animated: false, scrollPosition: UICollectionView.ScrollPosition())
         #endif
         self.collectionView(collectionView, didSelectItemAt: indexPath)
     }
