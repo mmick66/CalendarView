@@ -19,6 +19,13 @@ Pod::Spec.new do |s|
 
   s.source       = { :git => "https://github.com/mmick66/CalendarView.git", :tag => s.version }
 
-  s.source_files = "Classes", "KDCalendar/CalendarView/**/*.{swift}"
+  s.default_subspec = 'EventManager'
 
+  s.subspec 'Core' do |ss|
+    ss.source_files = "KDCalendar/CalendarView/**/*.{swift}"
+  end
+  s.subspec 'EventManager' do |ss|
+    ss.source_files = "KDCalendar/CalendarView/**/*.{swift}"
+    ss.pod_target_xcconfig = { 'SWIFT_ACTIVE_COMPILATION_CONDITIONS' => 'KDCALENDAR_EVENT_MANAGER_ENABLED' }
+  end
 end

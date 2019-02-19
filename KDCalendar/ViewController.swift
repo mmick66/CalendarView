@@ -73,7 +73,8 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         let tomorrow = self.calendarView.calendar.date(byAdding: tomorrowComponents, to: today)!
         self.calendarView.selectDate(tomorrow)
-        
+
+        #if KDCALENDAR_EVENT_MANAGER_ENABLED
         self.calendarView.loadEvents() { error in
             if error != nil {
                 let message = "The karmadust calender could not load system events. It is possibly a problem with permissions"
@@ -82,6 +83,7 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
                 self.present(alert, animated: true, completion: nil)
             }
         }
+        #endif
         
         
         self.calendarView.setDisplayDate(today)

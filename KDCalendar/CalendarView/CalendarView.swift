@@ -24,7 +24,9 @@
  */
 
 import UIKit
+#if KDCALENDAR_EVENT_MANAGER_ENABLED
 import EventKit
+#endif
 
 struct EventLocation {
     let title: String
@@ -393,6 +395,8 @@ extension CalendarView {
     public func goToPreviousMonth() {
         goToMonthWithOffet(-1)
     }
+
+    #if KDCALENDAR_EVENT_MANAGER_ENABLED
     
     public func loadEvents(onComplete: ((Error?) -> Void)? = nil) {
         
@@ -430,4 +434,6 @@ extension CalendarView {
         return true
         
     }
+
+    #endif
 }

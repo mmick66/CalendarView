@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  *
  */
-
+#if KDCALENDAR_EVENT_MANAGER_ENABLED
 import Foundation
 import EventKit
 
@@ -93,3 +93,4 @@ open class EventsManager {
         onComplete(events)
     }
 }
+#endif
