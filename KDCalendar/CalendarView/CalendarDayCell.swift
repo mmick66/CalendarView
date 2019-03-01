@@ -55,7 +55,7 @@ open class CalendarDayCell: UICollectionViewCell {
     
     var isWeekend: Bool = false {
         didSet {
-            if self.isToday { return }
+            if self.isSelected || self.isToday { return }
             switch isWeekend {
             case true:
                 self.textLabel.textColor = CalendarView.Style.cellTextColorWeekend
@@ -71,9 +71,12 @@ open class CalendarDayCell: UICollectionViewCell {
             case true:
                 self.bgView.layer.borderColor = CalendarView.Style.cellSelectedBorderColor.cgColor
                 self.bgView.layer.borderWidth = CalendarView.Style.cellSelectedBorderWidth
+                self.bgView.backgroundColor = CalendarView.Style.cellSelectedColor
+                self.textLabel.textColor = CalendarView.Style.cellSelectedTextColor
             case false:
                 self.bgView.layer.borderColor = CalendarView.Style.cellBorderColor.cgColor
                 self.bgView.layer.borderWidth = CalendarView.Style.cellBorderWidth
+                self.bgView.backgroundColor = CalendarView.Style.cellColorDefault
             }
         }
     }
