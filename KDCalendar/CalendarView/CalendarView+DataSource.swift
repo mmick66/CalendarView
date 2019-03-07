@@ -120,7 +120,8 @@ extension CalendarView: UICollectionViewDataSource {
         
         if self.marksWeekends {
             let we = indexPath.item % 7
-            dayCell.isWeekend = we == 5 || we == 6
+            let weekDayOption = CalendarView.Style.firstWeekday == .sunday ? 0 : 5
+            dayCell.isWeekend = we == weekDayOption || we == 6
         }
         
         if let eventsForDay = self.eventsByIndexPath[indexPath] {
