@@ -229,7 +229,7 @@ public class CalendarView: UIView {
         
         guard
             let indexPathEvents = collectionView.indexPathForItem(at: point),
-            let events = self.eventsByIndexPath[indexPathEvents] else {
+            let events = self.eventsByIndexPath[indexPathEvents], events.count > 0 else {
                 self.delegate?.calendar(self, didLongPressDate: date, withEvents: nil)
                 return
         }
