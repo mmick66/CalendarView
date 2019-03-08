@@ -44,9 +44,9 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         CalendarView.Style.cellEventColor           = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
         CalendarView.Style.headerTextColor          = UIColor.white
         CalendarView.Style.cellTextColorDefault     = UIColor.white
-        CalendarView.Style.cellTextColorToday       = UIColor(red:0.31, green:0.44, blue:0.47, alpha:1.00)
+        CalendarView.Style.cellTextColorToday       = UIColor.orange
         
-        CalendarView.Style.firstWeekday             = .monday
+        CalendarView.Style.firstWeekday             = .sunday
         
         CalendarView.Style.locale                   = Locale(identifier: "pt_BR")
         
