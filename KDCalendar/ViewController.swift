@@ -48,7 +48,7 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         CalendarView.Style.firstWeekday             = .sunday
         
-        CalendarView.Style.locale                   = Locale(identifier: "pt_BR")
+        CalendarView.Style.locale                   = Locale(identifier: "en_US")
         
         CalendarView.Style.timeZone                 = TimeZone(abbreviation: "UTC")!
         
