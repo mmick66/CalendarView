@@ -136,7 +136,13 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
     }
     
     
-    func calendar(_ calendar: CalendarView, didLongPressDate date : Date) {
+    func calendar(_ calendar: CalendarView, didLongPressDate date : Date, withEvents events: [CalendarEvent]?) {
+        
+        if let events = events {
+            for event in events {
+                print("\t\"\(event.title)\" - Starting at:\(event.startDate)")
+            }
+        }
         
         let alert = UIAlertController(title: "Create New Event", message: "Message", preferredStyle: .alert)
         

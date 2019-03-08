@@ -74,13 +74,13 @@ public protocol CalendarViewDelegate {
     /* optional */
     func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool
     func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void
-    func calendar(_ calendar : CalendarView, didLongPressDate date : Date) -> Void
+    func calendar(_ calendar : CalendarView, didLongPressDate date : Date, withEvents events: [CalendarEvent]?) -> Void
 }
 
 extension CalendarViewDelegate {
     func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool { return true }
     func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void { return }
-    func calendar(_ calendar : CalendarView, didLongPressDate date : Date) -> Void { return }
+    func calendar(_ calendar : CalendarView, didLongPressDate date : Date, withEvents events: [CalendarEvent]?) -> Void { return }
 }
 
 public class CalendarView: UIView {
@@ -227,7 +227,14 @@ public class CalendarView: UIView {
             return
         }
         
-        self.delegate?.calendar(self, didLongPressDate: date)
+        guard
+            let indexPathEvents = collectionView.indexPathForItem(at: point),
+            let events = self.eventsByIndexPath[indexPathEvents] else {
+                self.delegate?.calendar(self, didLongPressDate: date, withEvents: nil)
+                return
+        }
+        
+        self.delegate?.calendar(self, didLongPressDate: date, withEvents: events)
     }
     
     override open func layoutSubviews() {
