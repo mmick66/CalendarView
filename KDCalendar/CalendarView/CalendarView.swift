@@ -91,9 +91,9 @@ public class CalendarView: UIView {
     var collectionView: UICollectionView!
     
     public lazy var calendar : Calendar = {
-        var gregorian = Calendar(identifier: .gregorian)
-        gregorian.timeZone = TimeZone(abbreviation: "UTC")!
-        return gregorian
+        var calendarStyle = Calendar(identifier: CalendarView.Style.identifier)
+        calendarStyle.timeZone = CalendarView.Style.timeZone
+        return calendarStyle
     }()
     
     internal var startDateCache     = Date()
