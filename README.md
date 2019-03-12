@@ -188,7 +188,7 @@ Set the locale for header labels of Weekdays and Month. Use:
 CalendarView.Style.locale = Locale(identifier: "en_US")
 ```
 
-![IB Screenshot](https://github.com/mmick66/CalendarView/blob/Fix-Issue-%2355/Assets/locale.png)
+![IB Screenshot](https://github.com/felipedemetrius/CalendarView/blob/Fix-Issue-%2355/Assets/locale.png)
 
 The locale default is Locale.current of your device.
 
