@@ -42,6 +42,8 @@ open class CalendarHeaderView: UIView {
         let v = UIView()
         
         let formatter = DateFormatter()
+        formatter.locale = CalendarView.Style.locale
+        formatter.timeZone = CalendarView.Style.timeZone
         
         var start = CalendarView.Style.firstWeekday == .sunday ? 0 : 1
         
@@ -51,7 +53,7 @@ open class CalendarHeaderView: UIView {
             
             weekdayLabel.font = UIFont(name: CalendarView.Style.headerFontName, size: 14.0)
             
-            weekdayLabel.text = formatter.shortWeekdaySymbols[(index % 7)]
+            weekdayLabel.text = formatter.shortWeekdaySymbols[(index % 7)].capitalized
             
             weekdayLabel.textColor = CalendarView.Style.headerTextColor
             weekdayLabel.textAlignment = NSTextAlignment.center
