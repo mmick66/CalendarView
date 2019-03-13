@@ -107,7 +107,11 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
     func displayDateOnHeader(_ date: Date) {
         let month = self.calendar.component(.month, from: date) // get month
         
-        let monthName = DateFormatter().monthSymbols[(month-1) % 12] // 0 indexed array
+        let formatter = DateFormatter()
+        formatter.locale = CalendarView.Style.locale
+        formatter.timeZone = CalendarView.Style.timeZone
+        
+        let monthName = formatter.monthSymbols[(month-1) % 12].capitalized // 0 indexed array
         
         let year = self.calendar.component(.year, from: date)
 

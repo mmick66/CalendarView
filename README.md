@@ -180,6 +180,18 @@ CalendarView.Style.firstWeekday = .sunday
 
 The calendar defaults to Monday which is standard in Europe.
 
+#### Set locale of calendar 
+
+Set the locale for header labels of Weekdays and Month. Use:
+
+```Swift
+CalendarView.Style.locale = Locale(identifier: "en_US")
+```
+
+![IB Screenshot](https://github.com/mmick66/CalendarView/blob/Fix-Issue-%2355/Assets/locale.png)
+
+The locale default is Locale.current of your device.
+
 # Events
 
 This component has the ability to sync events from the system's `EKEventStore` which is common with the native calendar provided in iOS. 

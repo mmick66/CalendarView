@@ -48,6 +48,10 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         CalendarView.Style.firstWeekday             = .sunday
         
+        CalendarView.Style.locale                   = Locale(identifier: "en_US")
+        
+        CalendarView.Style.timeZone                 = TimeZone(abbreviation: "UTC")!
+        
         calendarView.dataSource = self
         calendarView.delegate = self
         
@@ -57,8 +61,6 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         
         calendarView.backgroundColor = UIColor(red:0.31, green:0.44, blue:0.47, alpha:1.00)
-        
-        
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -87,8 +89,10 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         
         self.calendarView.setDisplayDate(today)
-        self.datePicker.setDate(today, animated: false)
         
+        self.datePicker.locale = CalendarView.Style.locale
+        self.datePicker.timeZone = CalendarView.Style.timeZone
+        self.datePicker.setDate(today, animated: false)
     }
 
     // MARK : KDCalendarDataSource

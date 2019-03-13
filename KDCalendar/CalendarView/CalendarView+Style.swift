@@ -64,6 +64,13 @@ extension CalendarView {
         //Weekend Style
         public static var cellTextColorWeekend      = UIColor(red:1.00, green:0.84, blue:0.65, alpha:1.00)
         
+        //Locale Style
+        public static var locale                    = Locale.current
         
+        //TimeZone Calendar Style
+        public static var timeZone                  = TimeZone(abbreviation: "UTC")!
+        
+        //Calendar Identifier Style
+        public static var identifier                = Calendar.Identifier.gregorian
     }
 }
