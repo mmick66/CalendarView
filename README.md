@@ -22,11 +22,11 @@ It features both vertical and horizontal layout (and scrolling) and the display 
 #### CocoaPods
 
 ```
-pod 'KDCalendar', '~> 1.6.5'
+pod 'KDCalendar', '~> 1.6.6'
 
 # An alternative Core subspec is available without EventKit integration
 # This avoids needing to add NSCalendarsUsageDescription in your Info.plist
-pod 'KDCalendar/Core', '~> 1.6.5'
+pod 'KDCalendar/Core', '~> 1.6.6'
 ```
 
 #### Carthage
