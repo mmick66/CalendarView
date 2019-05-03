@@ -52,6 +52,9 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         CalendarView.Style.timeZone                 = TimeZone(abbreviation: "UTC")!
         
+        CalendarView.Style.hideCellsOutsideDateRange = false
+        CalendarView.Style.changeCellColorOutsideRange = false
+        
         calendarView.dataSource = self
         calendarView.delegate = self
         
@@ -113,7 +116,7 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         var dateComponents = DateComponents()
       
-        dateComponents.year = 2;
+        dateComponents.year = 2
         let today = Date()
         
         let twoYearsFromNow = self.calendarView.calendar.date(byAdding: dateComponents, to: today)!

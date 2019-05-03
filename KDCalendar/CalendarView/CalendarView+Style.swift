@@ -72,5 +72,10 @@ extension CalendarView {
         
         //Calendar Identifier Style
         public static var identifier                = Calendar.Identifier.gregorian
+        
+        //Hide/Alter Cells Outside Date Range
+        public static var hideCellsOutsideDateRange = false
+        public static var changeCellColorOutsideRange = false
+        public static var cellTextColorOutsideRange = UIColor.red
     }
 }
