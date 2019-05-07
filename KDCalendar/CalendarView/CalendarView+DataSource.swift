@@ -124,6 +124,8 @@ extension CalendarView: UICollectionViewDataSource {
             dayCell.isWeekend = we == weekDayOption || we == 6
         }
         
+        hideOrAlterCellsOutsideDates(indexPath: indexPath, firstDayIndex: firstDayIndex, lastDayIndex: lastDayIndex, dayCell: dayCell)
+        
         if let eventsForDay = self.eventsByIndexPath[indexPath] {
             dayCell.eventsCount = eventsForDay.count
         } else {
@@ -131,5 +133,39 @@ extension CalendarView: UICollectionViewDataSource {
         }
         
         return dayCell
+    }
+}
+
+extension CalendarView {
+    
+    func hideOrAlterCellsOutsideDates(indexPath: IndexPath, firstDayIndex: Int, lastDayIndex: Int, dayCell: CalendarDayCell){
+        
+        if CalendarView.Style.hideCellsOutsideDateRange == true || CalendarView.Style.changeCellColorOutsideRange == true {
+            
+            if indexPath.section == 0 {
+                let startDay = Calendar.current.component(.day, from: startDateCache) - 1
+                let daysToShow = startDay + firstDayIndex
+                if !(daysToShow..<lastDayIndex).contains(indexPath.item){
+                    hideOrAlterCells(cell: dayCell)
+                }
+            }
+            if indexPath.section == monthInfoForSection.count - 1 {
+                let endDay = Calendar.current.component(.day, from: endDateCache)
+                let daysToShow = firstDayIndex + endDay
+                if (daysToShow..<lastDayIndex).contains(indexPath.item){
+                    hideOrAlterCells(cell: dayCell)
+                }
+            }
+        }
+    }
+    
+    func hideOrAlterCells(cell: CalendarDayCell) {
+        if CalendarView.Style.hideCellsOutsideDateRange == true {
+            cell.textLabel.text = ""
+            cell.isHidden = true
+        }
+        if CalendarView.Style.changeCellColorOutsideRange == true {
+            cell.textLabel.textColor = CalendarView.Style.cellTextColorOutsideRange
+        }
     }
 }
