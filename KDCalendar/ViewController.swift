@@ -55,6 +55,8 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         CalendarView.Style.hideCellsOutsideDateRange = false
         CalendarView.Style.changeCellColorOutsideRange = false
         
+        CalendarView.Style.cellFont = UIFont(name: "Helvetica", size: 20.0)
+
         calendarView.dataSource = self
         calendarView.delegate = self
         
