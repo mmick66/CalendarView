@@ -30,7 +30,7 @@ open class CalendarHeaderView: UIView {
     lazy var monthLabel : UILabel = {
         let lbl = UILabel()
         lbl.textAlignment = NSTextAlignment.center
-        lbl.font = UIFont(name: CalendarView.Style.headerFontName, size: CalendarView.Style.headerFontSize)
+        lbl.font = CalendarView.Style.headerFont
         lbl.textColor = CalendarView.Style.headerTextColor
         
         self.addSubview(lbl)
@@ -51,7 +51,7 @@ open class CalendarHeaderView: UIView {
             
             let weekdayLabel = UILabel()
             
-            weekdayLabel.font = UIFont(name: CalendarView.Style.headerFontName, size: 14.0)
+            weekdayLabel.font = CalendarView.Style.subHeaderFont
             
             weekdayLabel.text = formatter.shortWeekdaySymbols[(index % 7)].capitalized
             
