@@ -95,6 +95,9 @@ open class CalendarDayCell: UICollectionViewCell {
         
         self.dotsView.backgroundColor = CalendarView.Style.cellEventColor
         
+        self.textLabel.font = CalendarView.Style.cellFont
+        
+        
         super.init(frame: frame)
         
         self.addSubview(self.bgView)
