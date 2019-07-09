@@ -37,8 +37,8 @@ extension CalendarView {
         //Header
         public static var headerHeight: CGFloat     = 80.0
         public static var headerTextColor           = UIColor.gray
-        public static var headerFont                = UIFont(name: "Helvetica", size: 20.0) // Used for the month
-        public static var subHeaderFont             = UIFont(name: "Helvetica", size: 14.0) // Used for days of the week
+        public static var headerFont                = UIFont.systemFont(ofSize: 20) // Used for the month
+        public static var subHeaderFont             = UIFont.systemFont(ofSize: 14) // Used for days of the week
 
         //Common
         public static var cellShape                 = CellShapeOptions.bevel(4.0)
@@ -50,7 +50,7 @@ extension CalendarView {
         public static var cellTextColorDefault      = UIColor.gray
         public static var cellBorderColor           = UIColor.clear
         public static var cellBorderWidth           = CGFloat(0.0)
-        public static var cellFont                  = UIFont(name: "Helvetica", size: 17.0)
+        public static var cellFont                  = UIFont.systemFont(ofSize: 17)
         
         //Today Style
         public static var cellTextColorToday        = UIColor.gray
