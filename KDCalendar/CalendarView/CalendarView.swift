@@ -353,8 +353,19 @@ extension CalendarView {
      function: - scroll calendar at date (month/year) passed as parameter.
      */
     public func setDisplayDate(_ date : Date, animated: Bool = false) {
-        
-        guard (date >= startDateCache) && (date <= endDateCache) else { return }
+		if #available(iOS 10.0, *) {
+			guard
+				let startDate = calendar.dateInterval(of: .month, for: startDateCache)?.start,
+				let endDate = calendar.dateInterval(of: .month, for: endDateCache)?.end,
+				(startDate..<endDate).contains(date)
+			else {
+				return
+			}
+		}
+		else {
+			guard (startDateCache..<endDateCache).contains(date) else { return }
+		}
+		
         self.collectionView.setContentOffset(self.scrollViewOffset(for: date), animated: animated)
         self.displayDateOnHeader(date)
     }
