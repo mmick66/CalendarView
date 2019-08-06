@@ -52,8 +52,6 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         CalendarView.Style.timeZone                 = TimeZone(abbreviation: "UTC")!
         
-        CalendarView.Style.cellOutOfRangeDisplay    = .grayed
-        
         CalendarView.Style.cellFont = UIFont(name: "Helvetica", size: 20.0) ?? UIFont.systemFont(ofSize: 20.0)
         CalendarView.Style.headerFont = UIFont(name: "Helvetica", size: 20.0) ?? UIFont.systemFont(ofSize: 20.0)
         CalendarView.Style.subHeaderFont = UIFont(name: "Helvetica", size: 14.0) ?? UIFont.systemFont(ofSize: 14.0)
@@ -119,7 +117,7 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         var dateComponents = DateComponents()
       
-        dateComponents.year = 2
+        dateComponents.month = 3
         let today = Date()
         
         let twoYearsFromNow = self.calendarView.calendar.date(byAdding: dateComponents, to: today)!

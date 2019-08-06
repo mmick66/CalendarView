@@ -53,6 +53,19 @@ open class CalendarDayCell: UICollectionViewCell {
         }
     }
     
+    
+    var isOutOfRange : Bool = false {
+        didSet {
+            switch isOutOfRange {
+            case true:
+                self.textLabel.textColor = CalendarView.Style.cellColorOutOfRange
+            case false:
+                self.textLabel.textColor = CalendarView.Style.cellTextColorDefault
+            }
+        }
+    }
+    
+    
     var isWeekend: Bool = false {
         didSet {
             if self.isSelected || self.isToday { return }
@@ -81,7 +94,14 @@ open class CalendarDayCell: UICollectionViewCell {
         }
     }
     
-    
+    // MARK: - Public methods
+    public func clearStyles() {
+        self.bgView.layer.borderColor = CalendarView.Style.cellBorderColor.cgColor
+        self.bgView.layer.borderWidth = CalendarView.Style.cellBorderWidth
+        self.bgView.backgroundColor = CalendarView.Style.cellColorDefault
+        self.textLabel.textColor = CalendarView.Style.cellTextColorDefault
+        self.eventsCount = 0
+    }
     
     
     let textLabel   = UILabel()

@@ -37,9 +37,12 @@ extension CalendarView: UICollectionViewDataSource {
         
         guard self.startDateCache <= self.endDateCache else { fatalError("Start date cannot be later than end date.") }
         
-        let startDateComponents = self.calendar.dateComponents([.era, .year, .month], from: self.startDateCache)
+        let getComponents = { (date: Date) -> DateComponents in
+            self.calendar.dateComponents([.era, .year, .month, .day], from: date)
+        }
         
-        
+        let startDateComponents = getComponents(self.startDateCache)
+        let endDateComponents = getComponents(self.endDateCache)
         
         var firstDayOfStartMonthComponents = startDateComponents
         firstDayOfStartMonthComponents.day = 1
@@ -63,20 +66,29 @@ extension CalendarView: UICollectionViewDataSource {
             self.todayIndexPath = IndexPath(item: distanceFromTodayComponents.day!, section: distanceFromTodayComponents.month!)
         }
         
+        // how many months should the whole calendar display?
+        let numberOfMonths = self.calendar.dateComponents([.month], from: startOfMonthCache, to: endOfMonthCache).month!
+        
+        // subtract one to include the day
+        self.startIndexPath = IndexPath(item: startDateComponents.day! - 1, section: 0)
+        self.endIndexPath = IndexPath(item: endDateComponents.day! - 1, section: numberOfMonths)
+        
         // if we are for example on the same month and the difference is 0 we still need 1 to display it
-        return self.calendar.dateComponents([.month], from: startOfMonthCache, to: endOfMonthCache).month! + 1
+        return numberOfMonths + 1
     }
     
     public func getMonthInfo(for date: Date) -> (firstDay: Int, daysTotal: Int)? {
         
         var firstWeekdayOfMonthIndex    = self.calendar.component(.weekday, from: date)
         firstWeekdayOfMonthIndex       -= CalendarView.Style.firstWeekday == .monday ? 1 : 0 
-        firstWeekdayOfMonthIndex        = (firstWeekdayOfMonthIndex + 6) % 7 // push it modularly to take it back one day where the first day is Monday instead of Sunday
+        firstWeekdayOfMonthIndex        = (firstWeekdayOfMonthIndex + 6) % 7 // push it modularly to map it in the range 0 to 6
         
         guard let rangeOfDaysInMonth = self.calendar.range(of: .day, in: .month, for: date) else { return nil }
         
         return (firstDay: firstWeekdayOfMonthIndex, daysTotal: rangeOfDaysInMonth.count)
     }
+    
+    
     
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         
@@ -93,13 +105,26 @@ extension CalendarView: UICollectionViewDataSource {
         
     }
     
+    
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
         let dayCell = collectionView.dequeueReusableCell(withReuseIdentifier: cellReuseIdentifier, for: indexPath) as! CalendarDayCell
         
+        dayCell.clearStyles()
+        
         guard let (firstDayIndex, numberOfDaysTotal) = self.monthInfoForSection[indexPath.section] else { return dayCell }
         
         let lastDayIndex = firstDayIndex + numberOfDaysTotal
+        
+        let cellOutOfRange = { (indexPath: IndexPath) -> Bool in
+            if self.startIndexPath.section == indexPath.section { // is 0
+                return self.startIndexPath.item + firstDayIndex > indexPath.item
+            }
+            if self.endIndexPath.section == indexPath.section {
+                return self.endIndexPath.item + firstDayIndex < indexPath.item
+            }
+            return false
+        }
     
         // the index of this cell is within the range of first and the last day of the month
         if (firstDayIndex..<lastDayIndex).contains(indexPath.item) {
@@ -107,16 +132,23 @@ extension CalendarView: UICollectionViewDataSource {
             dayCell.textLabel.text = String((indexPath.item - firstDayIndex) + 1)
             dayCell.isHidden = false
             
+            dayCell.isOutOfRange = cellOutOfRange(indexPath)
+            
         } else {
             dayCell.textLabel.text = ""
             dayCell.isHidden = true
         }
         
+        // hack: send once at the beginning
         if indexPath.section == 0 && indexPath.item == 0 {
             self.scrollViewDidEndDecelerating(collectionView)
         }
         
-        if let idx = todayIndexPath {
+        guard !dayCell.isOutOfRange else { return dayCell }
+        
+        // if is in range continue with additional styling
+        
+        if let idx = self.todayIndexPath {
             dayCell.isToday = (idx.section == indexPath.section && idx.item + firstDayIndex == indexPath.item)
         }
         
@@ -128,12 +160,7 @@ extension CalendarView: UICollectionViewDataSource {
             dayCell.isWeekend = we == weekDayOption || we == 6
         }
         
-        
-        if let eventsForDay = self.eventsByIndexPath[indexPath] {
-            dayCell.eventsCount = eventsForDay.count
-        } else {
-            dayCell.eventsCount = 0
-        }
+        dayCell.eventsCount = self.eventsByIndexPath[indexPath]?.count ?? 0
         
         return dayCell
     }

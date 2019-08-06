@@ -61,6 +61,7 @@ extension CalendarView {
         //Today Style
         public static var cellTextColorToday        = UIColor.gray
         public static var cellColorToday            = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.3)
+        public static var cellColorOutOfRange       = UIColor(white: 0.0, alpha: 0.5)
         
         //Selected Style
         public static var cellSelectedBorderColor   = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8)
@@ -80,7 +81,6 @@ extension CalendarView {
         //Calendar Identifier Style
         public static var identifier                = Calendar.Identifier.gregorian
         
-        //Hide/Alter Cells Outside Date Range
-        public static var cellOutOfRangeDisplay     = CellOutOfRangeDisplayOptions.normal
+        
     }
 }
