@@ -6,7 +6,7 @@
 [![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/vsouza/awesome-ios)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 
-This is an implementation of a calendar component for iOS written in Swift 4.0. 
+This is an implementation of a calendar component for iOS written in Swift 4.0.
 It features both vertical and horizontal layout (and scrolling) and the display of native calendar events.
 
 ![Calendar Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/screenshots.png)
@@ -22,7 +22,7 @@ It features both vertical and horizontal layout (and scrolling) and the display 
 #### CocoaPods
 
 ```
-pod 'KDCalendar', '~> 1.6.6'
+pod 'KDCalendar', '~> 1.7.1'
 
 # An alternative Core subspec is available without EventKit integration
 # This avoids needing to add NSCalendarsUsageDescription in your Info.plist
@@ -54,15 +54,15 @@ protocol CalendarViewDataSource {
     func endDate() -> NSDate   // UTC Date
 }
 protocol CalendarViewDelegate {
-    func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool /* optional */ 
+    func calendar(_ calendar : CalendarView, canSelectDate date : Date) -> Bool /* optional */
     func calendar(_ calendar : CalendarView, didScrollToMonth date : Date) -> Void
     func calendar(_ calendar : CalendarView, didSelectDate date : Date, withEvents events: [CalendarEvent]) -> Void
-    func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void /* optional */ 
-    func calendar(_ calendar : CalendarView, didLongPressDate date : Date, withEvents events: [CalendarEvent]?) -> Void /* optional */ 
+    func calendar(_ calendar : CalendarView, didDeselectDate date : Date) -> Void /* optional */
+    func calendar(_ calendar : CalendarView, didLongPressDate date : Date, withEvents events: [CalendarEvent]?) -> Void /* optional */
 }
 ```
 
-The data source will provide the **start date** and the **end date** of the calendar. The methods have a default implementation that will return `Date()` resulting in a single-page calendar displaying the current month. 
+The data source will provide the **start date** and the **end date** of the calendar. The methods have a default implementation that will return `Date()` resulting in a single-page calendar displaying the current month.
 
 The delegate responds to events such as scrolling and the selection of specific dates.
 
@@ -139,9 +139,9 @@ The look of this calendar component is based on a small set of static variables 
 
 ```Swift
 override func viewDidLoad() {
-    
+
     super.viewDidLoad()
-    
+
     CalendarView.Style.cellShape                = .bevel(8.0)
     CalendarView.Style.cellColorDefault         = UIColor.clear
     CalendarView.Style.cellColorToday           = UIColor(red:1.00, green:0.84, blue:0.64, alpha:1.00)
@@ -150,7 +150,7 @@ override func viewDidLoad() {
     CalendarView.Style.headerTextColor          = UIColor.white
     CalendarView.Style.cellTextColorDefault     = UIColor.white
     CalendarView.Style.cellTextColorToday       = UIColor(red:0.31, green:0.44, blue:0.47, alpha:1.00)
-    
+
     // complete init
 }
 ```
@@ -180,7 +180,7 @@ CalendarView.Style.firstWeekday = .sunday
 
 The calendar defaults to Monday which is standard in Europe.
 
-#### Set locale of calendar 
+#### Set locale of calendar
 
 Set the locale for header labels of Weekdays and Month. Use:
 
@@ -194,7 +194,7 @@ The locale default is Locale.current of your device.
 
 # Events
 
-This component has the ability to sync events from the system's `EKEventStore` which is common with the native calendar provided in iOS. 
+This component has the ability to sync events from the system's `EKEventStore` which is common with the native calendar provided in iOS.
 
 #### Loading Events
 
