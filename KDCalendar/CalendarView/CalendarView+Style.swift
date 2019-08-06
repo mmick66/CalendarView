@@ -31,6 +31,12 @@ extension CalendarView {
             case monday
         }
         
+        public enum CellOutOfRangeDisplayOptions {
+            case normal
+            case hidden
+            case grayed
+        }
+        
         //Event
         public static var cellEventColor = UIColor(red: 254.0/255.0, green: 73.0/255.0, blue: 64.0/255.0, alpha: 0.8)
         
@@ -75,8 +81,6 @@ extension CalendarView {
         public static var identifier                = Calendar.Identifier.gregorian
         
         //Hide/Alter Cells Outside Date Range
-        public static var hideCellsOutsideDateRange = false
-        public static var changeCellColorOutsideRange = false
-        public static var cellTextColorOutsideRange = UIColor.red
+        public static var cellOutOfRangeDisplay     = CellOutOfRangeDisplayOptions.normal
     }
 }

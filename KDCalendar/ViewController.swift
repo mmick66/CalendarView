@@ -52,8 +52,7 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         CalendarView.Style.timeZone                 = TimeZone(abbreviation: "UTC")!
         
-        CalendarView.Style.hideCellsOutsideDateRange = false
-        CalendarView.Style.changeCellColorOutsideRange = false
+        CalendarView.Style.cellOutOfRangeDisplay    = .grayed
         
         CalendarView.Style.cellFont = UIFont(name: "Helvetica", size: 20.0) ?? UIFont.systemFont(ofSize: 20.0)
         CalendarView.Style.headerFont = UIFont(name: "Helvetica", size: 20.0) ?? UIFont.systemFont(ofSize: 20.0)

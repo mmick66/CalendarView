@@ -37,7 +37,11 @@ extension CalendarView: UICollectionViewDataSource {
         
         guard self.startDateCache <= self.endDateCache else { fatalError("Start date cannot be later than end date.") }
         
-        var firstDayOfStartMonthComponents = self.calendar.dateComponents([.era, .year, .month], from: self.startDateCache)
+        let startDateComponents = self.calendar.dateComponents([.era, .year, .month], from: self.startDateCache)
+        
+        
+        
+        var firstDayOfStartMonthComponents = startDateComponents
         firstDayOfStartMonthComponents.day = 1
         
         let firstDayOfStartMonthDate = self.calendar.date(from: firstDayOfStartMonthComponents)!
@@ -95,12 +99,12 @@ extension CalendarView: UICollectionViewDataSource {
         
         guard let (firstDayIndex, numberOfDaysTotal) = self.monthInfoForSection[indexPath.section] else { return dayCell }
         
-        let fromStartOfMonthIndexPath = IndexPath(item: indexPath.item - firstDayIndex, section: indexPath.section) // if the first is wednesday, add 2
-        
         let lastDayIndex = firstDayIndex + numberOfDaysTotal
-        
-        if (firstDayIndex..<lastDayIndex).contains(indexPath.item) { // item within range from first to last day
-            dayCell.textLabel.text = String(fromStartOfMonthIndexPath.item + 1)
+    
+        // the index of this cell is within the range of first and the last day of the month
+        if (firstDayIndex..<lastDayIndex).contains(indexPath.item) {
+            // ex. if the first is wednesday (index of 3), subtract 2 to show it as 1
+            dayCell.textLabel.text = String((indexPath.item - firstDayIndex) + 1)
             dayCell.isHidden = false
             
         } else {
@@ -124,7 +128,6 @@ extension CalendarView: UICollectionViewDataSource {
             dayCell.isWeekend = we == weekDayOption || we == 6
         }
         
-        hideOrAlterCellsOutsideDates(indexPath: indexPath, firstDayIndex: firstDayIndex, lastDayIndex: lastDayIndex, dayCell: dayCell)
         
         if let eventsForDay = self.eventsByIndexPath[indexPath] {
             dayCell.eventsCount = eventsForDay.count
@@ -136,36 +139,4 @@ extension CalendarView: UICollectionViewDataSource {
     }
 }
 
-extension CalendarView {
-    
-    func hideOrAlterCellsOutsideDates(indexPath: IndexPath, firstDayIndex: Int, lastDayIndex: Int, dayCell: CalendarDayCell){
-        
-        if CalendarView.Style.hideCellsOutsideDateRange == true || CalendarView.Style.changeCellColorOutsideRange == true {
-            
-            if indexPath.section == 0 {
-                let startDay = Calendar.current.component(.day, from: startDateCache) - 1
-                let daysToShow = startDay + firstDayIndex
-                if !(daysToShow..<lastDayIndex).contains(indexPath.item){
-                    hideOrAlterCells(cell: dayCell)
-                }
-            }
-            if indexPath.section == monthInfoForSection.count - 1 {
-                let endDay = Calendar.current.component(.day, from: endDateCache)
-                let daysToShow = firstDayIndex + endDay
-                if (daysToShow..<lastDayIndex).contains(indexPath.item){
-                    hideOrAlterCells(cell: dayCell)
-                }
-            }
-        }
-    }
-    
-    func hideOrAlterCells(cell: CalendarDayCell) {
-        if CalendarView.Style.hideCellsOutsideDateRange == true {
-            cell.textLabel.text = ""
-            cell.isHidden = true
-        }
-        if CalendarView.Style.changeCellColorOutsideRange == true {
-            cell.textLabel.textColor = CalendarView.Style.cellTextColorOutsideRange
-        }
-    }
-}
+

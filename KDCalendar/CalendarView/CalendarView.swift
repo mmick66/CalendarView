@@ -101,7 +101,9 @@ public class CalendarView: UIView {
     internal var startOfMonthCache  = Date()
     internal var endOfMonthCache    = Date()
     
-    internal var todayIndexPath: IndexPath?
+    internal var todayIndexPath : IndexPath?
+    internal var startIndexPath : IndexPath?
+    internal var endIndexPath   : IndexPath?
 
     internal var selectedIndexPaths    = [IndexPath]()
     internal var selectedDates         = [Date]()
