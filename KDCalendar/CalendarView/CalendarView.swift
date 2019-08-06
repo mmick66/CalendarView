@@ -103,8 +103,8 @@ public class CalendarView: UIView {
     
     internal var todayIndexPath: IndexPath?
 
-    internal(set) var selectedIndexPaths    = [IndexPath]()
-    internal(set) var selectedDates         = [Date]()
+    internal var selectedIndexPaths    = [IndexPath]()
+    internal var selectedDates         = [Date]()
     
     internal var monthInfoForSection = [Int:(firstDay: Int, daysTotal: Int)]()
     internal var eventsByIndexPath = [IndexPath: [CalendarEvent]]()
@@ -284,6 +284,8 @@ public class CalendarView: UIView {
         switch self.direction {
         case .horizontal:   point.x = CGFloat(sections) * self.collectionView.frame.size.width
         case .vertical:     point.y = CGFloat(sections) * self.collectionView.frame.size.height
+        @unknown default:
+            fatalError()
         }
         
         return point

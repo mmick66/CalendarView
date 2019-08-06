@@ -31,7 +31,7 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         
         guard let date = self.dateFromIndexPath(indexPath) else { return }
         
-        if let index = selectedIndexPaths.index(of: indexPath) {
+        if let index = selectedIndexPaths.firstIndex(of: indexPath) {
             
             delegate?.calendar(self, didDeselectDate: date)
             if enableDeslection {
@@ -94,6 +94,8 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         switch self.direction {
         case .horizontal:   page = Int(floor(self.collectionView.contentOffset.x / self.collectionView.bounds.size.width))
         case .vertical:     page = Int(floor(self.collectionView.contentOffset.y / self.collectionView.bounds.size.height))
+        @unknown default:
+            fatalError()
         }
         
         page = page > 0 ? page : 0

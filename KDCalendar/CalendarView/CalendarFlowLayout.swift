@@ -60,6 +60,8 @@ open class CalendarFlowLayout: UICollectionViewFlowLayout {
         switch self.scrollDirection {
         case .horizontal:   xCellOffset += offset * collectionView.frame.size.width
         case .vertical:     yCellOffset += offset * collectionView.frame.size.height
+        @unknown default:
+            fatalError()
         }
         
         // set frame
