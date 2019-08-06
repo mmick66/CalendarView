@@ -182,7 +182,7 @@ Depending on the culture weeks are considered to start either on a Monday or on 
 CalendarView.Style.firstWeekday = .sunday
 ```
 
-![IB Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/Screen%20Shot%202018-05-04%20at%2009.31.08.png)
+![IB Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/Screen%20Shot%20First%20Day.png)
 
 The calendar defaults to Monday which is standard in Europe.
 
