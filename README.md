@@ -166,11 +166,13 @@ The `CellShape` will define whether the dates are displayed in a circle or squar
 
 #### Graying out days
 
-If you want the days that lie outside of the rage set by `startDate` and `endDate`, you can set the color in: 
+If you want the days that lie outside of the rage set by `startDate` and `endDate`, you can set the color in:
 
 ```Swift
 CalendarView.Style.cellColorOutOfRange = UIColor(white: 0.0, alpha: 0.5)
 ```
+
+![IB Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/Screen%20Shot%Out%20of%20Range.png)
 
 #### First Day of the Week
 
