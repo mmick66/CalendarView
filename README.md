@@ -172,7 +172,7 @@ If you want the days that lie outside of the rage set by `startDate` and `endDat
 CalendarView.Style.cellColorOutOfRange = UIColor(white: 0.0, alpha: 0.5)
 ```
 
-![IB Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/Screen%20Shot%Out%20of%20Range.png)
+![IB Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/Screen%20Shot%20Out%20of%20Range.png)
 
 #### First Day of the Week
 
