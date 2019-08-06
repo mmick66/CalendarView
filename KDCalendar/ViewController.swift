@@ -46,7 +46,7 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         CalendarView.Style.cellTextColorDefault     = UIColor.white
         CalendarView.Style.cellTextColorToday       = UIColor.orange
         
-        CalendarView.Style.firstWeekday             = .sunday
+        CalendarView.Style.firstWeekday             = .monday
         
         CalendarView.Style.locale                   = Locale(identifier: "en_US")
         
