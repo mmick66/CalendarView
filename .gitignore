@@ -1,6 +1,5 @@
 .DS_Store
 KDCalendar/.DS_Store
 DerivedData/
-CalendarView.xcodeproj/project.xcworkspace/xcuserdata/**
-CalendarView.xcodeproj/xcuserdata/**
-*/xcuserdata/*
+*xcuserdata*
+*xcshareddata*
