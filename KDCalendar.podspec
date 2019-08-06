@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "KDCalendar"
-  s.version      = "1.6.7"
+  s.version      = "1.7.0"
   s.summary      = "A calendar component with native events support."
 
   s.description  = <<-DESC
