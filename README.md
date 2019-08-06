@@ -164,6 +164,14 @@ calendarView.marksWeekends = true
 
 The `CellShape` will define whether the dates are displayed in a circle or square with bevel or not.
 
+#### Graying out days
+
+If you want the days that lie outside of the rage set by `startDate` and `endDate`, you can set the color in: 
+
+```Swift
+CalendarView.Style.cellColorOutOfRange = UIColor(white: 0.0, alpha: 0.5)
+```
+
 #### First Day of the Week
 
 Depending on the culture weeks are considered to start either on a Monday or on a Sunday. To change the way the days are displayed use:
