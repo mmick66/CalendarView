@@ -1,13 +1,12 @@
 ![Karmadust](https://github.com/Tobaloidee/CalendarView/blob/master/Assets/logotype.png)
 
-[![Language](https://img.shields.io/badge/Swift-4.0-orange.svg?style=flat)](https://swift.org)
+[![Language](https://img.shields.io/badge/Swift-5.0-orange.svg?style=flat)](https://swift.org)
 [![Licence](https://img.shields.io/dub/l/vibe-d.svg?maxAge=2592000)](https://opensource.org/licenses/MIT)
 [![CocoaPods](https://img.shields.io/cocoapods/v/KDCalendar.svg?style=flat)](https://cocoapods.org/pods/KDCalendar)
 [![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/vsouza/awesome-ios)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 
-This is an implementation of a calendar component for iOS written in Swift 4.0.
-It features both vertical and horizontal layout (and scrolling) and the display of native calendar events.
+This is an easy to use, "just drag and drop it in your code" type of calendar for iOS. It features **both** vertical and horizontal layouts together with **scrolling**, and the display of native **calendar events**. Hurray!
 
 ![Calendar Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/screenshots.png)
 
