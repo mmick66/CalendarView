@@ -198,6 +198,17 @@ CalendarView.Style.locale = Locale(identifier: "en_US")
 
 The locale default is Locale.current of your device.
 
+#### Custom Headers
+
+Depending on the language, you might experience problems displaying the month strings in the header. There is however a method you can implement that will return any string you wish according to the date passed.
+
+```Swift
+public protocol CalendarViewDataSource {
+    /* other methods */
+    func headerString(_ date: Date) -> String?
+}
+```
+
 # Events
 
 This component has the ability to sync events from the system's `EKEventStore` which is common with the native calendar provided in iOS.
