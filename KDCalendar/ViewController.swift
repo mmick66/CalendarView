@@ -42,9 +42,10 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         CalendarView.Style.cellColorToday           = UIColor(red:1.00, green:0.84, blue:0.64, alpha:1.00)
         CalendarView.Style.cellSelectedBorderColor  = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
         CalendarView.Style.cellEventColor           = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
-        CalendarView.Style.headerTextColor          = UIColor.white
+        CalendarView.Style.headerTextColor          = UIColor.gray
         CalendarView.Style.cellTextColorDefault     = UIColor.white
         CalendarView.Style.cellTextColorToday       = UIColor.orange
+        CalendarView.Style.headerBackgroundColor    = UIColor.white
         
         CalendarView.Style.firstWeekday             = .sunday
         
