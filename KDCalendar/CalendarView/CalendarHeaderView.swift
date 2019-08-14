@@ -54,7 +54,7 @@ open class CalendarHeaderView: UIView {
             weekdayLabel.font = CalendarView.Style.subHeaderFont
             
             weekdayLabel.text = formatter.shortWeekdaySymbols[(index % 7)].capitalized
-            
+            self.backgroundColor = CalendarView.Style.headerBackgroundColor
             weekdayLabel.textColor = CalendarView.Style.headerTextColor
             weekdayLabel.textAlignment = NSTextAlignment.center
             
