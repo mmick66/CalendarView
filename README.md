@@ -33,7 +33,7 @@ github "mmick66/CalendarView" "master"
 
 #### Manual
 
-The files needed to be included are in the **CalendarView** subfolder of this project.
+Just the files from the **CalendarView/** subfolder to your project.
 
 # Setup
 
