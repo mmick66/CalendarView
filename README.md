@@ -21,7 +21,7 @@ This is an easy to use, "just drag and drop it in your code" type of calendar fo
 #### CocoaPods
 
 ```
-pod 'KDCalendar', '~> 1.7.2'
+pod 'KDCalendar', '~> 1.8.0'
 ```
 
 #### Carthage
