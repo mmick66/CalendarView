@@ -39,6 +39,16 @@ open class CalendarDayCell: UICollectionViewCell {
         }
     }
     
+    var day: Int? {
+        set {
+            guard let value = newValue else { return self.textLabel.text = nil }
+            self.textLabel.text = String(value)
+        }
+        get {
+            guard let value = self.textLabel.text else { return nil }
+            return Int(value)
+        }
+    }
     
     var isToday : Bool = false {
         didSet {
@@ -50,6 +60,7 @@ open class CalendarDayCell: UICollectionViewCell {
                 self.bgView.backgroundColor = CalendarView.Style.cellColorDefault
                 self.textLabel.textColor = CalendarView.Style.cellTextColorDefault
             }
+            
         }
     }
     
@@ -162,6 +173,7 @@ open class CalendarDayCell: UICollectionViewCell {
         case .bevel(let radius):
             self.bgView.layer.cornerRadius = radius
         }
+        
         
         
     }

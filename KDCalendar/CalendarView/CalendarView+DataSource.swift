@@ -129,7 +129,7 @@ extension CalendarView: UICollectionViewDataSource {
         // the index of this cell is within the range of first and the last day of the month
         if (firstDayIndex..<lastDayIndex).contains(indexPath.item) {
             // ex. if the first is wednesday (index of 3), subtract 2 to show it as 1
-            dayCell.textLabel.text = String((indexPath.item - firstDayIndex) + 1)
+            dayCell.day = (indexPath.item - firstDayIndex) + 1
             dayCell.isHidden = false
             
             dayCell.isOutOfRange = cellOutOfRange(indexPath)
