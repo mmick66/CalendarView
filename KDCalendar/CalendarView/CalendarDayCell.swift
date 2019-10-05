@@ -100,7 +100,12 @@ open class CalendarDayCell: UICollectionViewCell {
             case false:
                 self.bgView.layer.borderColor = CalendarView.Style.cellBorderColor.cgColor
                 self.bgView.layer.borderWidth = CalendarView.Style.cellBorderWidth
-                self.bgView.backgroundColor = CalendarView.Style.cellColorDefault
+                if self.isToday {
+                    self.bgView.backgroundColor = CalendarView.Style.cellColorToday
+                } else {
+                    self.bgView.backgroundColor = CalendarView.Style.cellColorDefault
+                }
+                
             }
         }
     }
