@@ -62,7 +62,6 @@ open class CalendarDayCell: UICollectionViewCell {
                 self.bgView.backgroundColor = style.cellColorDefault
                 self.textLabel.textColor = style.cellTextColorDefault
             }
-            
         }
     }
     
@@ -107,7 +106,6 @@ open class CalendarDayCell: UICollectionViewCell {
                 } else {
                     self.bgView.backgroundColor = style.cellColorDefault
                 }
-                
             }
         }
     }
@@ -180,7 +178,6 @@ open class CalendarDayCell: UICollectionViewCell {
         case .bevel(let radius):
             self.bgView.layer.cornerRadius = radius
         }
-        
         
         
     }

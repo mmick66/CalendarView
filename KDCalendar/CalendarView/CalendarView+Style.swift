@@ -48,10 +48,17 @@ extension CalendarView {
         
         //Header
         public var headerHeight: CGFloat     = 80.0
+        public var headerTopMargin: CGFloat  = 5.0
         public var headerTextColor           = UIColor.gray
         public var headerBackgroundColor     = UIColor.white
         public var headerFont                = UIFont.systemFont(ofSize: 20) // Used for the month
-        public var subHeaderFont             = UIFont.systemFont(ofSize: 14) // Used for days of the week
+        
+        public var weekdaysTopMargin: CGFloat     = 5.0
+        public var weekdaysBottomMargin: CGFloat  = 5.0
+        public var weekdaysHeight: CGFloat        = 35.0
+        public var weekdaysTextColor              = UIColor.gray
+        public var weekdaysBackgroundColor        = UIColor.white
+        public var weekdaysFont                   = UIFont.systemFont(ofSize: 14) // Used for days of the week
         
         //Common
         public var cellShape                 = CellShapeOptions.bevel(4.0)
@@ -83,9 +90,16 @@ extension CalendarView {
         public var locale                    = Locale.current
         
         //TimeZone Calendar Style
-        public var timeZone                  = TimeZone(abbreviation: "UTC")!
+        public var timeZone: TimeZone {
+            get { return calendar.timeZone }
+            set { calendar.timeZone = newValue }
+        }
         
         //Calendar Identifier Style
-        public var identifier                = Calendar.Identifier.gregorian
+        public lazy var calendar: Calendar   = {
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.timeZone = TimeZone(abbreviation: "UTC")!
+            return calendar
+        }()
     }
 }

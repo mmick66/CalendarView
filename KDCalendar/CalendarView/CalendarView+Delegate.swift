@@ -109,7 +109,7 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         var monthsOffsetComponents = DateComponents()
         monthsOffsetComponents.month = page
         
-        return self.calendar.date(byAdding: monthsOffsetComponents, to: self.startOfMonthCache);
+        return self.calendar.date(byAdding: monthsOffsetComponents, to: self.firstDayCache);
     }
     
     func displayDateOnHeader(_ date: Date) {
@@ -117,7 +117,7 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         
         let formatter = DateFormatter()
         formatter.locale = style.locale
-        formatter.timeZone = style.timeZone
+        formatter.timeZone = style.calendar.timeZone
         
         let monthName = formatter.monthSymbols[(month-1) % 12].capitalized // 0 indexed array
         
