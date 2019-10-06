@@ -80,7 +80,7 @@ extension CalendarView: UICollectionViewDataSource {
     public func getMonthInfo(for date: Date) -> (firstDay: Int, daysTotal: Int)? {
         
         var firstWeekdayOfMonthIndex    = self.calendar.component(.weekday, from: date)
-        firstWeekdayOfMonthIndex       -= CalendarView.Style.firstWeekday == .monday ? 1 : 0 
+        firstWeekdayOfMonthIndex       -= style.firstWeekday == .monday ? 1 : 0
         firstWeekdayOfMonthIndex        = (firstWeekdayOfMonthIndex + 6) % 7 // push it modularly to map it in the range 0 to 6
         
         guard let rangeOfDaysInMonth = self.calendar.range(of: .day, in: .month, for: date) else { return nil }
@@ -110,6 +110,7 @@ extension CalendarView: UICollectionViewDataSource {
         
         let dayCell = collectionView.dequeueReusableCell(withReuseIdentifier: cellReuseIdentifier, for: indexPath) as! CalendarDayCell
         
+        dayCell.style = style
         dayCell.clearStyles()
         
         guard let (firstDayIndex, numberOfDaysTotal) = self.monthInfoForSection[indexPath.section] else { return dayCell }
@@ -156,7 +157,7 @@ extension CalendarView: UICollectionViewDataSource {
         
         if self.marksWeekends {
             let we = indexPath.item % 7
-            let weekDayOption = CalendarView.Style.firstWeekday == .sunday ? 0 : 5
+            let weekDayOption = style.firstWeekday == .sunday ? 0 : 5
             dayCell.isWeekend = we == weekDayOption || we == 6
         }
         

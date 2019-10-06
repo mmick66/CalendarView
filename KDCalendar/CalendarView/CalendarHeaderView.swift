@@ -27,11 +27,13 @@ import UIKit
 
 open class CalendarHeaderView: UIView {
     
+    var style: CalendarView.Style = CalendarView.Style.Default
+    
     lazy var monthLabel : UILabel = {
         let lbl = UILabel()
         lbl.textAlignment = NSTextAlignment.center
-        lbl.font = CalendarView.Style.headerFont
-        lbl.textColor = CalendarView.Style.headerTextColor
+        lbl.font = style.headerFont
+        lbl.textColor = style.headerTextColor
         
         self.addSubview(lbl)
         
@@ -42,20 +44,20 @@ open class CalendarHeaderView: UIView {
         let v = UIView()
         
         let formatter = DateFormatter()
-        formatter.locale = CalendarView.Style.locale
-        formatter.timeZone = CalendarView.Style.timeZone
+        formatter.locale = style.locale
+        formatter.timeZone = style.timeZone
         
-        var start = CalendarView.Style.firstWeekday == .sunday ? 0 : 1
+        var start = style.firstWeekday == .sunday ? 0 : 1
         
         for index in start..<(start+7) {
             
             let weekdayLabel = UILabel()
             
-            weekdayLabel.font = CalendarView.Style.subHeaderFont
+            weekdayLabel.font = style.subHeaderFont
             
             weekdayLabel.text = formatter.shortWeekdaySymbols[(index % 7)].capitalized
-            self.backgroundColor = CalendarView.Style.headerBackgroundColor
-            weekdayLabel.textColor = CalendarView.Style.headerTextColor
+            self.backgroundColor = style.headerBackgroundColor
+            weekdayLabel.textColor = style.headerTextColor
             weekdayLabel.textAlignment = NSTextAlignment.center
             
             v.addSubview(weekdayLabel)

@@ -90,9 +90,15 @@ public class CalendarView: UIView {
     var headerView: CalendarHeaderView!
     var collectionView: UICollectionView!
     
+    public var style: Style = Style.Default {
+        didSet {
+            self.headerView?.style = style
+        }
+    }
+    
     public lazy var calendar : Calendar = {
-        var calendarStyle = Calendar(identifier: CalendarView.Style.identifier)
-        calendarStyle.timeZone = CalendarView.Style.timeZone
+        var calendarStyle = Calendar(identifier: style.identifier)
+        calendarStyle.timeZone = style.timeZone
         return calendarStyle
     }()
     
@@ -178,6 +184,7 @@ public class CalendarView: UIView {
         
         /* Header View */
         self.headerView = CalendarHeaderView(frame:CGRect.zero)
+        self.headerView.style = style
         self.addSubview(self.headerView)
         
         /* Layout */
@@ -247,14 +254,14 @@ public class CalendarView: UIView {
             x:0.0,
             y:0.0,
             width: self.frame.size.width,
-            height: CalendarView.Style.headerHeight
+            height: style.headerHeight
         )
         
         self.collectionView.frame = CGRect(
             x: 0.0,
-            y: CalendarView.Style.headerHeight,
+            y: style.headerHeight,
             width: self.frame.size.width,
-            height: self.frame.size.height - CalendarView.Style.headerHeight
+            height: self.frame.size.height - style.headerHeight
         )
         
         flowLayout.itemSize = self.cellSize(in: self.bounds)
@@ -265,7 +272,7 @@ public class CalendarView: UIView {
     private func cellSize(in bounds: CGRect) -> CGSize {
         return CGSize(
             width:   frame.size.width / 7.0,                                    // number of days in week
-            height: (frame.size.height - CalendarView.Style.headerHeight) / 6.0 // maximum number of rows
+            height: (frame.size.height - style.headerHeight) / 6.0 // maximum number of rows
         )
     }
     
