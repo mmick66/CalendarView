@@ -169,18 +169,40 @@ extension CalendarView: UICollectionViewDataSource {
             }
             return false
         }
+        
+        let isInRange = (firstDayIndex..<lastDayIndex).contains(indexPath.item)
+        let isAdjacent = !isInRange && style.showAdjacentDays && (
+            indexPath.item < firstDayIndex || indexPath.item >= lastDayIndex
+        )
     
         // the index of this cell is within the range of first and the last day of the month
-        if (firstDayIndex..<lastDayIndex).contains(indexPath.item) {
-            // ex. if the first is wednesday (index of 3), subtract 2 to show it as 1
-            dayCell.day = (indexPath.item - firstDayIndex) + 1
+        if isInRange || isAdjacent {
             dayCell.isHidden = false
             
+            if isAdjacent {
+                if indexPath.item < firstDayIndex {
+                    if let prevInfo = self.getCachedSectionInfo(indexPath.section - 1) {
+                        dayCell.day = prevInfo.daysTotal - firstDayIndex + indexPath.item
+                    }
+                    else {
+                        dayCell.isHidden = true
+                    }
+                }
+                else {
+                    dayCell.day = indexPath.item - lastDayIndex + 1
+                }
+            }
+            else {
+                // ex. if the first is wednesday (index of 3), subtract 2 to show it as 1
+                dayCell.day = (indexPath.item - firstDayIndex) + 1
+            }
+            
+            dayCell.isAdjacent = isAdjacent
             dayCell.isOutOfRange = cellOutOfRange(indexPath)
             
         } else {
-            dayCell.textLabel.text = ""
             dayCell.isHidden = true
+            dayCell.textLabel.text = ""
         }
         
         // hack: send once at the beginning

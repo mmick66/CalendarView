@@ -52,41 +52,55 @@ open class CalendarDayCell: UICollectionViewCell {
         }
     }
     
+    func updateTextColor() {
+        if isSelected {
+            self.textLabel.textColor = style.cellSelectedTextColor
+        }
+        else if isToday {
+            self.textLabel.textColor = style.cellTextColorToday
+        }
+        else if isOutOfRange {
+            self.textLabel.textColor = style.cellColorOutOfRange
+        }
+        else if isAdjacent {
+            self.textLabel.textColor = style.cellColorAdjacent
+        }
+        else if isWeekend {
+            self.textLabel.textColor = style.cellTextColorWeekend
+        }
+        else {
+            self.textLabel.textColor = style.cellTextColorDefault
+        }
+    }
+    
     var isToday : Bool = false {
         didSet {
             switch isToday {
             case true:
                 self.bgView.backgroundColor = style.cellColorToday
-                self.textLabel.textColor    = style.cellTextColorToday
             case false:
                 self.bgView.backgroundColor = style.cellColorDefault
-                self.textLabel.textColor = style.cellTextColorDefault
             }
+            
+            updateTextColor()
         }
     }
-    
     
     var isOutOfRange : Bool = false {
         didSet {
-            switch isOutOfRange {
-            case true:
-                self.textLabel.textColor = style.cellColorOutOfRange
-            case false:
-                self.textLabel.textColor = style.cellTextColorDefault
-            }
+            updateTextColor()
         }
     }
     
+    var isAdjacent : Bool = false {
+        didSet {
+            updateTextColor()
+        }
+    }
     
     var isWeekend: Bool = false {
         didSet {
-            if self.isSelected || self.isToday { return }
-            switch isWeekend {
-            case true:
-                self.textLabel.textColor = style.cellTextColorWeekend
-            case false:
-                self.textLabel.textColor = style.cellTextColorDefault
-            }
+            updateTextColor()
         }
     }
     
@@ -97,7 +111,6 @@ open class CalendarDayCell: UICollectionViewCell {
                 self.bgView.layer.borderColor = style.cellSelectedBorderColor.cgColor
                 self.bgView.layer.borderWidth = style.cellSelectedBorderWidth
                 self.bgView.backgroundColor = style.cellSelectedColor
-                self.textLabel.textColor = style.cellSelectedTextColor
             case false:
                 self.bgView.layer.borderColor = style.cellBorderColor.cgColor
                 self.bgView.layer.borderWidth = style.cellBorderWidth
@@ -107,6 +120,8 @@ open class CalendarDayCell: UICollectionViewCell {
                     self.bgView.backgroundColor = style.cellColorDefault
                 }
             }
+            
+            updateTextColor()
         }
     }
     
