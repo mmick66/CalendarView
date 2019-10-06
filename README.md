@@ -210,7 +210,11 @@ public protocol CalendarViewDataSource {
 
 # Events
 
-This component has the ability to sync events from the system's `EKEventStore` which is common with the native calendar provided in iOS.
+This component has the ability to sync events from the system's `EKEventStore`, which is shared with the native calendar provided in iOS. This ability is optional and (in order to keep the calendar's footprint low) needs to be activated seperatly via a custom flag in the build settings as shown below:
+
+![Events Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/Screen%20Shot%20Add%20Events.png)
+
+In the "Build Settings," under the "Swift Compiler - Custom Flags" and "Active Compilation Conditions," simply add the `KDCALENDAR_EVENT_MANAGER_ENABLED` flag for both debug and release. The events will be enabled.
 
 #### Loading Events
 
