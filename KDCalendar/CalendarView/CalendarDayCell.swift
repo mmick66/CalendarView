@@ -27,6 +27,8 @@ import UIKit
 
 open class CalendarDayCell: UICollectionViewCell {
     
+    var style: CalendarView.Style = CalendarView.Style.Default
+    
     override open var description: String {
         let dayString = self.textLabel.text ?? " "
         return "<DayCell (text:\"\(dayString)\")>"
@@ -50,42 +52,55 @@ open class CalendarDayCell: UICollectionViewCell {
         }
     }
     
+    func updateTextColor() {
+        if isSelected {
+            self.textLabel.textColor = style.cellSelectedTextColor
+        }
+        else if isToday {
+            self.textLabel.textColor = style.cellTextColorToday
+        }
+        else if isOutOfRange {
+            self.textLabel.textColor = style.cellColorOutOfRange
+        }
+        else if isAdjacent {
+            self.textLabel.textColor = style.cellColorAdjacent
+        }
+        else if isWeekend {
+            self.textLabel.textColor = style.cellTextColorWeekend
+        }
+        else {
+            self.textLabel.textColor = style.cellTextColorDefault
+        }
+    }
+    
     var isToday : Bool = false {
         didSet {
             switch isToday {
             case true:
-                self.bgView.backgroundColor = CalendarView.Style.cellColorToday
-                self.textLabel.textColor    = CalendarView.Style.cellTextColorToday
+                self.bgView.backgroundColor = style.cellColorToday
             case false:
-                self.bgView.backgroundColor = CalendarView.Style.cellColorDefault
-                self.textLabel.textColor = CalendarView.Style.cellTextColorDefault
+                self.bgView.backgroundColor = style.cellColorDefault
             }
             
+            updateTextColor()
         }
     }
-    
     
     var isOutOfRange : Bool = false {
         didSet {
-            switch isOutOfRange {
-            case true:
-                self.textLabel.textColor = CalendarView.Style.cellColorOutOfRange
-            case false:
-                self.textLabel.textColor = CalendarView.Style.cellTextColorDefault
-            }
+            updateTextColor()
         }
     }
     
+    var isAdjacent : Bool = false {
+        didSet {
+            updateTextColor()
+        }
+    }
     
     var isWeekend: Bool = false {
         didSet {
-            if self.isSelected || self.isToday { return }
-            switch isWeekend {
-            case true:
-                self.textLabel.textColor = CalendarView.Style.cellTextColorWeekend
-            case false:
-                self.textLabel.textColor = CalendarView.Style.cellTextColorDefault
-            }
+            updateTextColor()
         }
     }
     
@@ -93,29 +108,29 @@ open class CalendarDayCell: UICollectionViewCell {
         didSet {
             switch isSelected {
             case true:
-                self.bgView.layer.borderColor = CalendarView.Style.cellSelectedBorderColor.cgColor
-                self.bgView.layer.borderWidth = CalendarView.Style.cellSelectedBorderWidth
-                self.bgView.backgroundColor = CalendarView.Style.cellSelectedColor
-                self.textLabel.textColor = CalendarView.Style.cellSelectedTextColor
+                self.bgView.layer.borderColor = style.cellSelectedBorderColor.cgColor
+                self.bgView.layer.borderWidth = style.cellSelectedBorderWidth
+                self.bgView.backgroundColor = style.cellSelectedColor
             case false:
-                self.bgView.layer.borderColor = CalendarView.Style.cellBorderColor.cgColor
-                self.bgView.layer.borderWidth = CalendarView.Style.cellBorderWidth
+                self.bgView.layer.borderColor = style.cellBorderColor.cgColor
+                self.bgView.layer.borderWidth = style.cellBorderWidth
                 if self.isToday {
-                    self.bgView.backgroundColor = CalendarView.Style.cellColorToday
+                    self.bgView.backgroundColor = style.cellColorToday
                 } else {
-                    self.bgView.backgroundColor = CalendarView.Style.cellColorDefault
+                    self.bgView.backgroundColor = style.cellColorDefault
                 }
-                
             }
+            
+            updateTextColor()
         }
     }
     
     // MARK: - Public methods
     public func clearStyles() {
-        self.bgView.layer.borderColor = CalendarView.Style.cellBorderColor.cgColor
-        self.bgView.layer.borderWidth = CalendarView.Style.cellBorderWidth
-        self.bgView.backgroundColor = CalendarView.Style.cellColorDefault
-        self.textLabel.textColor = CalendarView.Style.cellTextColorDefault
+        self.bgView.layer.borderColor = style.cellBorderColor.cgColor
+        self.bgView.layer.borderWidth = style.cellBorderWidth
+        self.bgView.backgroundColor = style.cellColorDefault
+        self.textLabel.textColor = style.cellTextColorDefault
         self.eventsCount = 0
     }
     
@@ -129,9 +144,9 @@ open class CalendarDayCell: UICollectionViewCell {
         self.textLabel.textAlignment = NSTextAlignment.center
         
         
-        self.dotsView.backgroundColor = CalendarView.Style.cellEventColor
+        self.dotsView.backgroundColor = style.cellEventColor
         
-        self.textLabel.font = CalendarView.Style.cellFont
+        self.textLabel.font = style.cellFont
         
         
         super.init(frame: frame)
@@ -154,7 +169,7 @@ open class CalendarDayCell: UICollectionViewCell {
         
         var elementsFrame = self.bounds.insetBy(dx: 3.0, dy: 3.0)
         
-        if CalendarView.Style.cellShape.isRound { // square of
+        if style.cellShape.isRound { // square of
             let smallestSide = min(elementsFrame.width, elementsFrame.height)
             elementsFrame = elementsFrame.insetBy(
                 dx: (elementsFrame.width - smallestSide) / 2.0,
@@ -170,7 +185,7 @@ open class CalendarDayCell: UICollectionViewCell {
         self.dotsView.center                = CGPoint(x: self.textLabel.center.x, y: self.bounds.height - (2.5 * size))
         self.dotsView.layer.cornerRadius    = size * 0.5 // round it
         
-        switch CalendarView.Style.cellShape {
+        switch style.cellShape {
         case .square:
             self.bgView.layer.cornerRadius = 0.0
         case .round:
@@ -178,7 +193,6 @@ open class CalendarDayCell: UICollectionViewCell {
         case .bevel(let radius):
             self.bgView.layer.cornerRadius = radius
         }
-        
         
         
     }

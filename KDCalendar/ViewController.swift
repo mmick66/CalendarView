@@ -37,25 +37,26 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         super.viewDidLoad()
         
-        CalendarView.Style.cellShape                = .bevel(8.0)
-        CalendarView.Style.cellColorDefault         = UIColor.clear
-        CalendarView.Style.cellColorToday           = UIColor(red:1.00, green:0.84, blue:0.64, alpha:1.00)
-        CalendarView.Style.cellSelectedBorderColor  = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
-        CalendarView.Style.cellEventColor           = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
-        CalendarView.Style.headerTextColor          = UIColor.gray
-        CalendarView.Style.cellTextColorDefault     = UIColor.white
-        CalendarView.Style.cellTextColorToday       = UIColor.orange
-        CalendarView.Style.headerBackgroundColor    = UIColor.white
+        CalendarView.Style.Default.cellShape                = .bevel(8.0)
+        CalendarView.Style.Default.cellColorDefault         = UIColor.clear
+        CalendarView.Style.Default.cellColorToday           = UIColor(red:1.00, green:0.84, blue:0.64, alpha:1.00)
+        CalendarView.Style.Default.cellSelectedBorderColor  = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
+        CalendarView.Style.Default.cellEventColor           = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
+        CalendarView.Style.Default.headerTextColor          = UIColor.gray
+        CalendarView.Style.Default.cellTextColorDefault     = UIColor.white
+        CalendarView.Style.Default.cellTextColorToday       = UIColor.orange
+        CalendarView.Style.Default.headerBackgroundColor    = UIColor.white
+        CalendarView.Style.Default.weekdaysBackgroundColor  = UIColor.white
         
-        CalendarView.Style.firstWeekday             = .sunday
+        CalendarView.Style.Default.firstWeekday             = .sunday
         
-        CalendarView.Style.locale                   = Locale(identifier: "en_US")
+        CalendarView.Style.Default.locale                   = Locale(identifier: "en_US")
         
-        CalendarView.Style.timeZone                 = TimeZone(abbreviation: "UTC")!
+        CalendarView.Style.Default.timeZone                 = TimeZone(abbreviation: "UTC")!
         
-        CalendarView.Style.cellFont = UIFont(name: "Helvetica", size: 20.0) ?? UIFont.systemFont(ofSize: 20.0)
-        CalendarView.Style.headerFont = UIFont(name: "Helvetica", size: 20.0) ?? UIFont.systemFont(ofSize: 20.0)
-        CalendarView.Style.subHeaderFont = UIFont(name: "Helvetica", size: 14.0) ?? UIFont.systemFont(ofSize: 14.0)
+        CalendarView.Style.Default.cellFont = UIFont(name: "Helvetica", size: 20.0) ?? UIFont.systemFont(ofSize: 20.0)
+        CalendarView.Style.Default.headerFont = UIFont(name: "Helvetica", size: 20.0) ?? UIFont.systemFont(ofSize: 20.0)
+        CalendarView.Style.Default.weekdaysFont = UIFont(name: "Helvetica", size: 14.0) ?? UIFont.systemFont(ofSize: 14.0)
         
         calendarView.dataSource = self
         calendarView.delegate = self
@@ -95,8 +96,8 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         self.calendarView.setDisplayDate(today)
         
-        self.datePicker.locale = CalendarView.Style.locale
-        self.datePicker.timeZone = CalendarView.Style.timeZone
+        self.datePicker.locale = CalendarView.Style.Default.locale
+        self.datePicker.timeZone = CalendarView.Style.Default.timeZone
         self.datePicker.setDate(today, animated: false)
     }
 

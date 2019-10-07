@@ -27,67 +27,106 @@ import UIKit
 
 open class CalendarHeaderView: UIView {
     
-    lazy var monthLabel : UILabel = {
-        let lbl = UILabel()
-        lbl.textAlignment = NSTextAlignment.center
-        lbl.font = CalendarView.Style.headerFont
-        lbl.textColor = CalendarView.Style.headerTextColor
-        
-        self.addSubview(lbl)
-        
-        return lbl
-    }()
+    var style: CalendarView.Style = CalendarView.Style.Default {
+        didSet {
+            updateStyle()
+        }
+    }
     
-    lazy var dayLabelContainerView : UIView = {
-        let v = UIView()
+    var monthLabel: UILabel!
+    
+    var dayLabels = [UILabel]()
+    
+    public override init(frame: CGRect) {
+        super.init(frame: frame)
+        
+        self.translatesAutoresizingMaskIntoConstraints = false
+        
+        monthLabel = UILabel()
+        monthLabel.translatesAutoresizingMaskIntoConstraints = false
+        monthLabel.backgroundColor = UIColor.clear
+        self.addSubview(monthLabel)
+        
+        for _ in 0..<7 {
+            let label = UILabel()
+            label.translatesAutoresizingMaskIntoConstraints = false
+            label.backgroundColor = UIColor.clear
+            
+            dayLabels.append(label)
+            self.addSubview(label)
+        }
+    }
+    
+    public func updateStyle() {
+        self.monthLabel.textAlignment = NSTextAlignment.center
+        self.monthLabel.font = style.headerFont
+        self.monthLabel.textColor = style.headerTextColor
+        self.monthLabel.backgroundColor = style.headerBackgroundColor
         
         let formatter = DateFormatter()
-        formatter.locale = CalendarView.Style.locale
-        formatter.timeZone = CalendarView.Style.timeZone
+        formatter.locale = style.locale
+        formatter.timeZone = style.calendar.timeZone
         
-        var start = CalendarView.Style.firstWeekday == .sunday ? 0 : 1
+        let start = style.firstWeekday == .sunday ? 0 : 1
+        var i = 0
         
         for index in start..<(start+7) {
+            let label = dayLabels[i]
+            label.font = style.weekdaysFont
+            label.text = formatter.shortWeekdaySymbols[(index % 7)].capitalized
+            label.textColor = style.weekdaysTextColor
+            label.textAlignment = .center
             
-            let weekdayLabel = UILabel()
-            
-            weekdayLabel.font = CalendarView.Style.subHeaderFont
-            
-            weekdayLabel.text = formatter.shortWeekdaySymbols[(index % 7)].capitalized
-            self.backgroundColor = CalendarView.Style.headerBackgroundColor
-            weekdayLabel.textColor = CalendarView.Style.headerTextColor
-            weekdayLabel.textAlignment = NSTextAlignment.center
-            
-            v.addSubview(weekdayLabel)
+            i = i + 1
         }
-        
-        self.addSubview(v)
-        
-        return v
-        
-    }()
+
+        self.backgroundColor = style.weekdaysBackgroundColor
+    }
+    
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override open func layoutSubviews() {
-        
         super.layoutSubviews()
         
-        var frm = self.bounds
-        frm.origin.y += 5.0
-        frm.size.height = self.bounds.size.height / 2.0 - 5.0
+        var isRtl = UIApplication.shared.userInterfaceLayoutDirection == .rightToLeft
         
-        self.monthLabel.frame = frm
+        if #available(iOS 10.0, *) {
+            isRtl = self.effectiveUserInterfaceLayoutDirection == .rightToLeft
+        }
+        else if #available(iOS 9.0, *) {
+            isRtl = UIView.userInterfaceLayoutDirection(for: self.semanticContentAttribute) == .rightToLeft
+        }
+        
+        self.monthLabel?.frame = CGRect(
+            x: 0.0,
+            y: style.headerTopMargin,
+            width: self.bounds.size.width,
+            height: self.bounds.size.height
+                - style.headerTopMargin
+                - style.weekdaysHeight
+                - style.weekdaysBottomMargin
+                - style.weekdaysTopMargin
+        )
         
         var labelFrame = CGRect(
             x: 0.0,
-            y: self.bounds.size.height / 2.0,
+            y: self.bounds.size.height
+                - style.weekdaysBottomMargin
+                - style.weekdaysHeight,
             width: self.bounds.size.width / 7.0,
-            height: self.bounds.size.height / 2.0
+            height: style.weekdaysHeight
         )
         
-        for lbl in self.dayLabelContainerView.subviews {
-            
+        if isRtl {
+            labelFrame.origin.x = self.bounds.size.width - labelFrame.width
+        }
+        
+        for lbl in self.dayLabels {
             lbl.frame = labelFrame
-            labelFrame.origin.x += labelFrame.size.width
+            
+            labelFrame.origin.x += isRtl ? -labelFrame.size.width : labelFrame.size.width
         }
     }
 }

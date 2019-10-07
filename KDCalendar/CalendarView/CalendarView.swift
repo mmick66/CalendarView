@@ -90,16 +90,26 @@ public class CalendarView: UIView {
     var headerView: CalendarHeaderView!
     var collectionView: UICollectionView!
     
-    public lazy var calendar : Calendar = {
-        var calendarStyle = Calendar(identifier: CalendarView.Style.identifier)
-        calendarStyle.timeZone = CalendarView.Style.timeZone
-        return calendarStyle
-    }()
+    public var forceLtr: Bool = true {
+        didSet {
+            updateLayoutDirections()
+        }
+    }
     
-    internal var startDateCache     = Date()
-    internal var endDateCache       = Date()
-    internal var startOfMonthCache  = Date()
-    internal var endOfMonthCache    = Date()
+    public var style: Style = Style.Default {
+        didSet {
+            updateStyle()
+        }
+    }
+    
+    public var calendar : Calendar {
+        return style.calendar
+    }
+
+    internal var _startDateCache: Date?
+    internal var _endDateCache: Date?
+    internal var _firstDayCache: Date?
+    internal var _lastDayCache: Date?
     
     internal var todayIndexPath : IndexPath?
     internal var startIndexPath : IndexPath!
@@ -108,7 +118,7 @@ public class CalendarView: UIView {
     internal var selectedIndexPaths    = [IndexPath]()
     internal var selectedDates         = [Date]()
     
-    internal var monthInfoForSection = [Int:(firstDay: Int, daysTotal: Int)]()
+    internal var _cachedMonthInfoForSection = [Int:(firstDay: Int, daysTotal: Int)]()
     internal var eventsByIndexPath = [IndexPath: [CalendarEvent]]()
     
     public var events: [CalendarEvent] = [] {
@@ -133,7 +143,7 @@ public class CalendarView: UIView {
     
     // MARK: - public
     
-    public var displayDate: Date?
+    public internal(set) var displayDate: Date?
     public var multipleSelectionEnable = true
     public var enableDeslection = true
     public var marksWeekends = true
@@ -175,9 +185,11 @@ public class CalendarView: UIView {
     private func setup() {
         
         self.clipsToBounds = true
+        self.translatesAutoresizingMaskIntoConstraints = false
         
         /* Header View */
         self.headerView = CalendarHeaderView(frame:CGRect.zero)
+        self.headerView.style = style
         self.addSubview(self.headerView)
         
         /* Layout */
@@ -198,16 +210,16 @@ public class CalendarView: UIView {
         self.collectionView.showsVerticalScrollIndicator    = false
         self.collectionView.allowsMultipleSelection         = false
         self.collectionView.register(CalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
-        if #available(iOS 9.0, *) {
-            self.collectionView.semanticContentAttribute = .forceLeftToRight // forces western style language orientation
-        }
+        
         self.addSubview(self.collectionView)
+        
+        // Update semantic content attributes
+        updateLayoutDirections()
         
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(CalendarView.handleLongPress))
         self.collectionView.addGestureRecognizer(longPress)
         
     }
-    
     
     @objc func handleLongPress(gesture: UILongPressGestureRecognizer) {
         
@@ -240,21 +252,21 @@ public class CalendarView: UIView {
     }
     
     override open func layoutSubviews() {
-       
+        
         super.layoutSubviews()
         
-        self.headerView.frame = CGRect(
-            x:0.0,
-            y:0.0,
+        self.headerView?.frame = CGRect(
+            x: 0.0,
+            y: 0.0,
             width: self.frame.size.width,
-            height: CalendarView.Style.headerHeight
+            height: style.headerHeight
         )
         
-        self.collectionView.frame = CGRect(
+        self.collectionView?.frame = CGRect(
             x: 0.0,
-            y: CalendarView.Style.headerHeight,
+            y: style.headerHeight,
             width: self.frame.size.width,
-            height: self.frame.size.height - CalendarView.Style.headerHeight
+            height: self.frame.size.height - style.headerHeight
         )
         
         flowLayout.itemSize = self.cellSize(in: self.bounds)
@@ -263,10 +275,51 @@ public class CalendarView: UIView {
     }
     
     private func cellSize(in bounds: CGRect) -> CGSize {
+        guard let collectionView = self.collectionView
+            else {
+                return CGSize(
+                    width: self.bounds.width / 7.0,
+                    height: self.bounds.width / 7.0
+                )
+            }
+        
         return CGSize(
-            width:   frame.size.width / 7.0,                                    // number of days in week
-            height: (frame.size.height - CalendarView.Style.headerHeight) / 6.0 // maximum number of rows
+            width:   collectionView.bounds.width / 7.0,                                    // number of days in week
+            height: (collectionView.bounds.height) / 6.0 // maximum number of rows
         )
+    }
+    
+    internal var _isRtl = false
+    
+    internal func updateLayoutDirections() {
+        if #available(iOS 9.0, *) {
+            self.collectionView?.semanticContentAttribute = .forceLeftToRight
+            self.headerView?.semanticContentAttribute = forceLtr ? .forceLeftToRight : .unspecified
+        }
+        
+        var isRtl = false
+        
+        if !forceLtr
+        {
+            isRtl = UIApplication.shared.userInterfaceLayoutDirection == .rightToLeft
+            
+            if #available(iOS 10.0, *) {
+                isRtl = self.effectiveUserInterfaceLayoutDirection == .rightToLeft
+            }
+            else if #available(iOS 9.0, *) {
+                isRtl = UIView.userInterfaceLayoutDirection(for: self.semanticContentAttribute) == .rightToLeft
+            }
+        }
+        
+        if _isRtl != isRtl
+        {
+            _isRtl = isRtl
+            
+            self.collectionView?.transform = isRtl
+                ? CGAffineTransform(scaleX: -1.0, y: 1.0)
+                : CGAffineTransform.identity
+            self.collectionView?.reloadData()
+        }
     }
     
     internal func resetDisplayDate() {
@@ -276,6 +329,10 @@ public class CalendarView: UIView {
             self.scrollViewOffset(for: displayDate),
             animated: false
         )
+    }
+    
+    internal func updateStyle() {
+        self.headerView?.style = style
     }
     
     func scrollViewOffset(for date: Date) -> CGPoint {
@@ -300,12 +357,12 @@ extension CalendarView {
 
     func indexPathForDate(_ date : Date) -> IndexPath? {
         
-        let distanceFromStartDate = self.calendar.dateComponents([.month, .day], from: self.startOfMonthCache, to: date)
+        let distanceFromStartDate = self.calendar.dateComponents([.month, .day], from: self.firstDayCache, to: date)
         
         guard
             let day   = distanceFromStartDate.day,
             let month = distanceFromStartDate.month,
-            let (firstDayIndex, _) = monthInfoForSection[month] else { return nil }
+            let (firstDayIndex, _) = getCachedSectionInfo(month) else { return nil }
         
         return IndexPath(item: day + firstDayIndex, section: month)
     }
@@ -314,13 +371,13 @@ extension CalendarView {
         
         let month = indexPath.section
         
-        guard let monthInfo = monthInfoForSection[month] else { return nil }
+        guard let monthInfo = getCachedSectionInfo(month) else { return nil }
         
         var components      = DateComponents()
         components.month    = month
         components.day      = indexPath.item - monthInfo.firstDay
         
-        return self.calendar.date(byAdding: components, to: self.startOfMonthCache)
+        return self.calendar.date(byAdding: components, to: self.firstDayCache)
     }
 }
 
@@ -331,7 +388,7 @@ extension CalendarView {
         guard let displayDate = self.displayDate else { return }
         
         var dateComponents = DateComponents()
-        dateComponents.month = offset;
+        dateComponents.month = offset
     
         guard let newDate = self.calendar.date(byAdding: dateComponents, to: displayDate) else { return }
         self.setDisplayDate(newDate, animated: true)
@@ -370,7 +427,8 @@ extension CalendarView {
 			guard (startDateCache..<endDateCache).contains(date) else { return }
 		}
 		
-        self.collectionView.setContentOffset(self.scrollViewOffset(for: date), animated: animated)
+        self.collectionView?.reloadData()
+        self.collectionView?.setContentOffset(self.scrollViewOffset(for: date), animated: animated)
         self.displayDateOnHeader(date)
     }
     

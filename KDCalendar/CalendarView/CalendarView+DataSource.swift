@@ -27,47 +27,85 @@ import UIKit
 
 extension CalendarView: UICollectionViewDataSource {
     
+    internal func resetDateCaches() {
+        _startDateCache = nil
+        _endDateCache = nil
+        
+        _firstDayCache = nil
+        _lastDayCache = nil
+        
+        _cachedMonthInfoForSection.removeAll()
+    }
+    
+    internal var startDateCache: Date {
+        if _startDateCache == nil {
+            _startDateCache = dataSource?.startDate()
+        }
+        
+        return _startDateCache ?? Date()
+    }
+    
+    internal var endDateCache: Date {
+        if _endDateCache == nil {
+            _endDateCache = dataSource?.endDate()
+        }
+        
+        return _endDateCache ?? Date()
+    }
+    
+    internal var firstDayCache: Date {
+        if _firstDayCache == nil {
+            let startDateComponents = self.calendar.dateComponents([.era, .year, .month, .day], from: startDateCache)
+            
+            var firstDayOfStartMonthComponents = startDateComponents
+            firstDayOfStartMonthComponents.day = 1
+            
+            let firstDayOfStartMonthDate = self.calendar.date(from: firstDayOfStartMonthComponents)!
+            
+            _firstDayCache = firstDayOfStartMonthDate
+        }
+        
+        return _firstDayCache ?? Date()
+    }
+    
+    internal var lastDayCache: Date {
+        if _lastDayCache == nil {
+            var lastDayOfEndMonthComponents = self.calendar.dateComponents([.era, .year, .month], from: self.endDateCache)
+            let range = self.calendar.range(of: .day, in: .month, for: self.endDateCache)!
+            lastDayOfEndMonthComponents.day = range.count
+            
+            _lastDayCache = self.calendar.date(from: lastDayOfEndMonthComponents)!
+        }
+        
+        return _lastDayCache ?? Date()
+    }
     
     public func numberOfSections(in collectionView: UICollectionView) -> Int {
         
-        guard let dateSource = self.dataSource else { return 0 }
+        guard self.dataSource != nil else { return 0 }
         
-        self.startDateCache = dateSource.startDate()
-        self.endDateCache   = dateSource.endDate()
-        
-        guard self.startDateCache <= self.endDateCache else { fatalError("Start date cannot be later than end date.") }
-        
-        let getComponents = { (date: Date) -> DateComponents in
-            self.calendar.dateComponents([.era, .year, .month, .day], from: date)
+        if dataSource?.startDate() != _startDateCache ||
+            dataSource?.endDate() != _endDateCache
+        {
+            self.resetDateCaches()
         }
         
-        let startDateComponents = getComponents(self.startDateCache)
-        let endDateComponents = getComponents(self.endDateCache)
-        
-        var firstDayOfStartMonthComponents = startDateComponents
-        firstDayOfStartMonthComponents.day = 1
-        
-        let firstDayOfStartMonthDate = self.calendar.date(from: firstDayOfStartMonthComponents)!
-        
-        self.startOfMonthCache = firstDayOfStartMonthDate
-        
-        var lastDayOfEndMonthComponents = self.calendar.dateComponents([.era, .year, .month], from: self.endDateCache)
-        let range = self.calendar.range(of: .day, in: .month, for: self.endDateCache)!
-        lastDayOfEndMonthComponents.day = range.count
-        
-        self.endOfMonthCache = self.calendar.date(from: lastDayOfEndMonthComponents)!
+        guard self.startDateCache <= self.endDateCache else { fatalError("Start date cannot be later than end date.") }
+
+        let startDateComponents = self.calendar.dateComponents([.era, .year, .month, .day], from: startDateCache)
+        let endDateComponents = self.calendar.dateComponents([.era, .year, .month, .day], from: endDateCache)
         
         let today = Date()
         
-        if (self.startOfMonthCache ... self.endOfMonthCache).contains(today) {
+        if (self.firstDayCache ... self.lastDayCache).contains(today) {
             
-            let distanceFromTodayComponents = self.calendar.dateComponents([.month, .day], from: self.startOfMonthCache, to: today)
+            let distanceFromTodayComponents = self.calendar.dateComponents([.month, .day], from: self.firstDayCache, to: today)
             
             self.todayIndexPath = IndexPath(item: distanceFromTodayComponents.day!, section: distanceFromTodayComponents.month!)
         }
         
         // how many months should the whole calendar display?
-        let numberOfMonths = self.calendar.dateComponents([.month], from: startOfMonthCache, to: endOfMonthCache).month!
+        let numberOfMonths = self.calendar.dateComponents([.month], from: firstDayCache, to: lastDayCache).month!
         
         // subtract one to include the day
         self.startIndexPath = IndexPath(item: startDateComponents.day! - 1, section: 0)
@@ -77,42 +115,48 @@ extension CalendarView: UICollectionViewDataSource {
         return numberOfMonths + 1
     }
     
-    public func getMonthInfo(for date: Date) -> (firstDay: Int, daysTotal: Int)? {
+    public func getCachedSectionInfo(_ section: Int) -> (firstDay: Int, daysTotal: Int)? {
+        var result = _cachedMonthInfoForSection[section]
         
-        var firstWeekdayOfMonthIndex    = self.calendar.component(.weekday, from: date)
-        firstWeekdayOfMonthIndex       -= CalendarView.Style.firstWeekday == .monday ? 1 : 0 
-        firstWeekdayOfMonthIndex        = (firstWeekdayOfMonthIndex + 6) % 7 // push it modularly to map it in the range 0 to 6
-        
-        guard let rangeOfDaysInMonth = self.calendar.range(of: .day, in: .month, for: date) else { return nil }
-        
-        return (firstDay: firstWeekdayOfMonthIndex, daysTotal: rangeOfDaysInMonth.count)
-    }
-    
-    
-    
-    public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        if result != nil
+        {
+            return result!
+        }
         
         var monthOffsetComponents = DateComponents()
-        monthOffsetComponents.month = section;
+        monthOffsetComponents.month = section
         
-        guard
-            let correctMonthForSectionDate = self.calendar.date(byAdding: monthOffsetComponents, to: startOfMonthCache),
-            let info = self.getMonthInfo(for: correctMonthForSectionDate) else { return 0 }
+        let date = self.calendar.date(byAdding: monthOffsetComponents, to: firstDayCache)
         
-        self.monthInfoForSection[section] = info
+        var firstWeekdayOfMonthIndex    = date == nil ? 0 : self.calendar.component(.weekday, from: date!)
+        firstWeekdayOfMonthIndex       -= style.firstWeekday == .monday ? 1 : 0
+        firstWeekdayOfMonthIndex        = (firstWeekdayOfMonthIndex + 6) % 7 // push it modularly to map it in the range 0 to 6
         
-        return 42 // rows:7 x cols:6
+        guard let rangeOfDaysInMonth = date == nil ? nil : self.calendar.range(of: .day, in: .month, for: date!)
+            else { return nil }
         
+        result = (firstDay: firstWeekdayOfMonthIndex, daysTotal: rangeOfDaysInMonth.count)
+        
+        _cachedMonthInfoForSection[section] = result
+        
+        return result
     }
     
+    public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return 42 // rows:7 x cols:6
+    }
     
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        
         let dayCell = collectionView.dequeueReusableCell(withReuseIdentifier: cellReuseIdentifier, for: indexPath) as! CalendarDayCell
         
+        dayCell.style = style
         dayCell.clearStyles()
         
-        guard let (firstDayIndex, numberOfDaysTotal) = self.monthInfoForSection[indexPath.section] else { return dayCell }
+        dayCell.transform = _isRtl
+            ? CGAffineTransform(scaleX: -1.0, y: 1.0)
+            : CGAffineTransform.identity
+        
+        guard let (firstDayIndex, numberOfDaysTotal) = self.getCachedSectionInfo(indexPath.section) else { return dayCell }
         
         let lastDayIndex = firstDayIndex + numberOfDaysTotal
         
@@ -125,18 +169,40 @@ extension CalendarView: UICollectionViewDataSource {
             }
             return false
         }
+        
+        let isInRange = (firstDayIndex..<lastDayIndex).contains(indexPath.item)
+        let isAdjacent = !isInRange && style.showAdjacentDays && (
+            indexPath.item < firstDayIndex || indexPath.item >= lastDayIndex
+        )
     
         // the index of this cell is within the range of first and the last day of the month
-        if (firstDayIndex..<lastDayIndex).contains(indexPath.item) {
-            // ex. if the first is wednesday (index of 3), subtract 2 to show it as 1
-            dayCell.day = (indexPath.item - firstDayIndex) + 1
+        if isInRange || isAdjacent {
             dayCell.isHidden = false
             
+            if isAdjacent {
+                if indexPath.item < firstDayIndex {
+                    if let prevInfo = self.getCachedSectionInfo(indexPath.section - 1) {
+                        dayCell.day = prevInfo.daysTotal - firstDayIndex + indexPath.item
+                    }
+                    else {
+                        dayCell.isHidden = true
+                    }
+                }
+                else {
+                    dayCell.day = indexPath.item - lastDayIndex + 1
+                }
+            }
+            else {
+                // ex. if the first is wednesday (index of 3), subtract 2 to show it as 1
+                dayCell.day = (indexPath.item - firstDayIndex) + 1
+            }
+            
+            dayCell.isAdjacent = isAdjacent
             dayCell.isOutOfRange = cellOutOfRange(indexPath)
             
         } else {
-            dayCell.textLabel.text = ""
             dayCell.isHidden = true
+            dayCell.textLabel.text = ""
         }
         
         // hack: send once at the beginning
@@ -156,7 +222,7 @@ extension CalendarView: UICollectionViewDataSource {
         
         if self.marksWeekends {
             let we = indexPath.item % 7
-            let weekDayOption = CalendarView.Style.firstWeekday == .sunday ? 0 : 5
+            let weekDayOption = style.firstWeekday == .sunday ? 0 : 5
             dayCell.isWeekend = we == weekDayOption || we == 6
         }
         
