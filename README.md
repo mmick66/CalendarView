@@ -143,6 +143,7 @@ override func viewDidLoad() {
 }
 ```
 
+For more information have a look at our [wiki](https://github.com/mmick66/CalendarView/wiki/Styling).
 #### Marking Weekends
 
 Some calendars will want to display weekends as special and mark them with a different text color. To do that, first set the marksWeekends variable on the calendarView itself and (optionally) define the color to use.
