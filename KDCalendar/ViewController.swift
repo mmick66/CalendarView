@@ -37,26 +37,34 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         
         super.viewDidLoad()
         
-        CalendarView.Style.Default.cellShape                = .bevel(8.0)
-        CalendarView.Style.Default.cellColorDefault         = UIColor.clear
-        CalendarView.Style.Default.cellColorToday           = UIColor(red:1.00, green:0.84, blue:0.64, alpha:1.00)
-        CalendarView.Style.Default.cellSelectedBorderColor  = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
-        CalendarView.Style.Default.cellEventColor           = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
-        CalendarView.Style.Default.headerTextColor          = UIColor.gray
-        CalendarView.Style.Default.cellTextColorDefault     = UIColor.white
-        CalendarView.Style.Default.cellTextColorToday       = UIColor.orange
-        CalendarView.Style.Default.headerBackgroundColor    = UIColor.white
-        CalendarView.Style.Default.weekdaysBackgroundColor  = UIColor.white
+        let style = CalendarView.Style()
         
-        CalendarView.Style.Default.firstWeekday             = .sunday
         
-        CalendarView.Style.Default.locale                   = Locale(identifier: "en_US")
+        style.cellShape                = .bevel(8.0)
+        style.cellColorDefault         = UIColor.clear
+        style.cellColorToday           = UIColor(red:1.00, green:0.84, blue:0.64, alpha:1.00)
+        style.cellSelectedBorderColor  = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
+        style.cellEventColor           = UIColor(red:1.00, green:0.63, blue:0.24, alpha:1.00)
+        style.headerTextColor          = UIColor.gray
         
-        CalendarView.Style.Default.timeZone                 = TimeZone(abbreviation: "UTC")!
+        style.cellTextColorDefault     = UIColor(red: 249/255, green: 180/255, blue: 139/255, alpha: 1.0)
+        style.cellTextColorToday       = UIColor.orange
+        style.cellTextColorWeekend     = UIColor(red: 237/255, green: 103/255, blue: 73/255, alpha: 1.0)
+        style.cellColorOutOfRange      = UIColor(red: 249/255, green: 226/255, blue: 212/255, alpha: 1.0)
+            
+        style.headerBackgroundColor    = UIColor.white
+        style.weekdaysBackgroundColor  = UIColor.white
+        style.firstWeekday             = .sunday
         
-        CalendarView.Style.Default.cellFont = UIFont(name: "Helvetica", size: 20.0) ?? UIFont.systemFont(ofSize: 20.0)
-        CalendarView.Style.Default.headerFont = UIFont(name: "Helvetica", size: 20.0) ?? UIFont.systemFont(ofSize: 20.0)
-        CalendarView.Style.Default.weekdaysFont = UIFont(name: "Helvetica", size: 14.0) ?? UIFont.systemFont(ofSize: 14.0)
+        style.locale                   = Locale(identifier: "en_US")
+        
+        style.timeZone                 = TimeZone(abbreviation: "UTC")!
+        
+        style.cellFont = UIFont(name: "Helvetica", size: 20.0) ?? UIFont.systemFont(ofSize: 20.0)
+        style.headerFont = UIFont(name: "Helvetica", size: 20.0) ?? UIFont.systemFont(ofSize: 20.0)
+        style.weekdaysFont = UIFont(name: "Helvetica", size: 14.0) ?? UIFont.systemFont(ofSize: 14.0)
+        
+        calendarView.style = style
         
         calendarView.dataSource = self
         calendarView.delegate = self
@@ -66,8 +74,9 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         calendarView.marksWeekends = true
         
         
-        calendarView.backgroundColor = UIColor(red:0.31, green:0.44, blue:0.47, alpha:1.00)
+        calendarView.backgroundColor = UIColor(red: 252/255, green: 252/255, blue: 252/255, alpha: 1.0)
     }
+    
     
     override func viewDidAppear(_ animated: Bool) {
         
