@@ -31,6 +31,22 @@ Add this to your Cartfile, and then run `carthage update`:
 github "mmick66/CalendarView" "master"
 ```
 
+#### Swift Package Manager
+
+Go to Project -> Swift Packages and add the repository:
+```
+https://github.com/mmick66/CalendarView.git
+```
+
+
+Add this to your Package.swift:
+```
+dependencies: [
+    .Package(url: "https://github.com/mmick66/CalendarView")
+]
+```
+
+
 #### Manual
 
 Just the files from the **CalendarView/** subfolder to your project.
