@@ -105,6 +105,9 @@ public class CalendarView: UIView {
     public var calendar : Calendar {
         return style.calendar
     }
+    
+    public internal(set) var selectedIndexPaths = [IndexPath]()
+    public internal(set) var selectedDates = [Date]()
 
     internal var _startDateCache: Date?
     internal var _endDateCache: Date?
@@ -115,9 +118,6 @@ public class CalendarView: UIView {
     internal var startIndexPath : IndexPath!
     internal var endIndexPath   : IndexPath!
 
-    internal var selectedIndexPaths    = [IndexPath]()
-    internal var selectedDates         = [Date]()
-    
     internal var _cachedMonthInfoForSection = [Int:(firstDay: Int, daysTotal: Int)]()
     internal var eventsByIndexPath = [IndexPath: [CalendarEvent]]()
     

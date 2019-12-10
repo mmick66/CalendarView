@@ -150,6 +150,7 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
     }
     
     func calendar(_ calendar: CalendarView, didScrollToMonth date : Date) {
+        print(self.calendarView.selectedDates)
         
         self.datePicker.setDate(date, animated: true)
     }
