@@ -26,7 +26,9 @@
 import UIKit
 import EventKit
 
-class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDelegate {
+
+
+class ViewController: UIViewController {
 
     
     @IBOutlet weak var calendarView: CalendarView!
@@ -109,82 +111,6 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
         self.datePicker.timeZone = CalendarView.Style.Default.timeZone
         self.datePicker.setDate(today, animated: false)
     }
-
-    // MARK : KDCalendarDataSource
-    
-    func startDate() -> Date {
-        
-        var dateComponents = DateComponents()
-        dateComponents.month = 0
-        
-        let today = Date()
-        
-        let threeMonthsAgo = self.calendarView.calendar.date(byAdding: dateComponents, to: today)!
-        
-        return threeMonthsAgo
-    }
-    
-    func endDate() -> Date {
-        
-        var dateComponents = DateComponents()
-      
-        dateComponents.month = 12
-        let today = Date()
-        
-        let twoYearsFromNow = self.calendarView.calendar.date(byAdding: dateComponents, to: today)!
-        
-        return twoYearsFromNow
-  
-    }
-    
-    
-    // MARK : KDCalendarDelegate
-   
-    func calendar(_ calendar: CalendarView, didSelectDate date : Date, withEvents events: [CalendarEvent]) {
-        
-        print("Did Select: \(date) with \(events.count) events")
-        for event in events {
-            print("\t\"\(event.title)\" - Starting at:\(event.startDate)")
-        }
-        
-    }
-    
-    func calendar(_ calendar: CalendarView, didScrollToMonth date : Date) {
-        print(self.calendarView.selectedDates)
-        
-        self.datePicker.setDate(date, animated: true)
-    }
-    
-    
-    func calendar(_ calendar: CalendarView, didLongPressDate date : Date, withEvents events: [CalendarEvent]?) {
-        
-        if let events = events {
-            for event in events {
-                print("\t\"\(event.title)\" - Starting at:\(event.startDate)")
-            }
-        }
-        
-        let alert = UIAlertController(title: "Create New Event", message: "Message", preferredStyle: .alert)
-        
-        alert.addTextField { (textField: UITextField) in
-            textField.placeholder = "Event Title"
-        }
-        
-        let addEventAction = UIAlertAction(title: "Create", style: .default, handler: { (action) -> Void in
-            let title = alert.textFields?.first?.text
-            self.calendarView.addEvent(title!, date: date)
-        })
-        
-        let cancelAction = UIAlertAction(title: "Cancel", style: .destructive, handler: nil)
-        
-        alert.addAction(addEventAction)
-        alert.addAction(cancelAction)
-        
-        self.present(alert, animated: true, completion: nil)
-        
-    }
-    
-    
     
     
     // MARK : Events
@@ -204,6 +130,84 @@ class ViewController: UIViewController, CalendarViewDataSource, CalendarViewDele
     override var prefersStatusBarHidden: Bool {
         return true
     }
+    
+}
+
+
+extension ViewController: CalendarViewDataSource {
+    
+      func startDate() -> Date {
+          
+          var dateComponents = DateComponents()
+          dateComponents.month = -1
+          
+          let today = Date()
+          
+          let threeMonthsAgo = self.calendarView.calendar.date(byAdding: dateComponents, to: today)!
+          
+          return threeMonthsAgo
+      }
+      
+      func endDate() -> Date {
+          
+          var dateComponents = DateComponents()
+        
+          dateComponents.month = 12
+          let today = Date()
+          
+          let twoYearsFromNow = self.calendarView.calendar.date(byAdding: dateComponents, to: today)!
+          
+          return twoYearsFromNow
+    
+      }
+    
+}
+
+extension ViewController: CalendarViewDelegate {
+    
+    func calendar(_ calendar: CalendarView, didSelectDate date : Date, withEvents events: [CalendarEvent]) {
+           
+           print("Did Select: \(date) with \(events.count) events")
+           for event in events {
+               print("\t\"\(event.title)\" - Starting at:\(event.startDate)")
+           }
+           
+       }
+       
+       func calendar(_ calendar: CalendarView, didScrollToMonth date : Date) {
+           print(self.calendarView.selectedDates)
+           
+           self.datePicker.setDate(date, animated: true)
+       }
+       
+       
+       func calendar(_ calendar: CalendarView, didLongPressDate date : Date, withEvents events: [CalendarEvent]?) {
+           
+           if let events = events {
+               for event in events {
+                   print("\t\"\(event.title)\" - Starting at:\(event.startDate)")
+               }
+           }
+           
+           let alert = UIAlertController(title: "Create New Event", message: "Message", preferredStyle: .alert)
+           
+           alert.addTextField { (textField: UITextField) in
+               textField.placeholder = "Event Title"
+           }
+           
+           let addEventAction = UIAlertAction(title: "Create", style: .default, handler: { (action) -> Void in
+               let title = alert.textFields?.first?.text
+               self.calendarView.addEvent(title!, date: date)
+           })
+           
+           let cancelAction = UIAlertAction(title: "Cancel", style: .destructive, handler: nil)
+           
+           alert.addAction(addEventAction)
+           alert.addAction(cancelAction)
+           
+           self.present(alert, animated: true, completion: nil)
+           
+       }
     
 }
 
