@@ -6,7 +6,7 @@
 [![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/vsouza/awesome-ios)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 
-This is an easy to use, "just drag and drop it in your code" type of calendar for iOS. It features **both** vertical and horizontal layouts together with **scrolling**, and the display of native **calendar events**. Hurray!
+This is an easy to use, "just drag and drop it in your code" type of calendar for iOS. It supports both **vertical** and **horizontal**, as well as native **calendar events**.
 
 ![Calendar Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/screenshots.png)
 
