@@ -40,6 +40,10 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
             }
             
         } else {
+            if let currentCell = collectionView.cellForItem(at: indexPath) as? CalendarDayCell, currentCell.isOutOfRange || currentCell.isAdjacent {
+                self.reloadData()
+                return
+            }
             
             if !multipleSelectionEnable {
                 selectedIndexPaths.removeAll()
