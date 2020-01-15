@@ -95,19 +95,15 @@ extension CalendarView {
         //Locale Style
         public var locale                    = Locale.current
         
-        //TimeZone Calendar Style
-        public var timeZone: TimeZone {
-            get { return calendar.timeZone }
-            set { calendar.timeZone = newValue }
-        }
-        
-        public var weekDayTransform = WeekDaysTransform.capitalized
-        
         //Calendar Identifier Style
         public lazy var calendar: Calendar   = {
             var calendar = Calendar(identifier: .gregorian)
             calendar.timeZone = TimeZone(abbreviation: "UTC")!
             return calendar
         }()
+        
+        public var weekDayTransform = WeekDaysTransform.capitalized
+        
+        
     }
 }

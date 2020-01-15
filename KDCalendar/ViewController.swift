@@ -60,8 +60,6 @@ class ViewController: UIViewController {
         
         style.locale                   = Locale(identifier: "en_US")
         
-        style.timeZone                 = TimeZone(abbreviation: "UTC")!
-        
         style.cellFont = UIFont(name: "Helvetica", size: 20.0) ?? UIFont.systemFont(ofSize: 20.0)
         style.headerFont = UIFont(name: "Helvetica", size: 20.0) ?? UIFont.systemFont(ofSize: 20.0)
         style.weekdaysFont = UIFont(name: "Helvetica", size: 14.0) ?? UIFont.systemFont(ofSize: 14.0)
@@ -107,8 +105,8 @@ class ViewController: UIViewController {
         
         self.calendarView.setDisplayDate(today)
         
-        self.datePicker.locale = CalendarView.Style.Default.locale
-        self.datePicker.timeZone = CalendarView.Style.Default.timeZone
+        self.datePicker.locale = self.calendarView.style.locale
+        self.datePicker.timeZone = self.calendarView.calendar.timeZone
         self.datePicker.setDate(today, animated: false)
     }
     

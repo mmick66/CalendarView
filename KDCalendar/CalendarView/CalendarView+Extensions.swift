@@ -41,3 +41,11 @@ extension String {
         return String(subString)
     }
 }
+
+extension Date {
+    func convertToTimeZone(from fromTimeZone: TimeZone, to toTimeZone: TimeZone) -> Date {
+         let delta = TimeInterval(toTimeZone.secondsFromGMT(for: self) - fromTimeZone.secondsFromGMT(for: self))
+         return addingTimeInterval(delta)
+    }
+}
+
