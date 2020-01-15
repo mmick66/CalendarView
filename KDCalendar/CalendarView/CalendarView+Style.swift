@@ -39,6 +39,10 @@ extension CalendarView {
             case grayed
         }
         
+        public enum WeekDaysTransform {
+            case capitalized, uppercase
+        }
+        
         public init()
         {
         }
@@ -96,6 +100,8 @@ extension CalendarView {
             get { return calendar.timeZone }
             set { calendar.timeZone = newValue }
         }
+        
+        public var weekDayTransform = WeekDaysTransform.capitalized
         
         //Calendar Identifier Style
         public lazy var calendar: Calendar   = {
