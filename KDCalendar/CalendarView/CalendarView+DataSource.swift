@@ -95,7 +95,7 @@ extension CalendarView: UICollectionViewDataSource {
         let startDateComponents = self.calendar.dateComponents([.era, .year, .month, .day], from: startDateCache)
         let endDateComponents = self.calendar.dateComponents([.era, .year, .month, .day], from: endDateCache)
         
-        let local = TimeZone(abbreviation: TimeZone.current.abbreviation()!)!
+        let local = TimeZone(secondsFromGMT: TimeZone.current.secondsFromGMT())!
         let today = Date().convertToTimeZone(from: self.calendar.timeZone, to: local)
         
         if (self.firstDayCache ... self.lastDayCache).contains(today) {
