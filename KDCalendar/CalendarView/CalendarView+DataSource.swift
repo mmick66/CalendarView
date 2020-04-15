@@ -162,13 +162,18 @@ extension CalendarView: UICollectionViewDataSource {
         let lastDayIndex = firstDayIndex + numberOfDaysTotal
         
         let cellOutOfRange = { (indexPath: IndexPath) -> Bool in
+            
+            var isOutOfRange = false
+            
             if self.startIndexPath.section == indexPath.section { // is 0
-                return self.startIndexPath.item + firstDayIndex > indexPath.item
+                isOutOfRange = self.startIndexPath.item + firstDayIndex > indexPath.item
             }
-            if self.endIndexPath.section == indexPath.section {
-                return self.endIndexPath.item + firstDayIndex < indexPath.item
+            if self.endIndexPath.section == indexPath.section && !isOutOfRange {
+                isOutOfRange = self.endIndexPath.item + firstDayIndex < indexPath.item
             }
-            return false
+            
+            return isOutOfRange
+            
         }
         
         let isInRange = (firstDayIndex..<lastDayIndex).contains(indexPath.item)
