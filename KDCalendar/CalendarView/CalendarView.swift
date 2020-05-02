@@ -198,8 +198,7 @@ public class CalendarView: UIView {
         layout.sectionInset = UIEdgeInsets.zero
         layout.minimumInteritemSpacing = 0
         layout.minimumLineSpacing = 0
-        layout.itemSize = self.cellSize(in: self.bounds)
-        
+
         /* Collection View */
         self.collectionView                     = UICollectionView(frame: CGRect.zero, collectionViewLayout: layout)
         self.collectionView.dataSource          = self
@@ -277,10 +276,7 @@ public class CalendarView: UIView {
     private func cellSize(in bounds: CGRect) -> CGSize {
         guard let collectionView = self.collectionView
             else {
-                return CGSize(
-                    width: self.bounds.width / 7.0,
-                    height: self.bounds.width / 7.0
-                )
+                return .zero
             }
         
         return CGSize(
