@@ -473,6 +473,17 @@ extension CalendarView {
         goToMonthWithOffet(-1)
     }
 
+    /*
+     method: - clearAllSelectedDates
+     function: - clear all selected dates.  Does not call `didDeselectDate` callback
+     */
+    public func clearAllSelectedDates() {
+        selectedIndexPaths.removeAll()
+        selectedDates.removeAll()
+        self.reloadData()
+    }
+
+
     #if KDCALENDAR_EVENT_MANAGER_ENABLED
     
     public func loadEvents(onComplete: ((Error?) -> Void)? = nil) {
