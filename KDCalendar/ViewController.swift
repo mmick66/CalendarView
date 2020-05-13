@@ -30,11 +30,14 @@ import EventKit
 
 class ViewController: UIViewController {
 
-    
+    private let defaultSelectionMode: CalendarView.MultipleSelectionMode =  .multiple
     @IBOutlet weak var calendarView: CalendarView!
     @IBOutlet weak var datePicker: UIDatePicker!
-    
-    
+
+    @IBAction func rangleSelectionEnabledToggled(_ sender: UISwitch) {
+        calendarView.multipleSelectionMode = sender.isOn ? .range : defaultSelectionMode
+    }
+
     override func viewDidLoad() {
         
         super.viewDidLoad()
@@ -70,7 +73,7 @@ class ViewController: UIViewController {
         calendarView.delegate = self
         
         calendarView.direction = .horizontal
-        calendarView.multipleSelectionEnable = false
+        calendarView.multipleSelectionMode = defaultSelectionMode
         calendarView.marksWeekends = true
         
         
@@ -127,8 +130,7 @@ class ViewController: UIViewController {
     
     override var prefersStatusBarHidden: Bool {
         return true
-    }
-    
+    } 
 }
 
 

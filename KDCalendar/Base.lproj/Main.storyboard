@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13771" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="vXZ-lx-hvc">
-    <device id="retina4_7" orientation="portrait">
-        <adaptation id="fullscreen"/>
-    </device>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="16096" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="vXZ-lx-hvc">
+    <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13772"/>
-        <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16087"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -23,23 +20,20 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="hW4-le-uM3" customClass="CalendarView" customModule="CalendarView" customModuleProvider="target">
-                                <rect key="frame" x="16" y="36" width="343" height="343"/>
+                                <rect key="frame" x="16" y="16" width="343" height="343"/>
                                 <color key="backgroundColor" red="0.94004629629629632" green="0.80393518518518514" blue="0.87748842592592591" alpha="0.87" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="hW4-le-uM3" secondAttribute="height" id="773-eW-lgj"/>
                                 </constraints>
                             </view>
-                            <datePicker contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="date" minuteInterval="1" translatesAutoresizingMaskIntoConstraints="NO" id="ZI5-5E-Eq0">
+                            <datePicker contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="date" translatesAutoresizingMaskIntoConstraints="NO" id="ZI5-5E-Eq0">
                                 <rect key="frame" x="16" y="431" width="343" height="216"/>
-                                <date key="date" timeIntervalSinceReferenceDate="482061469.277242">
-                                    <!--2016-04-11 09:57:49 +0000-->
-                                </date>
                                 <connections>
                                     <action selector="onValueChange:" destination="vXZ-lx-hvc" eventType="valueChanged" id="YJA-Ef-5x9"/>
                                 </connections>
                             </datePicker>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="BMl-ka-oh2">
-                                <rect key="frame" x="16" y="387" width="343" height="30"/>
+                                <rect key="frame" x="16" y="367" width="343" height="30"/>
                                 <subviews>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="d9N-eH-E3w">
                                         <rect key="frame" x="8" y="0.0" width="154" height="30"/>
@@ -79,9 +73,25 @@
                                     <constraint firstItem="ybt-dF-Rdi" firstAttribute="centerX" secondItem="BMl-ka-oh2" secondAttribute="centerX" id="vAu-hH-jPT"/>
                                 </constraints>
                             </view>
+                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="IEC-Gh-pGE">
+                                <rect key="frame" x="302" y="405" width="51" height="31"/>
+                                <connections>
+                                    <action selector="rangleSelectionEnabledToggled:" destination="vXZ-lx-hvc" eventType="valueChanged" id="HA1-Qc-RLd"/>
+                                </connections>
+                            </switch>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="enable range selection" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iqZ-iY-gSd">
+                                <rect key="frame" x="165.5" y="413.5" width="128.5" height="14.5"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="128.5" id="jH2-7N-igb"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" style="UICTFontTextStyleCaption1"/>
+                                <color key="textColor" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" red="0.94178299492385786" green="0.94178299492385786" blue="0.94178299492385786" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
+                            <constraint firstItem="IEC-Gh-pGE" firstAttribute="top" secondItem="ETR-rE-QOo" secondAttribute="bottom" constant="8" id="3aC-SB-LGi"/>
                             <constraint firstItem="ZI5-5E-Eq0" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leading" constant="16" id="6CH-G3-Mhc"/>
                             <constraint firstItem="BMl-ka-oh2" firstAttribute="leading" secondItem="hW4-le-uM3" secondAttribute="leading" id="7Z1-Xk-xnJ"/>
                             <constraint firstItem="hW4-le-uM3" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leading" constant="16" id="8wO-aF-0Eb"/>
@@ -89,8 +99,12 @@
                             <constraint firstItem="BMl-ka-oh2" firstAttribute="top" secondItem="hW4-le-uM3" secondAttribute="bottom" constant="8" id="KWY-nY-Oys"/>
                             <constraint firstItem="hW4-le-uM3" firstAttribute="top" secondItem="jyV-Pf-zRb" secondAttribute="bottom" constant="16" id="MZh-zF-zaS"/>
                             <constraint firstItem="BMl-ka-oh2" firstAttribute="trailing" secondItem="hW4-le-uM3" secondAttribute="trailing" id="Prb-A3-Qwc"/>
+                            <constraint firstItem="iqZ-iY-gSd" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leading" priority="250" constant="165.5" id="U2e-mI-54R"/>
+                            <constraint firstItem="IEC-Gh-pGE" firstAttribute="leading" secondItem="iqZ-iY-gSd" secondAttribute="trailing" constant="8" id="Xek-LA-BMT"/>
+                            <constraint firstItem="iqZ-iY-gSd" firstAttribute="centerY" secondItem="IEC-Gh-pGE" secondAttribute="centerY" id="fUF-2g-vwI"/>
                             <constraint firstAttribute="trailing" secondItem="ZI5-5E-Eq0" secondAttribute="trailing" constant="16" id="jgi-JH-Dcg"/>
                             <constraint firstAttribute="trailing" secondItem="hW4-le-uM3" secondAttribute="trailing" constant="16" id="vYW-BD-MiV"/>
+                            <constraint firstItem="IEC-Gh-pGE" firstAttribute="trailing" secondItem="ETR-rE-QOo" secondAttribute="trailing" id="zFx-dn-rD1"/>
                         </constraints>
                     </view>
                     <connections>

@@ -84,6 +84,12 @@ extension CalendarViewDelegate {
 }
 
 public class CalendarView: UIView {
+
+    public enum MultipleSelectionMode {
+        case single
+        case multiple
+        case range
+    }
     
     public let cellReuseIdentifier = "CalendarDayCell"
     
@@ -144,7 +150,18 @@ public class CalendarView: UIView {
     // MARK: - public
     
     public internal(set) var displayDate: Date?
-    public var multipleSelectionEnable = true
+
+    @available(*, deprecated, message: "Use `multipleSelectionMode` instead. `multipleSelectionEnable` equates to `multipleSelectionMode == .multiple`")
+    public var multipleSelectionEnable: Bool {
+        set (val) {
+            self.multipleSelectionMode = .multiple
+        }
+        get {
+            return self.multipleSelectionMode == .multiple
+        }
+    }
+
+    public var multipleSelectionMode: MultipleSelectionMode = .multiple
     public var enableDeselection = true
     public var marksWeekends = true
     
@@ -330,7 +347,99 @@ public class CalendarView: UIView {
     internal func updateStyle() {
         self.headerView?.style = style
     }
-    
+
+    internal func clearAllSelected() {
+        let wereSelectedDates = selectedDates.map{ $0 }
+        selectedIndexPaths.removeAll()
+        selectedDates.removeAll()
+        self.reloadData()
+        wereSelectedDates.forEach {delegate?.calendar(self, didDeselectDate: $0)}
+    }
+
+    // soft lock on selecting range
+    private var selectingRange = false
+
+    internal func selectRange(for dateSelected: Date) {
+        // while selecting range, let it finish
+        guard !selectingRange else {
+            return
+        }
+
+        let sortedDates = selectedDates.sorted()
+        // if more than one date, select a range
+        guard sortedDates.count > 1,
+            let startDate = sortedDates.first,
+            let endDate = sortedDates.last else {
+                return
+        }
+
+        // start selecting range
+        selectingRange = true
+        // complete selecting range upon exit
+        defer {selectingRange = false}
+        // count the days
+        let days = Calendar.current.dateComponents([.day], from: startDate, to: endDate).day ?? 1
+        // map to range of dates
+        let dates = stride(from: 0, to: days, by: 1)
+            .map { Calendar.current.date(byAdding: .day, value: $0, to: startDate) ?? Date() }
+        // select each date
+        dates.forEach { candiDate in
+            if !sortedDates.contains(candiDate) {
+                // selectDate will call delegate `calendar(_:, didSelectDate:, withEvents:)`
+                selectDate(candiDate)
+            }
+        }
+
+    }
+
+    internal func deselectRange(for unselectedDate: Date) {
+        let sortedDates = selectedDates.sorted()
+        guard sortedDates.count > 1,
+            let startDate = sortedDates.first,
+            let endDate = sortedDates.last else {
+                return
+        }
+        // if deselection is in the middle of a selected range, clear all
+        // if deselection is at the ends of the range, then this will unselect the tip only
+        if startDate.compare(unselectedDate) == .orderedAscending &&
+            unselectedDate.compare(endDate) == .orderedAscending {
+            clearAllSelected()
+        }
+    }
+
+    internal func handleCollectionViewDidSelectDate(_ date: Date, indexPath: IndexPath) {
+        // for single select, clear the selection
+        switch multipleSelectionMode {
+        case .single:
+            clearAllSelected()
+        case .multiple, .range:
+            break
+        }
+
+        selectedIndexPaths.append(indexPath)
+        selectedDates.append(date)
+
+        // for range select, select the range in the middle
+        switch multipleSelectionMode {
+        case .single, .multiple:
+            break
+        case .range:
+            selectRange(for: date)
+        }
+
+        let eventsForDaySelected = eventsByIndexPath[indexPath] ?? []
+        delegate?.calendar(self, didSelectDate: date, withEvents: eventsForDaySelected)
+    }
+
+    internal func handleCollectionViewDidDeselectDate(_ date: Date) {
+        switch multipleSelectionMode {
+        case .range where selectedDates.count > 1:
+            deselectRange(for: date)
+        case .single, .multiple, .range:
+            delegate?.calendar(self, didDeselectDate: date)
+        }
+    }
+
     func scrollViewOffset(for date: Date) -> CGPoint {
         var point = CGPoint.zero
         
@@ -475,12 +584,10 @@ extension CalendarView {
 
     /*
      method: - clearAllSelectedDates
-     function: - clear all selected dates.  Does not call `didDeselectDate` callback
+     function: - clear all selected dates
      */
     public func clearAllSelectedDates() {
-        selectedIndexPaths.removeAll()
-        selectedDates.removeAll()
-        self.reloadData()
+        clearAllSelected()
     }
 
 
