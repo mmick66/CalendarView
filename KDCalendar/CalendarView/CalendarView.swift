@@ -28,12 +28,6 @@ import UIKit
 import EventKit
 #endif
 
-struct EventLocation {
-    let title: String
-    let latitude: Double
-    let longitude: Double
-}
-
 public struct CalendarEvent {
     public let title: String
     public let startDate: Date
@@ -393,18 +387,17 @@ public class CalendarView: UIView {
     }
 
     internal func deselectRange(for unselectedDate: Date) {
-        let sortedDates = selectedDates.sorted()
-        guard sortedDates.count > 1,
-            let startDate = sortedDates.first,
-            let endDate = sortedDates.last else {
+        guard selectedDates.count > 1,
+            let startDate = selectedDates.min(),
+            let endDate = selectedDates.max(),
+            startDate.compare(unselectedDate) == .orderedAscending,
+            unselectedDate.compare(endDate) == .orderedAscending else {
+                delegate?.calendar(self, didDeselectDate: unselectedDate)
                 return
         }
-        // if deselection is in the middle of a selected range, clear all
-        // if deselection is at the ends of the range, then this will unselect the tip only
-        if startDate.compare(unselectedDate) == .orderedAscending &&
-            unselectedDate.compare(endDate) == .orderedAscending {
-            clearAllSelected()
-        }
+
+        clearAllSelected()
+
     }
 
     internal func handleCollectionViewDidSelectDate(_ date: Date, indexPath: IndexPath) {
