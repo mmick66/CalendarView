@@ -145,7 +145,7 @@ public class CalendarView: UIView {
     
     public internal(set) var displayDate: Date?
     public var multipleSelectionEnable = true
-    public var enableDeslection = true
+    public var enableDeselection = true
     public var marksWeekends = true
     
     public var delegate: CalendarViewDelegate?
