@@ -145,7 +145,7 @@ public class CalendarView: UIView {
     
     public internal(set) var displayDate: Date?
     public var multipleSelectionEnable = true
-    public var enableDeslection = true
+    public var enableDeselection = true
     public var marksWeekends = true
     
     public var delegate: CalendarViewDelegate?
@@ -472,6 +472,17 @@ extension CalendarView {
     public func goToPreviousMonth() {
         goToMonthWithOffet(-1)
     }
+
+    /*
+     method: - clearAllSelectedDates
+     function: - clear all selected dates.  Does not call `didDeselectDate` callback
+     */
+    public func clearAllSelectedDates() {
+        selectedIndexPaths.removeAll()
+        selectedDates.removeAll()
+        self.reloadData()
+    }
+
 
     #if KDCALENDAR_EVENT_MANAGER_ENABLED
     
