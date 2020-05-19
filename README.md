@@ -53,7 +53,7 @@ Just the files from the **CalendarView/** subfolder to your project.
 
 # Setup
 
-The calendar is a `UIView` and can be added either programmatically or via a XIB/Storyboard. **If doing the latter, make sure that the Module is selected to be 'KDCalendar'**.
+The calendar is a `UIView` and can be added either programmatically or via a XIB/Storyboard. **If doing the latter, make sure that the Module is selected to be 'KDCalendar'  ('CalendarView_iOS') if installed via Carthage)**.
 
 ![IB Screenshot](https://github.com/mmick66/CalendarView/blob/master/Assets/Screenshot.png)
 
@@ -81,7 +81,7 @@ Note: The dates should be in UTC (same as GMT)
 
 # How to Use
 
-You would want to implement the delegate functions inside your view controller as they appear in the example project.
+You would want to implement the delegate functions inside your view controller as they appear in the example project.  Don't forget to assign your class as the `CalendarView` delegate.
 
 Say you want to be able to scroll 3 months into the past, then:
 
@@ -129,10 +129,16 @@ Similarly you can deselect:
 self.calendarView.deselectDate(date)
 ```
 
-You can get all the dates that were selected, either manually or programatically using:
+You can get all the dates that were selected, either manually or programmatically using:
 
 ```Swift
 self.calendarView.selectedDates
+```
+
+To support selecting a range of dates where any selection will automatically select all dates in between, use:
+
+```Swift
+self.calendarView.multipleSelectionMode = .range 
 ```
 
 ### Layout
