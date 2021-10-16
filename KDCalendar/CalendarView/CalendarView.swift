@@ -181,6 +181,15 @@ public class CalendarView: UIView {
         self.setup()
     }
     
+    public var allowsMultipleSelection: Bool {
+        set {
+            self.collectionView.allowsMultipleSelection = newValue
+        }
+        get {
+            return self.collectionView.allowsMultipleSelection
+        }
+    }
+    
     // MARK: Create Subviews
     private func setup() {
         
@@ -207,7 +216,7 @@ public class CalendarView: UIView {
         self.collectionView.backgroundColor     = UIColor.clear
         self.collectionView.showsHorizontalScrollIndicator  = false
         self.collectionView.showsVerticalScrollIndicator    = false
-        self.collectionView.allowsMultipleSelection         = false
+        self.collectionView.allowsMultipleSelection         = true
         self.collectionView.register(CalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
         
         self.addSubview(self.collectionView)

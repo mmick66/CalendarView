@@ -86,6 +86,15 @@ open class CalendarDayCell: UICollectionViewCell {
         }
     }
     
+    open override var isHidden: Bool {
+        get {
+            return self.containerView.isHidden
+        }
+        set {
+            self.containerView.isHidden = newValue
+        }
+    }
+    
     var isOutOfRange : Bool = false {
         didSet {
             updateTextColor()
@@ -138,24 +147,20 @@ open class CalendarDayCell: UICollectionViewCell {
     let textLabel   = UILabel()
     let dotsView    = UIView()
     let bgView      = UIView()
+    var containerView = UIView()
     
     override init(frame: CGRect) {
-        
-        self.textLabel.textAlignment = NSTextAlignment.center
-        
-        
-        self.dotsView.backgroundColor = style.cellEventColor
-        
-        self.textLabel.font = style.cellFont
-        
-        
         super.init(frame: frame)
         
-        self.addSubview(self.bgView)
-        self.addSubview(self.textLabel)
+        self.textLabel.textAlignment = NSTextAlignment.center
+        self.dotsView.backgroundColor = style.cellEventColor
+        self.textLabel.font = style.cellFont
         
-        self.addSubview(self.dotsView)
+        contentView.addSubview(containerView)
         
+        containerView.addSubview(self.bgView)
+        containerView.addSubview(self.textLabel)
+        containerView.addSubview(self.dotsView)
     }
     
     
@@ -167,7 +172,9 @@ open class CalendarDayCell: UICollectionViewCell {
         
         super.layoutSubviews()
         
-        var elementsFrame = self.bounds.insetBy(dx: 3.0, dy: 3.0)
+        containerView.frame = bounds
+        
+        var elementsFrame = containerView.bounds.insetBy(dx: 3.0, dy: 3.0)
         
         if style.cellShape.isRound { // square of
             let smallestSide = min(elementsFrame.width, elementsFrame.height)
@@ -180,9 +187,9 @@ open class CalendarDayCell: UICollectionViewCell {
         self.bgView.frame           = elementsFrame
         self.textLabel.frame        = elementsFrame
         
-        let size                            = self.bounds.height * 0.08 // always a percentage of the whole cell
+        let size                            = containerView.bounds.height * 0.08 // always a percentage of the whole cell
         self.dotsView.frame                 = CGRect(x: 0, y: 0, width: size, height: size)
-        self.dotsView.center                = CGPoint(x: self.textLabel.center.x, y: self.bounds.height - (2.5 * size))
+        self.dotsView.center                = CGPoint(x: self.textLabel.center.x, y: containerView.bounds.height - (2.5 * size))
         self.dotsView.layer.cornerRadius    = size * 0.5 // round it
         
         switch style.cellShape {

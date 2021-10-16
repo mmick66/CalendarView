@@ -31,9 +31,32 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         
         guard let date = self.dateFromIndexPath(indexPath) else { return }
         
-        if let index = selectedIndexPaths.firstIndex(of: indexPath) {
+        if let currentCell = collectionView.cellForItem(at: indexPath) as? CalendarDayCell, currentCell.isOutOfRange || currentCell.isAdjacent {
+            return
+        }
+        
+        if !multipleSelectionEnable {
+            selectedIndexPaths.forEach { indexPath in
+                collectionView.deselectItem(at: indexPath, animated: false)
+            }
             
-            delegate?.calendar(self, didDeselectDate: date)
+            selectedIndexPaths.removeAll()
+            selectedDates.removeAll()
+        }
+        
+        selectedIndexPaths.append(indexPath)
+        selectedDates.append(date)
+        
+        collectionView.selectItem(at: indexPath, animated: false, scrollPosition: .bottom)
+        
+        let eventsForDaySelected = eventsByIndexPath[indexPath] ?? []
+        delegate?.calendar(self, didSelectDate: date, withEvents: eventsForDaySelected)
+    }
+    
+    public func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
+        guard let date = self.dateFromIndexPath(indexPath) else { return }
+
+        if let index = selectedIndexPaths.firstIndex(of: indexPath) {
             if enableDeselection {
                 // bug: when deselecting the second to last item programmatically, during
                 // didDeselectDate delegation, the index returned is out of the bounds of
@@ -43,27 +66,14 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
                 }
                 selectedIndexPaths.remove(at: index)
                 selectedDates.remove(at: index)
+                
+                collectionView.deselectItem(at: indexPath, animated: false)
+                
+                delegate?.calendar(self, didDeselectDate: date)
+            } else {
+                collectionView.selectItem(at: indexPath, animated: false, scrollPosition: .bottom)
             }
-            
-        } else {
-            if let currentCell = collectionView.cellForItem(at: indexPath) as? CalendarDayCell, currentCell.isOutOfRange || currentCell.isAdjacent {
-                self.reloadData()
-                return
-            }
-            
-            if !multipleSelectionEnable {
-                selectedIndexPaths.removeAll()
-                selectedDates.removeAll()
-            }
-            
-            selectedIndexPaths.append(indexPath)
-            selectedDates.append(date)
-            
-            let eventsForDaySelected = eventsByIndexPath[indexPath] ?? []
-            delegate?.calendar(self, didSelectDate: date, withEvents: eventsForDaySelected)
         }
-        
-        self.reloadData()
     }
     
     public func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
