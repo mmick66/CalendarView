@@ -46,7 +46,14 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
             }
             
         } else {
-            if let currentCell = collectionView.cellForItem(at: indexPath) as? CalendarDayCell, currentCell.isOutOfRange || currentCell.isAdjacent {
+            guard let currentCell = collectionView.cellForItem(at: indexPath) as? CalendarDayCell else {
+                selectedIndexPaths.append(indexPath)
+                selectedDates.append(date)
+                self.reloadData()
+                return
+            }
+
+            if currentCell.isOutOfRange || currentCell.isAdjacent {
                 self.reloadData()
                 return
             }
@@ -58,6 +65,7 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
             
             selectedIndexPaths.append(indexPath)
             selectedDates.append(date)
+            currentCell.isPicked = true
             
             let eventsForDaySelected = eventsByIndexPath[indexPath] ?? []
             delegate?.calendar(self, didSelectDate: date, withEvents: eventsForDaySelected)
