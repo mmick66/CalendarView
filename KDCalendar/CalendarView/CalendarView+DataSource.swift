@@ -224,7 +224,7 @@ extension CalendarView: UICollectionViewDataSource {
             dayCell.isToday = (idx.section == indexPath.section && idx.item + firstDayIndex == indexPath.item)
         }
         
-        dayCell.isSelected = selectedIndexPaths.contains(indexPath)
+        dayCell.isPicked = selectedIndexPaths.contains(indexPath)
         
         if self.marksWeekends {
             let we = indexPath.item % 7

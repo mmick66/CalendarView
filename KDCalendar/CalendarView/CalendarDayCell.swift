@@ -53,7 +53,7 @@ open class CalendarDayCell: UICollectionViewCell {
     }
     
     func updateTextColor() {
-        if isSelected {
+        if isPicked {
             self.textLabel.textColor = style.cellSelectedTextColor
         }
         else if isToday {
@@ -104,9 +104,9 @@ open class CalendarDayCell: UICollectionViewCell {
         }
     }
     
-    override open var isSelected : Bool {
+    open var isPicked : Bool = false {
         didSet {
-            switch isSelected {
+            switch isPicked {
             case true:
                 self.bgView.layer.borderColor = style.cellSelectedBorderColor.cgColor
                 self.bgView.layer.borderWidth = style.cellSelectedBorderWidth
