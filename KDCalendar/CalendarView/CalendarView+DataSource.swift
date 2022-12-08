@@ -225,6 +225,10 @@ extension CalendarView: UICollectionViewDataSource {
         }
         
         dayCell.isSelected = selectedIndexPaths.contains(indexPath)
+        // Here is why: https://stackoverflow.com/a/31387259
+        if dayCell.isSelected {
+            collectionView.selectItem(at: indexPath, animated: true, scrollPosition: .centeredHorizontally)
+        }
         
         if self.marksWeekends {
             let we = indexPath.item % 7
