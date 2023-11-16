@@ -27,7 +27,11 @@ import UIKit
 
 open class CalendarDayCell: UICollectionViewCell {
     
-    var style: CalendarView.Style = CalendarView.Style.Default
+    var style: CalendarView.Style = CalendarView.Style.Default {
+        didSet {
+            applyTextAndDotStyle()
+        }
+    }
     
     override open var description: String {
         let dayString = self.textLabel.text ?? " "
@@ -143,12 +147,6 @@ open class CalendarDayCell: UICollectionViewCell {
         
         self.textLabel.textAlignment = NSTextAlignment.center
         
-        
-        self.dotsView.backgroundColor = style.cellEventColor
-        
-        self.textLabel.font = style.cellFont
-        
-        
         super.init(frame: frame)
         
         self.addSubview(self.bgView)
@@ -156,6 +154,7 @@ open class CalendarDayCell: UICollectionViewCell {
         
         self.addSubview(self.dotsView)
         
+        self.applyTextAndDotStyle()
     }
     
     
@@ -197,6 +196,10 @@ open class CalendarDayCell: UICollectionViewCell {
         
     }
     
+    private func applyTextAndDotStyle() {
+        self.dotsView.backgroundColor = style.cellEventColor
+        self.textLabel.font = style.cellFont
+    }
 }
 
 
