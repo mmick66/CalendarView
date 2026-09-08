@@ -90,14 +90,7 @@ open class CalendarHeaderView: UIView {
     override open func layoutSubviews() {
         super.layoutSubviews()
         
-        var isRtl = UIApplication.shared.userInterfaceLayoutDirection == .rightToLeft
-        
-        if #available(iOS 10.0, *) {
-            isRtl = self.effectiveUserInterfaceLayoutDirection == .rightToLeft
-        }
-        else if #available(iOS 9.0, *) {
-            isRtl = UIView.userInterfaceLayoutDirection(for: self.semanticContentAttribute) == .rightToLeft
-        }
+        let isRtl = self.effectiveUserInterfaceLayoutDirection == .rightToLeft
         
         self.monthLabel?.frame = CGRect(
             x: 0.0,
