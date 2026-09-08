@@ -1,29 +1,31 @@
-// swift-tools-version:5.0
-// The swift-tools-version declares the minimum version of Swift required to build this package.
-
+// swift-tools-version: 6.0
 import PackageDescription
 
 let package = Package(
     name: "KDCalendar",
     platforms: [
-        .iOS(.v8)
+        .iOS(.v17)
     ],
     products: [
-        .library(
-            name: "KDCalendar",
-            targets: ["KDCalendar"]
-        )
+        .library(name: "KDCalendar", targets: ["KDCalendar"]),
+        .library(name: "KDCalendarEventKit", targets: ["KDCalendarEventKit"]),
     ],
     targets: [
         .target(
             name: "KDCalendar",
-            path: "KDCalendar/CalendarView",
-            sources: [
-                "."
-            ],
-            swiftSettings: [
-                .define("KDCALENDAR_EVENT_MANAGER_ENABLED"),
-            ]
-        )
-    ]
+            path: "Sources/KDCalendar",
+            resources: [.process("Resources"), .copy("PrivacyInfo.xcprivacy")]
+        ),
+        .target(
+            name: "KDCalendarEventKit",
+            dependencies: ["KDCalendar"],
+            path: "Sources/KDCalendarEventKit"
+        ),
+        .testTarget(
+            name: "KDCalendarTests",
+            dependencies: ["KDCalendar", "KDCalendarEventKit"],
+            path: "Tests/KDCalendarTests"
+        ),
+    ],
+    swiftLanguageModes: [.v6]
 )

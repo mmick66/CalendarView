@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [master, modernize]
+  pull_request:
+
+env:
+  DESTINATION: platform=iOS Simulator,name=iPhone 17 Pro
+
+jobs:
+  test:
+    name: Build and test (iOS Simulator)
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_26.app || sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)"
+      - name: Xcode version
+        run: xcodebuild -version
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: DerivedData
+          key: deriveddata-${{ runner.os }}-${{ hashFiles('Package.swift', 'Sources/**', 'Tests/**') }}
+          restore-keys: deriveddata-${{ runner.os }}-
+      - name: Test package
+        run: |
+          set -o pipefail
+          xcodebuild -scheme KDCalendar-Package -destination "$DESTINATION" -derivedDataPath DerivedData test | xcbeautify --renderer github-actions || xcodebuild -scheme KDCalendar-Package -destination "$DESTINATION" -derivedDataPath DerivedData test
+      - name: Build documentation
+        run: |
+          set -o pipefail
+          xcodebuild docbuild -scheme KDCalendar -destination "$DESTINATION" -derivedDataPath DerivedData | xcbeautify --renderer github-actions || xcodebuild docbuild -scheme KDCalendar -destination "$DESTINATION" -derivedDataPath DerivedData
+      - name: Build example app
+        run: |
+          set -o pipefail
+          xcodebuild -project Example/KDCalendarDemo.xcodeproj -scheme KDCalendarDemo -destination "$DESTINATION" -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO build | xcbeautify --renderer github-actions || xcodebuild -project Example/KDCalendarDemo.xcodeproj -scheme KDCalendarDemo -destination "$DESTINATION" -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO build
+
+  lint:
+    name: swift-format lint
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint
+        run: xcrun swift-format lint --strict --recursive Sources Tests Example/KDCalendarDemo

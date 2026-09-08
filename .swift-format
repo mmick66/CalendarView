@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "indentation": { "spaces": 4 },
+  "lineLength": 120,
+  "maximumBlankLines": 1,
+  "respectsExistingLineBreaks": true,
+  "lineBreakBeforeControlFlowKeywords": false,
+  "lineBreakBeforeEachArgument": false,
+  "indentConditionalCompilationBlocks": false,
+  "rules": {
+    "AllPublicDeclarationsHaveDocumentation": false,
+    "AlwaysUseLiteralForEmptyCollectionInit": false,
+    "NoBlockComments": false,
+    "NoAccessLevelOnExtensionDeclaration": false,
+    "OrderedImports": true,
+    "UseLetInEveryBoundCaseVariable": false
+  }
+}
