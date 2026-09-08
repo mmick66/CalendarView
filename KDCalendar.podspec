@@ -25,6 +25,7 @@ Pod::Spec.new do |s|
 
   s.subspec 'Core' do |ss|
     ss.source_files = "Sources/KDCalendar/**/*.swift"
+    ss.resource_bundles = { 'KDCalendar' => ['Sources/KDCalendar/Resources/*.xcstrings', 'Sources/KDCalendar/PrivacyInfo.xcprivacy'] }
   end
 
   s.subspec 'EventKit' do |ss|

@@ -68,16 +68,21 @@ struct PlatformTests {
         let style = CalendarView.Style.default
         let light = UITraitCollection(userInterfaceStyle: .light)
         let dark = UITraitCollection(userInterfaceStyle: .dark)
-        #expect(style.headerBackgroundColor.resolvedColor(with: light) != style.headerBackgroundColor.resolvedColor(with: dark))
+        #expect(
+            style.headerBackgroundColor.resolvedColor(with: light)
+                != style.headerBackgroundColor.resolvedColor(with: dark))
         #expect(style.cellColorDefault.resolvedColor(with: light) != style.cellColorDefault.resolvedColor(with: dark))
-        #expect(style.cellSelectedTextColor.resolvedColor(with: light) != style.cellSelectedTextColor.resolvedColor(with: dark))
+        #expect(
+            style.cellSelectedTextColor.resolvedColor(with: light)
+                != style.cellSelectedTextColor.resolvedColor(with: dark))
         #expect(CalendarView.Style() == CalendarView.Style.default, "two default styles are equal")
     }
 
     @Test func defaultFontsScaleWithDynamicType() {
         let style = CalendarView.Style.default
         let large = UITraitCollection(preferredContentSizeCategory: .accessibilityExtraLarge)
-        let scaled = UIFontMetrics(forTextStyle: .body).scaledFont(for: UIFont.systemFont(ofSize: 17), compatibleWith: large)
+        let scaled = UIFontMetrics(forTextStyle: .body).scaledFont(
+            for: UIFont.systemFont(ofSize: 17), compatibleWith: large)
         #expect(scaled.pointSize > style.cellFont.pointSize)
         let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
         #expect(cell(view, IndexPath(item: 0, section: 0))?.textLabel.adjustsFontForContentSizeCategory == true)
@@ -86,7 +91,9 @@ struct PlatformTests {
 
     @Test func dayCellsDescribeThemselvesToVoiceOver() {
         let view = makeCalendar(start: date(2024, 1, 10), end: date(2024, 1, 20))
-        view.events = [CalendarEvent(title: "a", startDate: date(2024, 1, 15), endDate: date(2024, 1, 15).addingTimeInterval(3600))]
+        view.events = [
+            CalendarEvent(title: "a", startDate: date(2024, 1, 15), endDate: date(2024, 1, 15).addingTimeInterval(3600))
+        ]
         view.layoutIfNeeded()
         // January 2024 starts on a Monday, so day n is item n - 1.
         let fifteenth = cell(view, IndexPath(item: 14, section: 0))
@@ -110,7 +117,8 @@ struct PlatformTests {
         style.locale = Locale(identifier: "en_US")
         let view = CalendarView(frame: CGRect(x: 0, y: 0, width: 350, height: 420))
         view.style = style
-        let dataSource = FixedDataSource(start: local.date(byAdding: .day, value: -3, to: now)!, end: local.date(byAdding: .day, value: 3, to: now)!)
+        let dataSource = FixedDataSource(
+            start: local.date(byAdding: .day, value: -3, to: now)!, end: local.date(byAdding: .day, value: 3, to: now)!)
         retained.objects.append(dataSource)
         view.dataSource = dataSource
         Self.window.addSubview(view)
@@ -138,7 +146,11 @@ struct PlatformTests {
         var dates: [Date] = []
         var changes = 0
         var binding: Binding<[Date]> {
-            Binding(get: { self.dates }, set: { self.dates = $0; self.changes += 1 })
+            Binding(
+                get: { self.dates },
+                set: {
+                    self.dates = $0; self.changes += 1
+                })
         }
     }
 
@@ -181,7 +193,8 @@ struct PlatformTests {
 
         // A new value from SwiftUI flows into the view.
         box.dates = [date(2024, 2, 14)]
-        host.rootView = KDCalendarView(range: range, selection: box.binding).calendarStyle(style).allowsMultipleSelection(false)
+        host.rootView = KDCalendarView(range: range, selection: box.binding).calendarStyle(style)
+            .allowsMultipleSelection(false)
         host.view.layoutIfNeeded()
         #expect(calendar.selectedDates == [date(2024, 2, 14)])
         #expect(box.dates == [date(2024, 2, 14)], "the sync does not echo back into the binding")

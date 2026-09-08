@@ -200,12 +200,13 @@ public class CalendarView: UIView {
         accessibilityDateFormatter.locale = style.locale
         var parts = [accessibilityDateFormatter.string(from: date)]
         if isToday {
-            parts.append(String(localized: "Today", bundle: .module, comment: "VoiceOver suffix for the current day"))
+            parts.append(
+                String(localized: "Today", bundle: .kdCalendar, comment: "VoiceOver suffix for the current day"))
         }
         if eventsCount > 0 {
             parts.append(
                 String(
-                    localized: "\(eventsCount) events", bundle: .module,
+                    localized: "\(eventsCount) events", bundle: .kdCalendar,
                     comment: "VoiceOver suffix with the number of events on a day"))
         }
         return parts.joined(separator: ", ")
@@ -286,7 +287,8 @@ public class CalendarView: UIView {
 
         guard
             let indexPath = collectionView.indexPathForItem(at: point),
-            let date = self.dateFromIndexPath(indexPath) else {
+            let date = self.dateFromIndexPath(indexPath)
+        else {
             return
         }
 
@@ -359,7 +361,8 @@ public class CalendarView: UIView {
         if _isRtl != isRtl {
             _isRtl = isRtl
 
-            self.collectionView?.transform = isRtl
+            self.collectionView?.transform =
+                isRtl
                 ? CGAffineTransform(scaleX: -1.0, y: 1.0)
                 : CGAffineTransform.identity
             self.reloadData()
@@ -415,7 +418,9 @@ extension CalendarView {
     /// The delegate receives `didScrollToMonth` once the month is on screen: immediately when
     /// `animated` is `false`, when the animation ends otherwise.
     public func setDisplayDate(_ date: Date, animated: Bool = false) {
-        guard let indexPath = self.indexPathForDate(date), let month = self.months?.firstDay(ofSection: indexPath.section) else {
+        guard let indexPath = self.indexPathForDate(date),
+            let month = self.months?.firstDay(ofSection: indexPath.section)
+        else {
             return
         }
 

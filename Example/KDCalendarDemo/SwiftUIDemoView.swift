@@ -11,7 +11,8 @@ struct SwiftUIDemoView: View {
 
     private let range: ClosedRange<Date> = {
         let calendar = Calendar.current
-        return calendar.date(byAdding: .month, value: -1, to: Date())!...calendar.date(byAdding: .month, value: 3, to: Date())!
+        return calendar.date(byAdding: .month, value: -1, to: Date())!...calendar.date(
+            byAdding: .month, value: 3, to: Date())!
     }()
 
     private var style: CalendarView.Style {

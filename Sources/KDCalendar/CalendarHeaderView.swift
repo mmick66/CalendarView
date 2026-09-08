@@ -26,59 +26,60 @@
 import UIKit
 
 open class CalendarHeaderView: UIView {
-    
+
     var style: CalendarView.Style = .default {
         didSet {
             updateStyle()
         }
     }
-    
+
     var monthLabel: UILabel!
-    
+
     var dayLabels = [UILabel]()
-    
+
     public override init(frame: CGRect) {
         super.init(frame: frame)
-        
+
         self.translatesAutoresizingMaskIntoConstraints = false
-        
+
         monthLabel = UILabel()
         monthLabel.translatesAutoresizingMaskIntoConstraints = false
         monthLabel.backgroundColor = UIColor.clear
         monthLabel.adjustsFontForContentSizeCategory = true
         monthLabel.accessibilityTraits = .header
         self.addSubview(monthLabel)
-        
+
         for _ in 0..<7 {
             let label = UILabel()
             label.translatesAutoresizingMaskIntoConstraints = false
             label.backgroundColor = UIColor.clear
             label.adjustsFontForContentSizeCategory = true
-            
+
             dayLabels.append(label)
             self.addSubview(label)
         }
     }
-    
+
     public func updateStyle() {
         self.monthLabel.textAlignment = NSTextAlignment.center
         self.monthLabel.font = style.headerFont
         self.monthLabel.textColor = style.headerTextColor
         self.monthLabel.backgroundColor = style.headerBackgroundColor
-        
+
         let formatter = DateFormatter()
         formatter.calendar = style.calendar
         formatter.locale = style.locale
         formatter.timeZone = style.calendar.timeZone
-        
+
         // Weekday symbols are indexed from Sunday; rotate so the first label is the first weekday.
         let symbols = formatter.shortWeekdaySymbols ?? []
         let start = style.effectiveFirstWeekday - 1
-        
+
         for (i, label) in dayLabels.enumerated() {
             let symbol = symbols.isEmpty ? "" : symbols[(start + i) % symbols.count]
             label.font = style.weekdaysFont
-            label.text = style.weekDayTransform == .capitalized
+            label.text =
+                style.weekDayTransform == .capitalized
                 ? symbol.capitalized(with: style.locale)
                 : symbol.uppercased(with: style.locale)
             label.textColor = style.weekdaysTextColor
@@ -87,16 +88,16 @@ open class CalendarHeaderView: UIView {
 
         self.backgroundColor = style.weekdaysBackgroundColor
     }
-    
+
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     override open func layoutSubviews() {
         super.layoutSubviews()
-        
+
         let isRtl = self.effectiveUserInterfaceLayoutDirection == .rightToLeft
-        
+
         self.monthLabel?.frame = CGRect(
             x: 0.0,
             y: style.headerTopMargin,
@@ -107,7 +108,7 @@ open class CalendarHeaderView: UIView {
                 - style.weekdaysBottomMargin
                 - style.weekdaysTopMargin
         )
-        
+
         var labelFrame = CGRect(
             x: 0.0,
             y: self.bounds.size.height
@@ -116,14 +117,14 @@ open class CalendarHeaderView: UIView {
             width: self.bounds.size.width / 7.0,
             height: style.weekdaysHeight
         )
-        
+
         if isRtl {
             labelFrame.origin.x = self.bounds.size.width - labelFrame.width
         }
-        
+
         for lbl in self.dayLabels {
             lbl.frame = labelFrame
-            
+
             labelFrame.origin.x += isRtl ? -labelFrame.size.width : labelFrame.size.width
         }
     }

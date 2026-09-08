@@ -27,7 +27,10 @@ extension CalendarView {
             traits.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.1) : UIColor(white: 0.0, alpha: 0.1)
         }
 
-        @available(*, deprecated, renamed: "default", message: "Style is a value now; use Style.default and assign a modified copy to the view.")
+        @available(
+            *, deprecated, renamed: "default",
+            message: "Style is a value now; use Style.default and assign a modified copy to the view."
+        )
         public static var Default: Style { .default }
 
         /// The shape of a day's background.
@@ -57,7 +60,10 @@ extension CalendarView {
             case automatic
         }
 
-        @available(*, deprecated, message: "Never used by the view; days outside the range are always styled with cellColorOutOfRange.")
+        @available(
+            *, deprecated,
+            message: "Never used by the view; days outside the range are always styled with cellColorOutOfRange."
+        )
         public enum CellOutOfRangeDisplayOptions: Sendable {
             case normal
             case hidden
@@ -140,7 +146,8 @@ extension CalendarView {
         // MARK: Selection
 
         /// The border colour of a selected day.
-        public var cellSelectedBorderColor = UIColor(red: 254.0 / 255.0, green: 73.0 / 255.0, blue: 64.0 / 255.0, alpha: 0.8)
+        public var cellSelectedBorderColor = UIColor(
+            red: 254.0 / 255.0, green: 73.0 / 255.0, blue: 64.0 / 255.0, alpha: 0.8)
         /// The border width of a selected day.
         public var cellSelectedBorderWidth = CGFloat(2.0)
         /// The background of a selected day.
@@ -151,7 +158,8 @@ extension CalendarView {
         // MARK: Weekends
 
         /// The text colour of weekend days when ``CalendarView/marksWeekends`` is on.
-        public var cellTextColorWeekend = UIColor(red: 254.0 / 255.0, green: 73.0 / 255.0, blue: 64.0 / 255.0, alpha: 0.8)
+        public var cellTextColorWeekend = UIColor(
+            red: 254.0 / 255.0, green: 73.0 / 255.0, blue: 64.0 / 255.0, alpha: 0.8)
 
         // MARK: Locale and calendar
 

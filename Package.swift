@@ -14,7 +14,7 @@ let package = Package(
         .target(
             name: "KDCalendar",
             path: "Sources/KDCalendar",
-            resources: [.process("Resources")]
+            resources: [.process("Resources"), .copy("PrivacyInfo.xcprivacy")]
         ),
         .target(
             name: "KDCalendarEventKit",

@@ -77,7 +77,8 @@ struct MonthGrid {
         self.startDay = startDay
         self.endDay = endDay
         self.months = months
-        self.startIndexPath = IndexPath(item: months[0].firstDay + calendar.component(.day, from: startDay) - 1, section: 0)
+        self.startIndexPath = IndexPath(
+            item: months[0].firstDay + calendar.component(.day, from: startDay) - 1, section: 0)
         self.endIndexPath = IndexPath(
             item: months[monthCount].firstDay + calendar.component(.day, from: endDay) - 1, section: monthCount)
     }
@@ -204,11 +205,16 @@ extension CalendarView: UICollectionViewDataSource {
         return MonthGrid.cellsPerMonth  // rows:7 x cols:6
     }
 
-    public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let dayCell = collectionView.dequeueReusableCell(withReuseIdentifier: cellReuseIdentifier, for: indexPath) as! CalendarDayCell
+    public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath)
+        -> UICollectionViewCell
+    {
+        let dayCell =
+            collectionView.dequeueReusableCell(withReuseIdentifier: cellReuseIdentifier, for: indexPath)
+            as! CalendarDayCell
 
         dayCell.style = style
-        dayCell.transform = _isRtl
+        dayCell.transform =
+            _isRtl
             ? CGAffineTransform(scaleX: -1.0, y: 1.0)
             : CGAffineTransform.identity
 

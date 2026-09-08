@@ -216,7 +216,8 @@ public struct KDCalendarView: UIViewRepresentable {
             parent.selection = calendar.selectedDates
         }
 
-        public func calendar(_ calendar: CalendarView, didLongPressDate date: Date, withEvents events: [CalendarEvent]?) {
+        public func calendar(_ calendar: CalendarView, didLongPressDate date: Date, withEvents events: [CalendarEvent]?)
+        {
             parent.onLongPress?(date, events ?? [])
         }
     }

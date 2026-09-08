@@ -255,7 +255,8 @@ struct CalendarViewTests {
         #expect(cell(view, IndexPath(item: 2, section: 1))?.day == 31)
         #expect(cell(view, IndexPath(item: 32, section: 1))?.day == 1)
         #expect(cell(view, IndexPath(item: 32, section: 1))?.isAdjacent == true)
-        #expect(cell(view, IndexPath(item: 32, section: 1))?.dotsView.isHidden == true, "adjacent days never show events")
+        #expect(
+            cell(view, IndexPath(item: 32, section: 1))?.dotsView.isHidden == true, "adjacent days never show events")
         #expect(cell(view, IndexPath(item: 32, section: 1))?.bgView.backgroundColor == .clear)
         // The first month has no previous month to borrow from.
         view.setDisplayDate(date(2024, 1, 1))
@@ -322,7 +323,8 @@ struct CalendarViewTests {
         #expect(reused.day == nil)
         #expect(reused.isHidden == false)
         // An out-of-range cell is fully configured, so a flag can never survive on it.
-        let outOfRange = view.collectionView(view.collectionView, cellForItemAt: IndexPath(item: 2, section: 0)) as! CalendarDayCell
+        let outOfRange =
+            view.collectionView(view.collectionView, cellForItemAt: IndexPath(item: 2, section: 0)) as! CalendarDayCell
         #expect(outOfRange.isOutOfRange == true)
         #expect(outOfRange.isToday == false)
         #expect(outOfRange.textLabel.textColor == view.style.cellColorOutOfRange)
@@ -353,7 +355,9 @@ struct CalendarViewTests {
         #expect(view.eventsByIndexPath[IndexPath(item: 10, section: 0)]?.map(\.title) == ["b"])
         #expect(view.eventsByIndexPath[IndexPath(item: 11, section: 0)]?.map(\.title) == ["b"])
         #expect(view.eventsByIndexPath[IndexPath(item: 12, section: 0)] == nil)
-        #expect(view.eventsByIndexPath[IndexPath(item: 19, section: 0)]?.count == 1, "an event ending at midnight stays on its day")
+        #expect(
+            view.eventsByIndexPath[IndexPath(item: 19, section: 0)]?.count == 1,
+            "an event ending at midnight stays on its day")
         #expect(view.eventsByIndexPath[IndexPath(item: 20, section: 0)] == nil)
         view.layoutIfNeeded()
         #expect(cell(view, IndexPath(item: 9, section: 0))?.eventsCount == 2)
@@ -513,7 +517,10 @@ struct CalendarViewTests {
         view.selectDate(date(2024, 1, 10))
         view.selectDate(date(2024, 1, 12))
         #expect(view.selectedDates == [date(2024, 1, 10), date(2024, 1, 12)])
-        #expect(Set(view.collectionView.indexPathsForSelectedItems ?? []) == [IndexPath(item: 9, section: 0), IndexPath(item: 11, section: 0)])
+        #expect(
+            Set(view.collectionView.indexPathsForSelectedItems ?? []) == [
+                IndexPath(item: 9, section: 0), IndexPath(item: 11, section: 0),
+            ])
     }
 
     @Test func selectionSurvivesAReload() {
@@ -549,7 +556,8 @@ struct CalendarViewTests {
         #expect(view.selectedDates == [])
         #expect(delegate(of: view).selected == [])
         #expect(view.collectionView(view.collectionView, shouldSelectItemAt: IndexPath(item: 4, section: 0)) == false)
-        #expect(view.collectionView(view.collectionView, shouldHighlightItemAt: IndexPath(item: 4, section: 0)) == false)
+        #expect(
+            view.collectionView(view.collectionView, shouldHighlightItemAt: IndexPath(item: 4, section: 0)) == false)
         #expect(view.collectionView(view.collectionView, shouldSelectItemAt: IndexPath(item: 14, section: 0)) == true)
     }
 

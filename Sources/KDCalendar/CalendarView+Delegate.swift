@@ -151,7 +151,8 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         formatter.locale = style.locale
         formatter.setLocalizedDateFormatFromTemplate("yMMMM")
 
-        self.headerView.monthLabel.text = dataSource?.headerString(date) ?? formatter.string(from: date).capitalized(with: style.locale)
+        self.headerView.monthLabel.text =
+            dataSource?.headerString(date) ?? formatter.string(from: date).capitalized(with: style.locale)
 
         self.displayDate = date
     }
