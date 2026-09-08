@@ -65,12 +65,10 @@ public enum EventsManager {
             return false
         }
 
-        let secondsFromGMTDifference = TimeInterval(TimeZone.current.secondsFromGMT()) * -1
-
         let event = EKEvent(eventStore: store)
         event.title = calendarEvent.title
-        event.startDate = calendarEvent.startDate.addingTimeInterval(secondsFromGMTDifference)
-        event.endDate = calendarEvent.endDate.addingTimeInterval(secondsFromGMTDifference)
+        event.startDate = calendarEvent.startDate
+        event.endDate = calendarEvent.endDate
         event.calendar = store.defaultCalendarForNewEvents
         do {
             try store.save(event, span: .thisEvent)
@@ -84,14 +82,8 @@ public enum EventsManager {
 
         let predicate = store.predicateForEvents(withStart: fromDate, end: toDate, calendars: nil)
 
-        let secondsFromGMTDifference = TimeInterval(TimeZone.current.secondsFromGMT())
-
         return store.events(matching: predicate).map {
-            CalendarEvent(
-                title:      $0.title,
-                startDate:  $0.startDate.addingTimeInterval(secondsFromGMTDifference),
-                endDate:    $0.endDate.addingTimeInterval(secondsFromGMTDifference)
-            )
+            CalendarEvent(title: $0.title, startDate: $0.startDate, endDate: $0.endDate)
         }
     }
 }

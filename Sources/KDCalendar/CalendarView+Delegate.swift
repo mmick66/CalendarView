@@ -26,124 +26,133 @@
 import UIKit
 
 extension CalendarView: UICollectionViewDelegateFlowLayout {
-    
-    public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        
+
+    // MARK: Selection
+
+    /// Whether the day at `indexPath` may be selected: it must be a day, in range, and allowed
+    /// by the delegate.
+    func shouldSelect(_ indexPath: IndexPath) -> Bool {
+        guard let date = self.dateFromIndexPath(indexPath), !isOutOfRange(indexPath) else { return false }
+        return delegate?.calendar(self, canSelectDate: date) ?? true
+    }
+
+    /// Records a selection the collection view already applied and notifies the delegate.
+    func didSelect(_ indexPath: IndexPath) {
         guard let date = self.dateFromIndexPath(indexPath) else { return }
-        
-        if let index = selectedIndexPaths.firstIndex(of: indexPath) {
-            
-            delegate?.calendar(self, didDeselectDate: date)
-            if enableDeselection {
-                // bug: when deselecting the second to last item programmatically, during
-                // didDeselectDate delegation, the index returned is out of the bounds of
-                // the selectedIndexPaths array.  This guard prevents the crash
-                guard index < selectedIndexPaths.count, index < selectedDates.count else {
-                    return
-                }
-                selectedIndexPaths.remove(at: index)
-                selectedDates.remove(at: index)
-            }
-            
-        } else {
-            guard let currentCell = collectionView.cellForItem(at: indexPath) as? CalendarDayCell else {
-                selectedIndexPaths.append(indexPath)
-                selectedDates.append(date)
-                self.reloadData()
-                return
-            }
+        guard !selectedIndexPaths.contains(indexPath) else { return }
 
-            if currentCell.isOutOfRange || currentCell.isAdjacent {
-                self.reloadData()
-                return
+        if !multipleSelectionEnable {
+            for previous in selectedIndexPaths {
+                collectionView.deselectItem(at: previous, animated: false)
             }
-            
-            if !multipleSelectionEnable {
-                selectedIndexPaths.removeAll()
-                selectedDates.removeAll()
+            let previousDates = selectedDates
+            selectedIndexPaths.removeAll()
+            selectedDates.removeAll()
+            for previousDate in previousDates {
+                delegate?.calendar(self, didDeselectDate: previousDate)
             }
-            
-            selectedIndexPaths.append(indexPath)
-            selectedDates.append(date)
-            currentCell.isSelected = true
-            collectionView.selectItem(at: indexPath, animated: true, scrollPosition: .centeredHorizontally)
-            
-            let eventsForDaySelected = eventsByIndexPath[indexPath] ?? []
-            delegate?.calendar(self, didSelectDate: date, withEvents: eventsForDaySelected)
         }
-        
-        self.reloadData()
+
+        selectedIndexPaths.append(indexPath)
+        selectedDates.append(date)
+
+        let eventsForDaySelected = eventsByIndexPath[indexPath] ?? []
+        delegate?.calendar(self, didSelectDate: date, withEvents: eventsForDaySelected)
     }
-    
+
+    /// Records a deselection the collection view already applied and notifies the delegate.
+    func didDeselect(_ indexPath: IndexPath) {
+        guard let index = selectedIndexPaths.firstIndex(of: indexPath) else { return }
+        let date = selectedDates[index]
+        selectedIndexPaths.remove(at: index)
+        selectedDates.remove(at: index)
+        delegate?.calendar(self, didDeselectDate: date)
+    }
+
     public func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
-        
-        guard let dateBeingSelected = self.dateFromIndexPath(indexPath) else { return false }
-        
-        if let delegate = self.delegate {
-            return delegate.calendar(self, canSelectDate: dateBeingSelected)
-        }
-   
-        return true // default
-    }
-    
-    // MARK: UIScrollViewDelegate
-    
-    public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        self.updateAndNotifyScrolling()
-        
-    }
-    
-    public func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-        self.updateAndNotifyScrolling()
-    }
-    
-    func updateAndNotifyScrolling() {
-        
-        guard let date = self.dateFromScrollViewPosition() else { return }
-        
-        self.displayDateOnHeader(date)
-        self.delegate?.calendar(self, didScrollToMonth: date)
-        
+        return shouldSelect(indexPath)
     }
 
-    @discardableResult
+    public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        didSelect(indexPath)
+    }
+
+    public func collectionView(_ collectionView: UICollectionView, shouldDeselectItemAt indexPath: IndexPath) -> Bool {
+        return enableDeselection
+    }
+
+    public func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
+        didDeselect(indexPath)
+    }
+
+    public func collectionView(_ collectionView: UICollectionView, shouldHighlightItemAt indexPath: IndexPath) -> Bool {
+        return self.dateFromIndexPath(indexPath) != nil && !isOutOfRange(indexPath)
+    }
+
+    // MARK: UIScrollViewDelegate
+
+    public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        animationTargetMonth = nil
+    }
+
+    public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        animationTargetMonth = nil
+        self.updateAndNotifyScrolling()
+    }
+
+    public func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        if let target = animationTargetMonth, self.dateFromScrollViewPosition() != target {
+            return  // interrupted by a newer animation; that one reports when it settles
+        }
+        animationTargetMonth = nil
+        self.updateAndNotifyScrolling()
+    }
+
+    func updateAndNotifyScrolling() {
+        guard let date = self.dateFromScrollViewPosition() else { return }
+        self.displayDateOnHeader(date)
+        self.notifyScrolled(to: date)
+    }
+
+    /// Tells the delegate about a settled month, once per month.
+    func notifyScrolled(to month: Date) {
+        guard lastNotifiedMonth != month else { return }
+        lastNotifiedMonth = month
+        self.delegate?.calendar(self, didScrollToMonth: month)
+    }
+
+    /// The first day of the month on the current page.
     func dateFromScrollViewPosition() -> Date? {
-        var page: Int = 0
-        
+        guard let months = currentMonths else { return nil }
+
+        let offset: CGFloat
+        let length: CGFloat
         switch self.direction {
         case .horizontal:
-            let offsetX = ceilf(Float(self.collectionView.contentOffset.x))
-            let width = self.collectionView.bounds.size.width
-            page = Int(floor(offsetX / Float(width)))
+            offset = self.collectionView.contentOffset.x
+            length = self.collectionView.bounds.size.width
         case .vertical:
-            let offsetY = ceilf(Float(self.collectionView.contentOffset.y))
-            let height = self.collectionView.bounds.size.height
-            page = Int(floor(offsetY / Float(height)))
+            offset = self.collectionView.contentOffset.y
+            length = self.collectionView.bounds.size.height
         @unknown default:
-            fatalError()
+            offset = self.collectionView.contentOffset.x
+            length = self.collectionView.bounds.size.width
         }
-        
-        page = page > 0 ? page : 0
-        
-        var monthsOffsetComponents = DateComponents()
-        monthsOffsetComponents.month = page
-        
-        return self.calendar.date(byAdding: monthsOffsetComponents, to: self.firstDayCache);
-    }
-    
-    func displayDateOnHeader(_ date: Date) {
-        let month = self.calendar.component(.month, from: date) // get month
-        
-        let formatter = DateFormatter()
-        formatter.locale = style.locale
-        formatter.timeZone = style.calendar.timeZone
-        
-        let monthName = formatter.standaloneMonthSymbols[(month-1) % 12].capitalized // 0 indexed array
-        
-        let year = self.calendar.component(.year, from: date)
 
-        self.headerView.monthLabel.text = dataSource?.headerString(date) ?? monthName + " " + String(year)
-        
+        guard length > 0 else { return months.firstDay(ofSection: 0) }
+        let page = min(max(Int((offset / length).rounded()), 0), months.numberOfSections - 1)
+        return months.firstDay(ofSection: page)
+    }
+
+    func displayDateOnHeader(_ date: Date) {
+        let formatter = DateFormatter()
+        formatter.calendar = style.calendar
+        formatter.timeZone = style.calendar.timeZone
+        formatter.locale = style.locale
+        formatter.setLocalizedDateFormatFromTemplate("yMMMM")
+
+        self.headerView.monthLabel.text = dataSource?.headerString(date) ?? formatter.string(from: date).capitalized(with: style.locale)
+
         self.displayDate = date
     }
 }

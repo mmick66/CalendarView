@@ -36,9 +36,13 @@ extension CalendarView {
             }
         }
 
+        /// The day the week starts on in the grid and the header.
         public enum FirstWeekdayOptions: Sendable {
             case sunday
             case monday
+            case saturday
+            /// The first weekday of ``Style/calendar``, which follows its locale.
+            case automatic
         }
 
         public enum CellOutOfRangeDisplayOptions: Sendable {
@@ -102,13 +106,20 @@ extension CalendarView {
         //Locale Style
         public var locale                    = Locale.current
 
-        //Calendar Identifier Style
-        public var calendar: Calendar = {
-            var calendar = Calendar(identifier: .gregorian)
-            calendar.timeZone = TimeZone(abbreviation: "UTC")!
-            return calendar
-        }()
+        /// The calendar, and with it the time zone, every date is interpreted in. Defaults to
+        /// the user's current calendar. Set a Gregorian calendar in UTC to get the 1.x behaviour.
+        public var calendar: Calendar = Calendar.current
 
         public var weekDayTransform = WeekDaysTransform.capitalized
+
+        /// The first weekday as a `Calendar` weekday number, 1 for Sunday through 7 for Saturday.
+        public var effectiveFirstWeekday: Int {
+            switch firstWeekday {
+            case .sunday: return 1
+            case .monday: return 2
+            case .saturday: return 7
+            case .automatic: return calendar.firstWeekday
+            }
+        }
     }
 }

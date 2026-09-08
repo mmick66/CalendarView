@@ -3,9 +3,7 @@ import UIKit
 
 @testable import KDCalendar
 
-/// Characterization tests. They pin the behaviour of the 1.8.9 date arithmetic
-/// before the modernization touches it. Known bugs are wrapped in
-/// `withKnownIssue` so the suite is green while documenting what is wrong.
+/// Behavioural tests for the month grid, cell configuration, header, scrolling and selection.
 ///
 /// Serialized because every test lays its calendar out in a shared window.
 @Suite(.serialized)
@@ -41,8 +39,8 @@ struct CalendarViewTests {
         func calendar(_ calendar: CalendarView, didLongPressDate date: Date, withEvents events: [CalendarEvent]?) {}
     }
 
-    /// The library's default calendar: Gregorian in UTC. Tests build every
-    /// date through it so they do not depend on the machine's time zone.
+    /// A Gregorian calendar in UTC. Tests build every date through it so they do not depend
+    /// on the machine's time zone.
     let utc: Calendar = {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "UTC")!
@@ -73,11 +71,13 @@ struct CalendarViewTests {
     /// A laid-out calendar inside the window, so the collection view has real
     /// cells to inspect.
     private func makeCalendar(
-        start: Date, end: Date, firstWeekday: CalendarView.Style.FirstWeekdayOptions = .monday
+        start: Date, end: Date, firstWeekday: CalendarView.Style.FirstWeekdayOptions = .monday,
+        calendar: Calendar? = nil, locale: Locale = Locale(identifier: "en_US")
     ) -> CalendarView {
         var style = CalendarView.Style()
         style.firstWeekday = firstWeekday
-        style.locale = Locale(identifier: "en_US")
+        style.locale = locale
+        style.calendar = calendar ?? utc
         let view = CalendarView(frame: CGRect(x: 0, y: 0, width: 350, height: 420))
         view.style = style
         let dataSource = FixedDataSource(start: start, end: end)
@@ -110,6 +110,7 @@ struct CalendarViewTests {
         #expect(view.getCachedSectionInfo(1)?.daysTotal == 29)
         #expect(view.getCachedSectionInfo(2)?.firstDay == 4)
         #expect(view.getCachedSectionInfo(2)?.daysTotal == 31)
+        #expect(view.getCachedSectionInfo(3) == nil)
     }
 
     @Test func sectionInfoUsesSundayAsIndexZeroWhenConfigured() {
@@ -119,11 +120,25 @@ struct CalendarViewTests {
         #expect(view.getCachedSectionInfo(2)?.firstDay == 5)
     }
 
+    @Test func sectionInfoSupportsSaturdayAndTheCalendarsOwnFirstWeekday() {
+        let saturday = makeCalendar(start: date(2024, 1, 10), end: date(2024, 1, 20), firstWeekday: .saturday)
+        #expect(saturday.getCachedSectionInfo(0)?.firstDay == 2)
+        #expect(saturday.headerView.dayLabels.first?.text == "Sat")
+
+        var wednesdayFirst = utc
+        wednesdayFirst.firstWeekday = 4
+        let automatic = makeCalendar(
+            start: date(2024, 1, 10), end: date(2024, 1, 20), firstWeekday: .automatic, calendar: wednesdayFirst)
+        #expect(automatic.style.effectiveFirstWeekday == 4)
+        #expect(automatic.getCachedSectionInfo(0)?.firstDay == 5)
+        #expect(automatic.headerView.dayLabels.map(\.text) == ["Wed", "Thu", "Fri", "Sat", "Sun", "Mon", "Tue"])
+    }
+
     @Test func numberOfSectionsCoversEveryMonthTouchedByTheRange() {
         let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
         #expect(view.numberOfSections(in: view.collectionView) == 3)
-        #expect(view.startIndexPath == IndexPath(item: 14, section: 0))
-        #expect(view.endIndexPath == IndexPath(item: 9, section: 2))
+        #expect(view.months?.startIndexPath == IndexPath(item: 14, section: 0))
+        #expect(view.months?.endIndexPath == IndexPath(item: 13, section: 2))
     }
 
     @Test func singleMonthRangeHasOneSection() {
@@ -131,8 +146,30 @@ struct CalendarViewTests {
         #expect(view.numberOfSections(in: view.collectionView) == 1)
     }
 
-    @Test func dateRangeSpansTheDataSource() {
+    @Test func startAfterEndShowsNoMonths() {
+        // Issue #132: this used to be a fatalError.
+        let view = makeCalendar(start: date(2024, 3, 10), end: date(2024, 1, 15))
+        #expect(view.numberOfSections(in: view.collectionView) == 0)
+        #expect(view.indexPathForDate(date(2024, 2, 1)) == nil)
+        view.selectDate(date(2024, 2, 1))
+        #expect(view.selectedDates == [])
+    }
+
+    @Test func rangeFollowsTheDataSourceWhenItsDatesChange() {
         let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
+        let source = view.dataSource as! FixedDataSource
+        source.end = date(2024, 5, 1)
+        view.reloadData()
+        #expect(view.numberOfSections(in: view.collectionView) == 5)
+        // A different time on the same days does not rebuild the grid.
+        let grid = view.months
+        source.start = date(2024, 1, 15, hour: 20)
+        view.reloadData()
+        #expect(view.months?.startDay == grid?.startDay)
+    }
+
+    @Test func dateRangeSpansTheDataSourceAtTheStartOfEachDay() {
+        let view = makeCalendar(start: date(2024, 1, 15, hour: 9), end: date(2024, 3, 10, hour: 18))
         #expect(view.dateRange == date(2024, 1, 15)...date(2024, 3, 10))
     }
 
@@ -155,6 +192,44 @@ struct CalendarViewTests {
         #expect(view.indexPathForDate(date(2024, 2, 10)) == IndexPath(item: 12, section: 1))
     }
 
+    @Test func datesOutsideTheDisplayedMonthsHaveNoIndexPath() {
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
+        #expect(view.indexPathForDate(date(2023, 12, 31)) == nil)
+        #expect(view.indexPathForDate(date(2024, 4, 1)) == nil)
+        #expect(view.dateFromIndexPath(IndexPath(item: 0, section: 0)) == date(2024, 1, 1))
+        #expect(view.dateFromIndexPath(IndexPath(item: 31, section: 0)) == nil, "empty cell after the 31st")
+        #expect(view.dateFromIndexPath(IndexPath(item: 0, section: 7)) == nil)
+    }
+
+    @Test func indexPathsUseTheStyleCalendar() {
+        // 2024-01-15 23:30 UTC is already the 16th in Athens.
+        var athens = Calendar(identifier: .gregorian)
+        athens.timeZone = TimeZone(identifier: "Europe/Athens")!
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31), calendar: athens)
+        let lateEvening = date(2024, 1, 15, hour: 23).addingTimeInterval(30 * 60)
+        #expect(view.indexPathForDate(lateEvening) == IndexPath(item: 15, section: 0))
+        #expect(view.dateFromIndexPath(IndexPath(item: 15, section: 0)) == athens.startOfDay(for: lateEvening))
+    }
+
+    @Test func todayIsMarkedInTheStyleCalendar() {
+        let now = Date()
+        let local = Calendar.current
+        let view = makeCalendar(
+            start: local.date(byAdding: .month, value: -1, to: now)!,
+            end: local.date(byAdding: .month, value: 1, to: now)!,
+            calendar: local)
+        view.setDisplayDate(now)
+        view.layoutIfNeeded()
+        let indexPath = view.indexPathForDate(now)!
+        #expect(view.todayIndexPath == indexPath)
+        #expect(cell(view, indexPath)?.isToday == true)
+        #expect(cell(view, indexPath)?.day == local.component(.day, from: now))
+    }
+
+    @Test func theDefaultCalendarIsTheUsersCurrentOne() {
+        #expect(CalendarView.Style().calendar == Calendar.current)
+    }
+
     // MARK: Cell configuration
 
     @Test func cellsOutsideTheMonthAreHidden() {
@@ -166,6 +241,24 @@ struct CalendarViewTests {
         #expect(cell(view, IndexPath(item: 3, section: 0))?.day == 1)
         #expect(cell(view, IndexPath(item: 31, section: 0))?.day == 29)
         #expect(cell(view, IndexPath(item: 32, section: 0))?.isHidden == true)
+    }
+
+    @Test func adjacentDaysShowThePreviousAndNextMonth() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 2, 29))
+        view.style.showAdjacentDays = true
+        view.setDisplayDate(date(2024, 2, 1))
+        view.layoutIfNeeded()
+        // February 2024 starts on a Thursday: the three cells before it are 29, 30, 31 January.
+        #expect(cell(view, IndexPath(item: 0, section: 1))?.day == 29)
+        #expect(cell(view, IndexPath(item: 0, section: 1))?.isAdjacent == true)
+        #expect(cell(view, IndexPath(item: 2, section: 1))?.day == 31)
+        #expect(cell(view, IndexPath(item: 32, section: 1))?.day == 1)
+        #expect(cell(view, IndexPath(item: 32, section: 1))?.isAdjacent == true)
+        // The first month has no previous month to borrow from.
+        view.setDisplayDate(date(2024, 1, 1))
+        view.layoutIfNeeded()
+        #expect(cell(view, IndexPath(item: 31, section: 0))?.day == 1)
+        #expect(view.shouldSelect(IndexPath(item: 31, section: 0)) == false, "adjacent days are not selectable")
     }
 
     @Test func outOfRangeFlagsRespectBothEndsInsideASingleMonth() {
@@ -190,7 +283,7 @@ struct CalendarViewTests {
         #expect(cell(view, IndexPath(item: 14, section: 2))?.isOutOfRange == true)
     }
 
-    @Test func weekendFlagsFollowTheFirstWeekday() {
+    @Test func weekendFlagsFollowTheCalendar() {
         let monday = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
         #expect(cell(monday, IndexPath(item: 4, section: 0))?.isWeekend == false)  // Friday 5th
         #expect(cell(monday, IndexPath(item: 5, section: 0))?.isWeekend == true)  // Saturday 6th
@@ -200,18 +293,70 @@ struct CalendarViewTests {
         #expect(cell(sunday, IndexPath(item: 7, section: 0))?.isWeekend == true)  // Sunday 7th
         #expect(cell(sunday, IndexPath(item: 8, section: 0))?.isWeekend == false)  // Monday 8th
         #expect(cell(sunday, IndexPath(item: 13, section: 0))?.isWeekend == true)  // Saturday 13th
+
+        let unmarked = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        unmarked.marksWeekends = false
+        unmarked.layoutIfNeeded()
+        #expect(cell(unmarked, IndexPath(item: 5, section: 0))?.isWeekend == false)
     }
 
-    @Test func eventsAreBucketedByStartDay() {
+    @Test func reusedCellsStartClean() {
+        // Issues #120 and #127: a recycled "today" or selected cell kept its look.
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
+        let reused = cell(view, IndexPath(item: 20, section: 0))!
+        reused.isToday = true
+        reused.isWeekend = true
+        reused.eventsCount = 3
+        reused.prepareForReuse()
+        #expect(reused.isToday == false)
+        #expect(reused.isWeekend == false)
+        #expect(reused.eventsCount == 0)
+        #expect(reused.day == nil)
+        #expect(reused.isHidden == false)
+        // An out-of-range cell is fully configured, so a flag can never survive on it.
+        let outOfRange = view.collectionView(view.collectionView, cellForItemAt: IndexPath(item: 2, section: 0)) as! CalendarDayCell
+        #expect(outOfRange.isOutOfRange == true)
+        #expect(outOfRange.isToday == false)
+        #expect(outOfRange.textLabel.textColor == view.style.cellColorOutOfRange)
+    }
+
+    @Test func outOfRangeWinsOverTodayForTheTextColour() {
+        let dayCell = CalendarDayCell(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
+        dayCell.isToday = true
+        #expect(dayCell.textLabel.textColor == dayCell.style.cellTextColorToday)
+        #expect(dayCell.bgView.backgroundColor == dayCell.style.cellColorToday)
+        dayCell.isOutOfRange = true
+        #expect(dayCell.textLabel.textColor == dayCell.style.cellColorOutOfRange)
+        #expect(dayCell.bgView.backgroundColor == dayCell.style.cellColorDefault)
+        dayCell.isSelected = true
+        #expect(dayCell.textLabel.textColor == dayCell.style.cellSelectedTextColor)
+        #expect(dayCell.bgView.layer.borderWidth == dayCell.style.cellSelectedBorderWidth)
+    }
+
+    @Test func eventsMarkEveryDayTheyCover() {
         let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
         view.events = [
             CalendarEvent(title: "a", startDate: date(2024, 1, 10, hour: 9), endDate: date(2024, 1, 10, hour: 10)),
             CalendarEvent(title: "b", startDate: date(2024, 1, 10, hour: 14), endDate: date(2024, 1, 12, hour: 10)),
+            CalendarEvent(title: "midnight", startDate: date(2024, 1, 20), endDate: date(2024, 1, 21)),
             CalendarEvent(title: "c", startDate: date(2024, 2, 1), endDate: date(2024, 2, 2)),
         ]
         #expect(view.eventsByIndexPath[IndexPath(item: 9, section: 0)]?.count == 2)
-        #expect(view.eventsByIndexPath[IndexPath(item: 10, section: 0)] == nil)
-        #expect(view.eventsByIndexPath[IndexPath(item: 11, section: 0)] == nil)
+        #expect(view.eventsByIndexPath[IndexPath(item: 10, section: 0)]?.map(\.title) == ["b"])
+        #expect(view.eventsByIndexPath[IndexPath(item: 11, section: 0)]?.map(\.title) == ["b"])
+        #expect(view.eventsByIndexPath[IndexPath(item: 12, section: 0)] == nil)
+        #expect(view.eventsByIndexPath[IndexPath(item: 19, section: 0)]?.count == 1, "an event ending at midnight stays on its day")
+        #expect(view.eventsByIndexPath[IndexPath(item: 20, section: 0)] == nil)
+        view.layoutIfNeeded()
+        #expect(cell(view, IndexPath(item: 9, section: 0))?.eventsCount == 2)
+        #expect(cell(view, IndexPath(item: 9, section: 0))?.dotsView.isHidden == false)
+    }
+
+    @Test func eventsCanBeSetBeforeTheViewHasADataSource() {
+        let view = CalendarView(frame: .zero)
+        view.events = [CalendarEvent(title: "a", startDate: Date(), endDate: Date())]
+        #expect(view.eventsByIndexPath.isEmpty)
+        #expect(view.numberOfSections(in: view.collectionView) == 0)
     }
 
     // MARK: Header and display date
@@ -220,7 +365,11 @@ struct CalendarViewTests {
         let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
         view.setDisplayDate(date(2024, 2, 10))
         #expect(view.headerView.monthLabel.text == "February 2024")
-        #expect(view.displayDate == date(2024, 2, 10))
+        #expect(view.displayDate == date(2024, 2, 1), "displayDate is the first day of the month shown")
+
+        let german = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10), locale: Locale(identifier: "de_DE"))
+        german.setDisplayDate(date(2024, 2, 10))
+        #expect(german.headerView.monthLabel.text == "Februar 2024")
     }
 
     @Test func headerStringFromTheDataSourceWins() {
@@ -230,11 +379,23 @@ struct CalendarViewTests {
         #expect(view.headerView.monthLabel.text == "Custom")
     }
 
+    @Test func nonGregorianCalendarsUseTheirOwnMonthNames() {
+        // Issue #134. 10 February 2024 is 21 Bahman 1402 in the Persian calendar.
+        var persian = Calendar(identifier: .persian)
+        persian.timeZone = TimeZone(identifier: "UTC")!
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10), calendar: persian)
+        view.setDisplayDate(date(2024, 2, 10))
+        view.layoutIfNeeded()
+        #expect(view.headerView.monthLabel.text == "Bahman 1402")
+        #expect(view.numberOfSections(in: view.collectionView) == 3, "Dey, Bahman and Esfand 1402")
+        #expect(cell(view, view.indexPathForDate(date(2024, 2, 10))!)?.day == 21)
+    }
+
     @Test func setDisplayDateOutsideTheRangeIsIgnored() {
         let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
         view.setDisplayDate(date(2024, 2, 10))
         view.setDisplayDate(date(2024, 6, 1))
-        #expect(view.displayDate == date(2024, 2, 10))
+        #expect(view.displayDate == date(2024, 2, 1))
     }
 
     @Test func weekdayLabelsStartOnTheConfiguredDay() {
@@ -242,6 +403,33 @@ struct CalendarViewTests {
         #expect(monday.headerView.dayLabels.map(\.text) == ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
         let sunday = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31), firstWeekday: .sunday)
         #expect(sunday.headerView.dayLabels.map(\.text) == ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"])
+    }
+
+    @Test func didScrollToMonthFiresOncePerSettledMonth() {
+        // Issue #109: the delegate used to hear about month zero on every reload.
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
+        #expect(delegate(of: view).scrolledTo == [date(2024, 1, 1)], "the first month is announced once")
+        view.reloadData()
+        view.layoutIfNeeded()
+        #expect(delegate(of: view).scrolledTo == [date(2024, 1, 1)])
+        view.setDisplayDate(date(2024, 2, 10))
+        #expect(delegate(of: view).scrolledTo == [date(2024, 1, 1), date(2024, 2, 1)])
+        view.setDisplayDate(date(2024, 2, 20))
+        #expect(delegate(of: view).scrolledTo == [date(2024, 1, 1), date(2024, 2, 1)], "same month, no repeat")
+        view.setDisplayDate(date(2024, 3, 1))
+        #expect(delegate(of: view).scrolledTo.last == date(2024, 3, 1))
+    }
+
+    @Test func goToNextAndPreviousMonthMoveTheDisplayDate() {
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
+        view.goToNextMonth()
+        #expect(view.displayDate == date(2024, 2, 1))
+        view.goToNextMonth()
+        #expect(view.displayDate == date(2024, 3, 1))
+        view.goToNextMonth()
+        #expect(view.displayDate == date(2024, 3, 1), "cannot leave the last month")
+        view.goToPreviousMonth()
+        #expect(view.displayDate == date(2024, 2, 1))
     }
 
     // MARK: Selection
@@ -252,6 +440,16 @@ struct CalendarViewTests {
         #expect(view.selectedDates == [date(2024, 1, 10)])
         #expect(view.selectedIndexPaths == [IndexPath(item: 9, section: 0)])
         #expect(delegate(of: view).selected == [date(2024, 1, 10)])
+        #expect(view.collectionView.indexPathsForSelectedItems == [IndexPath(item: 9, section: 0)])
+        #expect(cell(view, IndexPath(item: 9, section: 0))?.isSelected == true)
+    }
+
+    @Test func selectingTheSameDateTwiceIsANoOp() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        view.selectDate(date(2024, 1, 10))
+        view.selectDate(date(2024, 1, 10, hour: 12))
+        #expect(view.selectedDates == [date(2024, 1, 10)])
+        #expect(delegate(of: view).selected.count == 1)
     }
 
     @Test func deselectDateRemovesTheDateAndNotifiesTheDelegate() {
@@ -260,15 +458,46 @@ struct CalendarViewTests {
         view.deselectDate(date(2024, 1, 10))
         #expect(view.selectedDates == [])
         #expect(delegate(of: view).deselected == [date(2024, 1, 10)])
+        #expect(view.collectionView.indexPathsForSelectedItems == [])
+    }
+
+    @Test func deselectingADateThatIsNotSelectedDoesNothing() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        view.deselectDate(date(2024, 1, 10))
+        #expect(view.selectedDates == [])
+        #expect(delegate(of: view).deselected == [])
     }
 
     @Test func singleSelectionReplacesThePreviousDate() {
         let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
         view.multipleSelectionEnable = false
         view.selectDate(date(2024, 1, 10))
-        view.layoutIfNeeded()
         view.selectDate(date(2024, 1, 12))
         #expect(view.selectedDates == [date(2024, 1, 12)])
+        #expect(delegate(of: view).deselected == [date(2024, 1, 10)])
+        #expect(delegate(of: view).selected == [date(2024, 1, 10), date(2024, 1, 12)])
+        #expect(view.collectionView.indexPathsForSelectedItems == [IndexPath(item: 11, section: 0)])
+    }
+
+    @Test func singleSelectionAppliesToDaysOnOtherPages() {
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
+        view.multipleSelectionEnable = false
+        view.selectDate(date(2024, 1, 20))
+        view.selectDate(date(2024, 3, 5))
+        #expect(view.selectedDates == [date(2024, 3, 5)])
+        #expect(delegate(of: view).selected == [date(2024, 1, 20), date(2024, 3, 5)])
+        view.setDisplayDate(date(2024, 3, 5))
+        view.layoutIfNeeded()
+        #expect(cell(view, view.indexPathForDate(date(2024, 3, 5))!)?.isSelected == true)
+    }
+
+    @Test func turningOffMultipleSelectionKeepsTheLastDate() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        view.selectDate(date(2024, 1, 10))
+        view.selectDate(date(2024, 1, 12))
+        view.multipleSelectionEnable = false
+        #expect(view.selectedDates == [date(2024, 1, 12)])
+        #expect(view.collectionView.indexPathsForSelectedItems == [IndexPath(item: 11, section: 0)])
     }
 
     @Test func multipleSelectionAccumulates() {
@@ -276,6 +505,23 @@ struct CalendarViewTests {
         view.selectDate(date(2024, 1, 10))
         view.selectDate(date(2024, 1, 12))
         #expect(view.selectedDates == [date(2024, 1, 10), date(2024, 1, 12)])
+        #expect(Set(view.collectionView.indexPathsForSelectedItems ?? []) == [IndexPath(item: 9, section: 0), IndexPath(item: 11, section: 0)])
+    }
+
+    @Test func selectionSurvivesAReload() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        view.selectDate(date(2024, 1, 10))
+        view.reloadData()
+        view.layoutIfNeeded()
+        #expect(cell(view, IndexPath(item: 9, section: 0))?.isSelected == true)
+        #expect(view.collectionView.indexPathsForSelectedItems == [IndexPath(item: 9, section: 0)])
+        // Setting events, the style or the weekend flag reloads too.
+        view.events = [CalendarEvent(title: "a", startDate: date(2024, 1, 3), endDate: date(2024, 1, 3, hour: 1))]
+        view.style.cellShape = .round
+        view.marksWeekends = false
+        view.layoutIfNeeded()
+        #expect(cell(view, IndexPath(item: 9, section: 0))?.isSelected == true)
+        #expect(view.collectionView.indexPathsForSelectedItems == [IndexPath(item: 9, section: 0)])
     }
 
     @Test func clearAllSelectedDatesDoesNotNotify() {
@@ -284,45 +530,58 @@ struct CalendarViewTests {
         view.clearAllSelectedDates()
         #expect(view.selectedDates == [])
         #expect(delegate(of: view).deselected == [])
+        #expect(view.collectionView.indexPathsForSelectedItems == [])
     }
 
-    @Test func outOfRangeVisibleCellsAreNotSelectable() {
+    @Test func outOfRangeDaysAreNotSelectable() {
         let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
         view.selectDate(date(2024, 1, 5))
+        view.selectDate(date(2024, 3, 11))
+        view.selectDate(date(2024, 5, 1))
         #expect(view.selectedDates == [])
         #expect(delegate(of: view).selected == [])
+        #expect(view.collectionView(view.collectionView, shouldSelectItemAt: IndexPath(item: 4, section: 0)) == false)
+        #expect(view.collectionView(view.collectionView, shouldHighlightItemAt: IndexPath(item: 4, section: 0)) == false)
+        #expect(view.collectionView(view.collectionView, shouldSelectItemAt: IndexPath(item: 14, section: 0)) == true)
     }
 
-    // MARK: Pinned bugs (known issues until phase 3)
-
-    @Test func deselectingADateThatIsNotSelectedShouldDoNothing() {
+    @Test func canSelectDateGatesTapsAndProgrammaticSelection() {
         let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
-        withKnownIssue("deselectDate routes through didSelectItemAt and selects the date instead") {
-            view.deselectDate(date(2024, 1, 10))
-            #expect(view.selectedDates == [])
-        }
-    }
-
-    @Test func programmaticSelectionOfAHiddenCellShouldHonourSingleSelection() {
-        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
-        view.multipleSelectionEnable = false
-        view.selectDate(date(2024, 1, 20))
-        withKnownIssue("a date on a non-visible page bypasses multipleSelectionEnable and the delegate") {
-            view.selectDate(date(2024, 3, 5))
-            #expect(view.selectedDates == [date(2024, 3, 5)])
-            #expect(delegate(of: view).selected == [date(2024, 1, 20), date(2024, 3, 5)])
-        }
-    }
-
-    @Test func singleSelectionShouldNotDependOnALayoutPassBetweenCalls() {
-        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
-        view.multipleSelectionEnable = false
+        delegate(of: view).canSelect = { [utc] in utc.component(.day, from: $0) != 10 }
         view.selectDate(date(2024, 1, 10))
-        withKnownIssue("reloadData after a selection leaves no visible cell, so the next selectDate accumulates") {
-            view.selectDate(date(2024, 1, 12))
-            #expect(view.selectedDates == [date(2024, 1, 12)])
-        }
+        #expect(view.selectedDates == [])
+        #expect(view.collectionView(view.collectionView, shouldSelectItemAt: IndexPath(item: 9, section: 0)) == false)
+        view.selectDate(date(2024, 1, 11))
+        #expect(view.selectedDates == [date(2024, 1, 11)])
     }
+
+    @Test func tapsGoThroughTheCollectionViewCallbacks() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        let indexPath = IndexPath(item: 9, section: 0)
+        #expect(view.collectionView(view.collectionView, shouldSelectItemAt: indexPath) == true)
+        view.collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
+        view.collectionView(view.collectionView, didSelectItemAt: indexPath)
+        #expect(view.selectedDates == [date(2024, 1, 10)])
+        #expect(delegate(of: view).selected == [date(2024, 1, 10)])
+        #expect(view.collectionView(view.collectionView, shouldDeselectItemAt: indexPath) == true)
+        view.collectionView.deselectItem(at: indexPath, animated: false)
+        view.collectionView(view.collectionView, didDeselectItemAt: indexPath)
+        #expect(view.selectedDates == [])
+        #expect(delegate(of: view).deselected == [date(2024, 1, 10)])
+    }
+
+    @Test func enableDeselectionFalseBlocksTapsButNotProgrammaticDeselection() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        view.enableDeselection = false
+        view.selectDate(date(2024, 1, 10))
+        #expect(view.collectionView(view.collectionView, shouldDeselectItemAt: IndexPath(item: 9, section: 0)) == false)
+        #expect(delegate(of: view).deselected == [])
+        view.deselectDate(date(2024, 1, 10))
+        #expect(view.selectedDates == [])
+        #expect(delegate(of: view).deselected == [date(2024, 1, 10)])
+    }
+
+    // MARK: Style and references
 
     @Test func eachCalendarOwnsItsStyle() {
         let a = CalendarView(frame: .zero)
@@ -331,6 +590,15 @@ struct CalendarViewTests {
         #expect(a.style.headerHeight == 123)
         #expect(b.style.headerHeight == CalendarView.Style.default.headerHeight)
         #expect(a.headerView.style.headerHeight == 123, "in-place mutation restyles the header")
+    }
+
+    @Test func changingTheFirstWeekdayRebuildsTheGrid() {
+        let view = makeCalendar(start: date(2024, 1, 10), end: date(2024, 1, 20))
+        #expect(view.getCachedSectionInfo(0)?.firstDay == 0)
+        view.style.firstWeekday = .sunday
+        #expect(view.getCachedSectionInfo(0)?.firstDay == 1)
+        view.layoutIfNeeded()
+        #expect(cell(view, IndexPath(item: 1, section: 0))?.day == 1)
     }
 
     @Test func delegateAndDataSourceAreHeldWeakly() {
@@ -343,36 +611,5 @@ struct CalendarViewTests {
         delegate = nil
         #expect(view.dataSource == nil)
         #expect(view.delegate == nil)
-    }
-
-    @Test func reusedCellShouldNotKeepTheTodayFlag() {
-        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
-        let reused = cell(view, IndexPath(item: 20, section: 0))!
-        reused.isToday = true
-        withKnownIssue("cellForItemAt returns early for out-of-range cells without resetting isToday") {
-            reused.prepareForReuse()
-            _ = view.collectionView(view.collectionView, cellForItemAt: IndexPath(item: 2, section: 0))
-            #expect(reused.isToday == false)
-        }
-    }
-
-    @Test func didScrollToMonthShouldFireOncePerSettledPage() {
-        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
-        withKnownIssue("cellForItemAt(0,0) fires didScrollToMonth for month zero on every reload") {
-            view.reloadData()
-            view.layoutIfNeeded()
-            #expect(delegate(of: view).scrolledTo == [])
-        }
-    }
-
-    @Test func enableDeselectionFalseShouldNotReportADeselection() {
-        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
-        view.enableDeselection = false
-        view.selectDate(date(2024, 1, 10))
-        withKnownIssue("didDeselectDate is sent before enableDeselection is checked") {
-            view.deselectDate(date(2024, 1, 10))
-            #expect(view.selectedDates == [date(2024, 1, 10)])
-            #expect(delegate(of: view).deselected == [])
-        }
     }
 }

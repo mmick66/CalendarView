@@ -64,20 +64,22 @@ open class CalendarHeaderView: UIView {
         self.monthLabel.backgroundColor = style.headerBackgroundColor
         
         let formatter = DateFormatter()
+        formatter.calendar = style.calendar
         formatter.locale = style.locale
         formatter.timeZone = style.calendar.timeZone
         
-        let start = style.firstWeekday == .sunday ? 0 : 1
-        var i = 0
+        // Weekday symbols are indexed from Sunday; rotate so the first label is the first weekday.
+        let symbols = formatter.shortWeekdaySymbols ?? []
+        let start = style.effectiveFirstWeekday - 1
         
-        for index in start..<(start+7) {
-            let label = dayLabels[i]
+        for (i, label) in dayLabels.enumerated() {
+            let symbol = symbols.isEmpty ? "" : symbols[(start + i) % symbols.count]
             label.font = style.weekdaysFont
-            label.text = style.weekDayTransform == .capitalized ? formatter.shortWeekdaySymbols[(index % 7)].capitalized : formatter.shortWeekdaySymbols[(index % 7)].uppercased()
+            label.text = style.weekDayTransform == .capitalized
+                ? symbol.capitalized(with: style.locale)
+                : symbol.uppercased(with: style.locale)
             label.textColor = style.weekdaysTextColor
             label.textAlignment = .center
-            
-            i = i + 1
         }
 
         self.backgroundColor = style.weekdaysBackgroundColor
