@@ -236,6 +236,7 @@ struct CalendarViewTests {
         let view = makeCalendar(start: date(2024, 2, 1), end: date(2024, 2, 29))
         // February 2024: Thursday first, so items 0...2 and 32...41 are not days.
         #expect(cell(view, IndexPath(item: 0, section: 0))?.isHidden == true)
+        #expect(cell(view, IndexPath(item: 0, section: 0))?.dotsView.isHidden == true, "a fresh cell has no dot")
         #expect(cell(view, IndexPath(item: 2, section: 0))?.isHidden == true)
         #expect(cell(view, IndexPath(item: 3, section: 0))?.isHidden == false)
         #expect(cell(view, IndexPath(item: 3, section: 0))?.day == 1)
@@ -254,11 +255,18 @@ struct CalendarViewTests {
         #expect(cell(view, IndexPath(item: 2, section: 1))?.day == 31)
         #expect(cell(view, IndexPath(item: 32, section: 1))?.day == 1)
         #expect(cell(view, IndexPath(item: 32, section: 1))?.isAdjacent == true)
+        #expect(cell(view, IndexPath(item: 32, section: 1))?.dotsView.isHidden == true, "adjacent days never show events")
+        #expect(cell(view, IndexPath(item: 32, section: 1))?.bgView.backgroundColor == .clear)
         // The first month has no previous month to borrow from.
         view.setDisplayDate(date(2024, 1, 1))
         view.layoutIfNeeded()
         #expect(cell(view, IndexPath(item: 31, section: 0))?.day == 1)
         #expect(view.shouldSelect(IndexPath(item: 31, section: 0)) == false, "adjacent days are not selectable")
+        let februaryOnly = makeCalendar(start: date(2024, 2, 1), end: date(2024, 2, 29))
+        februaryOnly.style.showAdjacentDays = true
+        februaryOnly.layoutIfNeeded()
+        #expect(cell(februaryOnly, IndexPath(item: 0, section: 0))?.isHidden == true, "nothing before the first month")
+        #expect(cell(februaryOnly, IndexPath(item: 32, section: 0))?.day == 1, "March continues after the 29th")
     }
 
     @Test func outOfRangeFlagsRespectBothEndsInsideASingleMonth() {

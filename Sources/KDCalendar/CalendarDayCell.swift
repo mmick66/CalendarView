@@ -114,6 +114,7 @@ open class CalendarDayCell: UICollectionViewCell {
 
         self.textLabel.adjustsFontForContentSizeCategory = true
         self.isAccessibilityElement = true
+        self.dotsView.isHidden = true
         self.applyStyle()
 
         // Border colours are CGColors, which do not follow appearance changes on their own.
@@ -159,7 +160,8 @@ open class CalendarDayCell: UICollectionViewCell {
     }
 
     /// Derives every colour from the flags. Precedence for the text: selected, out of range,
-    /// today, adjacent, weekend, default. The background marks today unless out of range.
+    /// today, adjacent, weekend, default. The background marks today unless out of range, and
+    /// adjacent days have none.
     private func applyStyle() {
         self.dotsView.backgroundColor = style.cellEventColor
         self.textLabel.font = style.cellFont
@@ -171,7 +173,11 @@ open class CalendarDayCell: UICollectionViewCell {
         } else {
             self.bgView.layer.borderColor = style.cellBorderColor.cgColor
             self.bgView.layer.borderWidth = style.cellBorderWidth
-            self.bgView.backgroundColor = (isToday && !isOutOfRange) ? style.cellColorToday : style.cellColorDefault
+            if isAdjacent {
+                self.bgView.backgroundColor = .clear
+            } else {
+                self.bgView.backgroundColor = (isToday && !isOutOfRange) ? style.cellColorToday : style.cellColorDefault
+            }
         }
 
         var traits: UIAccessibilityTraits = .button

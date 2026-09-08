@@ -135,7 +135,7 @@ extension CalendarView {
         /// The text colour of days before the data source's start date or after its end date.
         public var cellColorOutOfRange = UIColor.tertiaryLabel
         /// The text colour of the neighbouring months' days when ``showAdjacentDays`` is on.
-        public var cellColorAdjacent = UIColor.clear
+        public var cellColorAdjacent = UIColor.quaternaryLabel
 
         // MARK: Selection
 
@@ -151,7 +151,7 @@ extension CalendarView {
         // MARK: Weekends
 
         /// The text colour of weekend days when ``CalendarView/marksWeekends`` is on.
-        public var cellTextColorWeekend = UIColor(red: 1.00, green: 0.84, blue: 0.65, alpha: 1.00)
+        public var cellTextColorWeekend = UIColor(red: 254.0 / 255.0, green: 73.0 / 255.0, blue: 64.0 / 255.0, alpha: 0.8)
 
         // MARK: Locale and calendar
 

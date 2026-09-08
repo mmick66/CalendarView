@@ -4,13 +4,17 @@ import UIKit
 
 /// The original demo: a styled horizontal calendar, previous and next month
 /// buttons, and a date picker that scrolls the calendar to the picked month.
-final class DemoViewController: UIViewController {
+/// Long-press a day to add an event to the system calendar.
+final class ClassicDemoViewController: UIViewController {
 
     private let calendarView = CalendarView(frame: .zero)
     private let datePicker = UIDatePicker()
 
+    private var hasAppeared = false
+
     override func viewDidLoad() {
         super.viewDidLoad()
+        title = "Classic"
         view.backgroundColor = UIColor(red: 252 / 255, green: 252 / 255, blue: 252 / 255, alpha: 1.0)
 
         var style = CalendarView.Style()
@@ -45,18 +49,24 @@ final class DemoViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        guard !hasAppeared else { return }
+        hasAppeared = true
 
         let today = Date()
         if let tomorrow = calendarView.calendar.date(byAdding: .day, value: 1, to: today) {
             calendarView.selectDate(tomorrow)
         }
 
-        calendarView.loadEvents { [weak self] error in
-            guard let self, error != nil else { return }
-            let message = "The calendar could not load system events. It is possibly a problem with permissions."
-            let alert = UIAlertController(title: "Events Loading Error", message: message, preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: nil))
-            self.present(alert, animated: true, completion: nil)
+        if DemoArguments.usesSampleEvents {
+            calendarView.events = SampleEvents.around(today, calendar: calendarView.calendar)
+        } else {
+            calendarView.loadEvents { [weak self] error in
+                guard let self, error != nil else { return }
+                let message = "The calendar could not load system events. It is possibly a problem with permissions."
+                let alert = UIAlertController(title: "Events Loading Error", message: message, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: nil))
+                self.present(alert, animated: true, completion: nil)
+            }
         }
 
         calendarView.setDisplayDate(today)
@@ -123,10 +133,9 @@ final class DemoViewController: UIViewController {
         calendarView.goToNextMonth()
     }
 
-    override var prefersStatusBarHidden: Bool { true }
 }
 
-extension DemoViewController: CalendarViewDataSource {
+extension ClassicDemoViewController: CalendarViewDataSource {
 
     func startDate() -> Date {
         calendarView.calendar.date(byAdding: .month, value: -1, to: Date())!
@@ -141,7 +150,7 @@ extension DemoViewController: CalendarViewDataSource {
     }
 }
 
-extension DemoViewController: CalendarViewDelegate {
+extension ClassicDemoViewController: CalendarViewDelegate {
 
     func calendar(_ calendar: CalendarView, didSelectDate date: Date, withEvents events: [CalendarEvent]) {
         print("Did Select: \(date) with \(events.count) events")

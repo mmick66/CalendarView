@@ -243,6 +243,7 @@ extension CalendarView: UICollectionViewDataSource {
                 dayCell.day = indexPath.item - lastDayIndex + 1
             }
             dayCell.isAdjacent = true
+            dayCell.eventsCount = 0
         } else {
             dayCell.isHidden = true
         }
