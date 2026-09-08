@@ -367,8 +367,8 @@ struct CalendarViewTests {
     @Test func eventsCanBeSetBeforeTheViewHasADataSource() {
         let view = CalendarView(frame: .zero)
         view.events = [CalendarEvent(title: "a", startDate: Date(), endDate: Date())]
-        #expect(view.eventsByIndexPath.isEmpty)
-        #expect(view.numberOfSections(in: view.collectionView) == 0)
+        #expect(view.numberOfSections(in: view.collectionView) == 1, "the current month stands in for a data source")
+        #expect(view.eventsByIndexPath[view.indexPathForDate(Date())!]?.count == 1)
     }
 
     // MARK: Header and display date

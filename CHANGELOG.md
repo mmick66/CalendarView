@@ -12,8 +12,16 @@ of source changes.
 
 ### Added
 
+- `selectionMode` with `.single`, `.multiple` and `.range`, `selectRange(_:)`
+  and the `didSelectRange` delegate method. In range mode two taps select
+  every selectable day between them, in either order and across months
+  (#32). `multipleSelectionEnable` maps to the first two modes.
+- `calendar(_:styleForDate:)` on the delegate, a style for one day: colour a
+  holiday or grey out the days `canSelectDate` refuses (#136, #122).
+- A calendar without a data source shows the current month (#135).
 - `KDCalendarView`, a SwiftUI wrapper with a two-way selection binding and
-  modifiers for style, direction, events, selection mode and callbacks (#108).
+  modifiers for style, direction, events, selection mode, per-day style and
+  callbacks (#108).
 - `KDCalendarEventKit`, a separate product for system calendar events, with
   `async` `loadEvents()` and `EventsManager.load(from:to:)` (#129).
 - `isScrollEnabled` on `CalendarView` (#126).
@@ -23,7 +31,7 @@ of source changes.
   fonts, and VoiceOver labels and traits on every day.
 - `dateRange`, the days the data source spans.
 - Swift Package Manager manifest with two products, privacy manifest, DocC
-  catalog, GitHub Actions CI, Swift Testing suite with 53 tests.
+  catalog, GitHub Actions CI, Swift Testing suite with 65 tests.
 - Example app on the UIScene lifecycle with three tabs: the classic styled
   calendar, the default style in light and dark mode, and the SwiftUI wrapper.
 

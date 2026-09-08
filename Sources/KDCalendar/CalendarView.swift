@@ -76,12 +76,20 @@ public protocol CalendarViewDelegate: AnyObject {
     func calendar(_ calendar: CalendarView, didDeselectDate date: Date)
     /// A day was long-pressed. `events` is `nil` when the day has none.
     func calendar(_ calendar: CalendarView, didLongPressDate date: Date, withEvents events: [CalendarEvent]?)
+    /// A range of days was selected, by the second tap in ``CalendarView/SelectionMode/range`` mode or
+    /// by ``CalendarView/selectRange(_:)``. `selectedDates` holds every selectable day in it.
+    func calendar(_ calendar: CalendarView, didSelectRange range: ClosedRange<Date>)
+    /// A style for one day, or `nil` for the calendar's own ``CalendarView/style``. Use it to colour
+    /// a holiday, grey out days that `canSelectDate` refuses, or change a single day's font.
+    func calendar(_ calendar: CalendarView, styleForDate date: Date) -> CalendarView.Style?
 }
 
 extension CalendarViewDelegate {
     public func calendar(_ calendar: CalendarView, canSelectDate date: Date) -> Bool { true }
     public func calendar(_ calendar: CalendarView, didDeselectDate date: Date) {}
     public func calendar(_ calendar: CalendarView, didLongPressDate date: Date, withEvents events: [CalendarEvent]?) {}
+    public func calendar(_ calendar: CalendarView, didSelectRange range: ClosedRange<Date>) {}
+    public func calendar(_ calendar: CalendarView, styleForDate date: Date) -> CalendarView.Style? { nil }
 }
 
 /// A month calendar that scrolls horizontally or vertically, one month per page.
@@ -154,18 +162,50 @@ public class CalendarView: UIView {
     /// another one reports its end at the wrong offset; the target tells them apart.
     var animationTargetMonth: Date?
 
-    /// Whether more than one day can be selected at a time.
-    public var multipleSelectionEnable = true {
+    /// How taps and ``selectDate(_:)`` combine into a selection.
+    public enum SelectionMode: Sendable {
+        /// One day at a time; selecting another replaces it.
+        case single
+        /// Any number of days, each toggled on its own.
+        case multiple
+        /// Two taps pick the ends of a range and every selectable day between them is selected.
+        /// A third tap starts a new range; tapping a selected day clears the range.
+        case range
+    }
+
+    /// How taps and ``selectDate(_:)`` combine into a selection. `.multiple` by default.
+    public var selectionMode: SelectionMode = .multiple {
         didSet {
-            guard !multipleSelectionEnable, selectedIndexPaths.count > 1 else { return }
-            let keep = selectedIndexPaths.last!
-            for indexPath in selectedIndexPaths where indexPath != keep {
-                collectionView?.deselectItem(at: indexPath, animated: false)
+            guard selectionMode != oldValue else { return }
+            rangeAnchor = nil
+            switch selectionMode {
+            case .single:
+                guard selectedIndexPaths.count > 1 else { return }
+                let keep = selectedIndexPaths.last!
+                for indexPath in selectedIndexPaths where indexPath != keep {
+                    collectionView?.deselectItem(at: indexPath, animated: false)
+                }
+                selectedIndexPaths = [keep]
+                selectedDates = [selectedDates.last!]
+            case .range:
+                clearAllSelectedDates()
+            case .multiple:
+                break
             }
-            selectedIndexPaths = [keep]
-            selectedDates = [selectedDates.last!]
         }
     }
+
+    /// Whether more than one day can be selected at a time. `false` is ``SelectionMode/single``,
+    /// `true` is ``SelectionMode/multiple``.
+    public var multipleSelectionEnable: Bool {
+        get { selectionMode != .single }
+        set { selectionMode = newValue ? .multiple : .single }
+    }
+
+    /// The first end of the range being picked in ``SelectionMode/range`` mode.
+    var rangeAnchor: IndexPath?
+    /// Whether the range starting at ``rangeAnchor`` has both ends.
+    var rangeIsComplete = false
 
     /// Whether tapping a selected day deselects it. Programmatic deselection always works.
     public var enableDeselection = true
@@ -462,6 +502,29 @@ extension CalendarView {
         goToMonth(offsetBy: -1)
     }
 
+    /// Selects every selectable day in `range`, replacing the current selection, and tells the
+    /// delegate with `didSelectRange`. Works in every ``SelectionMode``; in `.range` mode the next
+    /// tap starts a new range.
+    public func selectRange(_ range: ClosedRange<Date>) {
+        clearAllSelectedDates()
+        let lower = calendar.startOfDay(for: range.lowerBound)
+        let upper = calendar.startOfDay(for: range.upperBound)
+        var day = lower
+        while day <= upper {
+            if let indexPath = indexPathForDate(day), shouldSelect(indexPath) {
+                collectionView?.selectItem(at: indexPath, animated: false, scrollPosition: [])
+                selectedIndexPaths.append(indexPath)
+                selectedDates.append(day)
+            }
+            guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
+            day = next
+        }
+        rangeAnchor = selectedIndexPaths.first
+        rangeIsComplete = true
+        guard let first = selectedDates.first, let last = selectedDates.last else { return }
+        delegate?.calendar(self, didSelectRange: first...last)
+    }
+
     /// Deselects every day without notifying the delegate.
     public func clearAllSelectedDates() {
         for indexPath in selectedIndexPaths {
@@ -469,6 +532,8 @@ extension CalendarView {
         }
         selectedIndexPaths.removeAll()
         selectedDates.removeAll()
+        rangeAnchor = nil
+        rangeIsComplete = false
     }
 
     func goToMonth(offsetBy offset: Int) {

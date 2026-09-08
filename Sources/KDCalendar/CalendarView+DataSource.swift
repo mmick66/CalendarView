@@ -117,14 +117,11 @@ struct MonthGrid {
 extension CalendarView {
 
     /// The month grid for the data source's current range, rebuilt when the range moves to
-    /// other days. Zero months when there is no data source or the range is invalid.
+    /// other days. The current month alone without a data source; zero months when the range
+    /// is invalid.
     var currentMonths: MonthGrid? {
-        guard let dataSource = self.dataSource else {
-            months = nil
-            return nil
-        }
-        let start = dataSource.startDate()
-        let end = dataSource.endDate()
+        let start = dataSource?.startDate() ?? Date()
+        let end = dataSource?.endDate() ?? start
         if let months = months,
             calendar.isDate(months.startDay, inSameDayAs: start),
             calendar.isDate(months.endDay, inSameDayAs: end),
@@ -226,6 +223,9 @@ extension CalendarView: UICollectionViewDataSource {
         let isInRange = (firstDayIndex..<lastDayIndex).contains(indexPath.item)
 
         if isInRange {
+            if let date = months.date(at: indexPath), let dayStyle = delegate?.calendar(self, styleForDate: date) {
+                dayCell.style = dayStyle
+            }
             dayCell.day = indexPath.item - firstDayIndex + 1
             dayCell.isOutOfRange = months.isOutOfRange(indexPath)
             dayCell.isToday = indexPath == todayIndexPath

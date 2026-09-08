@@ -9,7 +9,8 @@ A month calendar for iOS. Drop it in, give it a start and an end date, and it sc
 - **UIKit and SwiftUI.** `CalendarView` for UIKit, `KDCalendarView` for SwiftUI with a two-way selection binding.
 - **Any calendar.** The user's current calendar and time zone by default; Gregorian, Persian, Hebrew or anything else through `Style.calendar`, with the week starting on the day the locale says.
 - **System events.** The optional `KDCalendarEventKit` product loads events from the user's calendars and adds new ones.
-- **Styled by value.** `CalendarView.Style` is a struct; change a property and the view follows. Dynamic system colours and Dynamic Type by default.
+- **Single, multiple or range selection.** Two taps select every day between them, across months.
+- **Styled by value.** `CalendarView.Style` is a struct; change a property and the view follows. Dynamic system colours and Dynamic Type by default, and a per-day style hook for holidays and disabled days.
 - **Swift 6, iOS 17+.** Main-actor isolated, `Sendable` where it matters, VoiceOver labels on every day.
 
 <p align="center">
@@ -56,10 +57,10 @@ let calendarView = CalendarView(frame: .zero)
 calendarView.dataSource = self
 calendarView.delegate = self
 calendarView.direction = .horizontal
-calendarView.multipleSelectionEnable = false
+calendarView.selectionMode = .single
 ```
 
-The data source returns the first and last selectable day. Every month those days touch is shown; days before the start or after the end are greyed out.
+The data source returns the first and last selectable day. Every month those days touch is shown; days before the start or after the end are greyed out. Without a data source the view shows the current month.
 
 ```swift
 extension ViewController: CalendarViewDataSource {
@@ -109,14 +110,16 @@ Call `setDisplayDate` from `viewDidAppear` or later; before that the view has no
 ### Selection
 
 ```swift
-calendarView.selectDate(date)        // same rules as a tap: in range, canSelectDate allows it
+calendarView.selectionMode = .multiple   // .single, .multiple or .range
+calendarView.selectDate(date)            // same rules as a tap: in range, canSelectDate allows it
 calendarView.deselectDate(date)
-calendarView.selectedDates           // in selection order
-calendarView.clearAllSelectedDates() // no delegate callbacks
+calendarView.selectRange(monday...friday)
+calendarView.selectedDates               // in selection order
+calendarView.clearAllSelectedDates()     // no delegate callbacks
 calendarView.enableDeselection = false   // taps cannot deselect; deselectDate still can
 ```
 
-With `multipleSelectionEnable` off, selecting a day deselects the previous one and reports it.
+In `.single` mode selecting a day deselects the previous one and reports it. In `.range` mode the first tap picks one end, the second picks the other and every selectable day between them is selected, in either order and across months; the delegate then receives `didSelectRange`. A third tap starts a new range and tapping a selected day clears it. `multipleSelectionEnable` still works and maps to `.single` and `.multiple`.
 
 ### Styling
 
@@ -143,6 +146,22 @@ The data source can replace the month title:
 
 ```swift
 func headerString(_ date: Date) -> String? { date.formatted(.dateTime.month(.wide)) }
+```
+
+The delegate can style single days. Return `nil` for the calendar's own style. Together with `canSelectDate` this greys out days the user must not pick:
+
+```swift
+func calendar(_ calendar: CalendarView, canSelectDate date: Date) -> Bool {
+    !Calendar.current.isDateInWeekend(date)
+}
+
+func calendar(_ calendar: CalendarView, styleForDate date: Date) -> CalendarView.Style? {
+    guard Calendar.current.isDateInWeekend(date) else { return nil }
+    var disabled = calendar.style
+    disabled.cellTextColorWeekend = disabled.cellColorOutOfRange
+    disabled.cellColorDefault = .clear
+    return disabled
+}
 ```
 
 ### Events
@@ -175,7 +194,8 @@ struct ContentView: View {
     var body: some View {
         KDCalendarView(range: start...end, selection: $selection)
             .calendarStyle(style)
-            .allowsMultipleSelection(false)
+            .selectionMode(.range)
+            .styleForDate { date in holidays.contains(date) ? holidayStyle : nil }
             .events(events)
             .displayDate(Date())
             .onScrollToMonth { month in print(month) }
@@ -188,7 +208,7 @@ Taps update the binding; assigning to it selects or deselects days.
 
 ## Example app
 
-`Example/KDCalendarDemo.xcodeproj` has three tabs: the classic styled calendar with system events, the default style in a vertical calendar, and the SwiftUI wrapper. Launch with `-sampleEvents` to seed events without calendar access and `-tab 1` or `-tab 2` to open a tab.
+`Example/KDCalendarDemo.xcodeproj` has three tabs: the classic styled calendar with system events, the default style in a vertical calendar with disabled Sundays and a holiday, and the SwiftUI wrapper with the three selection modes. Launch with `-sampleEvents` to seed events without calendar access and `-tab 1` or `-tab 2` to open a tab.
 
 ## Development
 
