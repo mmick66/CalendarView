@@ -118,9 +118,14 @@ public class CalendarView: UIView {
         }
     }
 
-    /// The calendar used for every date computation. Shorthand for `style.calendar`.
+    /// The calendar used for every date computation: `style.calendar`, given `style.locale`
+    /// when it has no locale of its own so that weekends and week numbering follow the locale.
     public var calendar: Calendar {
-        return style.calendar
+        var calendar = style.calendar
+        if calendar.locale == nil || calendar.locale?.identifier.isEmpty == true {
+            calendar.locale = style.locale
+        }
+        return calendar
     }
 
     /// The days the data source currently spans, from `startDate()` to `endDate()`, at the
@@ -138,6 +143,9 @@ public class CalendarView: UIView {
 
     /// The month grid derived from the data source. Rebuilt whenever the range changes.
     var months: MonthGrid?
+    /// The cell showing today, refreshed with the grid and when the day changes.
+    var todayIndexPath: IndexPath?
+    nonisolated(unsafe) private var observers: [NSObjectProtocol] = []
     var eventsByIndexPath = [IndexPath: [CalendarEvent]]()
 
     /// Events to show as dots. An event marks every day it covers.
@@ -315,6 +323,19 @@ public class CalendarView: UIView {
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(CalendarView.handleLongPress))
         self.collectionView.addGestureRecognizer(longPress)
 
+        // Keep the today marker honest across midnight and clock or time zone changes.
+        for name in [Notification.Name.NSCalendarDayChanged, UIApplication.significantTimeChangeNotification] {
+            observers.append(
+                NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                    MainActor.assumeIsolated { self?.reloadData() }
+                })
+        }
+    }
+
+    deinit {
+        for observer in observers {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     @objc func handleLongPress(gesture: UILongPressGestureRecognizer) {
@@ -444,9 +465,10 @@ public class CalendarView: UIView {
 // MARK: - Public methods
 extension CalendarView {
 
-    /// Reloads every day cell, keeping the selection.
+    /// Reloads every day cell, keeping the selection. Asks the data source for its range again.
     public func reloadData() {
         guard let collectionView = self.collectionView else { return }
+        refreshMonths()
         collectionView.reloadData()
         for indexPath in selectedIndexPaths {
             collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
