@@ -228,6 +228,10 @@ extension CalendarView: UICollectionViewDataSource {
             }
             dayCell.eventsCount = eventsByIndexPath[indexPath]?.count ?? 0
             dayCell.date = months.date(at: indexPath)
+            if let date = dayCell.date {
+                dayCell.accessibilityLabel = accessibilityLabel(
+                    for: date, isToday: dayCell.isToday, eventsCount: dayCell.eventsCount)
+            }
         } else if style.showAdjacentDays {
             if indexPath.item < firstDayIndex {
                 if indexPath.section > 0 {

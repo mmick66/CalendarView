@@ -13,7 +13,8 @@ let package = Package(
     targets: [
         .target(
             name: "KDCalendar",
-            path: "Sources/KDCalendar"
+            path: "Sources/KDCalendar",
+            resources: [.process("Resources")]
         ),
         .target(
             name: "KDCalendarEventKit",

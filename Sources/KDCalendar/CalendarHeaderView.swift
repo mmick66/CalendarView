@@ -45,12 +45,15 @@ open class CalendarHeaderView: UIView {
         monthLabel = UILabel()
         monthLabel.translatesAutoresizingMaskIntoConstraints = false
         monthLabel.backgroundColor = UIColor.clear
+        monthLabel.adjustsFontForContentSizeCategory = true
+        monthLabel.accessibilityTraits = .header
         self.addSubview(monthLabel)
         
         for _ in 0..<7 {
             let label = UILabel()
             label.translatesAutoresizingMaskIntoConstraints = false
             label.backgroundColor = UIColor.clear
+            label.adjustsFontForContentSizeCategory = true
             
             dayLabels.append(label)
             self.addSubview(label)

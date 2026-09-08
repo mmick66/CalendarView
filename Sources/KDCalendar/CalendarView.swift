@@ -89,11 +89,14 @@ public class CalendarView: UIView {
 
     static let logger = Logger(subsystem: "com.karmadust.KDCalendar", category: "CalendarView")
 
+    /// The reuse identifier of the day cells.
     public let cellReuseIdentifier = "CalendarDayCell"
 
     var headerView: CalendarHeaderView!
     var collectionView: UICollectionView!
 
+    /// Whether the grid always runs left to right. When `false` the grid mirrors in
+    /// right-to-left layouts.
     public var forceLtr: Bool = true {
         didSet {
             updateLayoutDirections()
@@ -172,8 +175,41 @@ public class CalendarView: UIView {
         didSet { reloadData() }
     }
 
+    /// Receives scrolling and selection events.
     public weak var delegate: CalendarViewDelegate?
+    /// Provides the range of days to show.
     public weak var dataSource: CalendarViewDataSource?
+
+    /// Whether the user can scroll between months. Programmatic scrolling always works.
+    public var isScrollEnabled: Bool {
+        get { collectionView?.isScrollEnabled ?? true }
+        set { collectionView?.isScrollEnabled = newValue }
+    }
+
+    /// Formats the full date for VoiceOver, in the style's locale and calendar.
+    private(set) lazy var accessibilityDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .full
+        formatter.timeStyle = .none
+        return formatter
+    }()
+
+    func accessibilityLabel(for date: Date, isToday: Bool, eventsCount: Int) -> String {
+        accessibilityDateFormatter.calendar = style.calendar
+        accessibilityDateFormatter.timeZone = style.calendar.timeZone
+        accessibilityDateFormatter.locale = style.locale
+        var parts = [accessibilityDateFormatter.string(from: date)]
+        if isToday {
+            parts.append(String(localized: "Today", bundle: .module, comment: "VoiceOver suffix for the current day"))
+        }
+        if eventsCount > 0 {
+            parts.append(
+                String(
+                    localized: "\(eventsCount) events", bundle: .module,
+                    comment: "VoiceOver suffix with the number of events on a day"))
+        }
+        return parts.joined(separator: ", ")
+    }
 
     /// The scrolling axis. Each month is one page.
     public var direction: UICollectionView.ScrollDirection = .horizontal {

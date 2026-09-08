@@ -112,7 +112,14 @@ open class CalendarDayCell: UICollectionViewCell {
 
         self.addSubview(self.dotsView)
 
+        self.textLabel.adjustsFontForContentSizeCategory = true
+        self.isAccessibilityElement = true
         self.applyStyle()
+
+        // Border colours are CGColors, which do not follow appearance changes on their own.
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (cell: CalendarDayCell, _) in
+            cell.applyStyle()
+        }
     }
 
     required public init?(coder aDecoder: NSCoder) {
@@ -166,6 +173,11 @@ open class CalendarDayCell: UICollectionViewCell {
             self.bgView.layer.borderWidth = style.cellBorderWidth
             self.bgView.backgroundColor = (isToday && !isOutOfRange) ? style.cellColorToday : style.cellColorDefault
         }
+
+        var traits: UIAccessibilityTraits = .button
+        if isSelected { traits.insert(.selected) }
+        if isOutOfRange || isAdjacent { traits.insert(.notEnabled) }
+        self.accessibilityTraits = traits
 
         if isSelected {
             self.textLabel.textColor = style.cellSelectedTextColor
