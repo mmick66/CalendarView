@@ -27,7 +27,7 @@ import UIKit
 
 open class CalendarHeaderView: UIView {
     
-    var style: CalendarView.Style = CalendarView.Style.Default {
+    var style: CalendarView.Style = .default {
         didSet {
             updateStyle()
         }

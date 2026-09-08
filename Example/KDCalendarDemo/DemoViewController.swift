@@ -13,7 +13,7 @@ final class DemoViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = UIColor(red: 252 / 255, green: 252 / 255, blue: 252 / 255, alpha: 1.0)
 
-        let style = CalendarView.Style()
+        var style = CalendarView.Style()
         style.cellShape = .bevel(8.0)
         style.cellColorDefault = UIColor.clear
         style.cellColorToday = UIColor(red: 1.00, green: 0.84, blue: 0.64, alpha: 1.00)

@@ -56,6 +56,12 @@ struct CalendarViewTests {
         return window
     }()
 
+    /// The view holds its data source and delegate weakly, so each test keeps them here.
+    final class Retained {
+        var objects: [AnyObject] = []
+    }
+    let retained = Retained()
+
     init() {
         Self.window.subviews.forEach { $0.removeFromSuperview() }
     }
@@ -65,18 +71,21 @@ struct CalendarViewTests {
     }
 
     /// A laid-out calendar inside the window, so the collection view has real
-    /// cells to inspect. The data source and delegate are retained by the
-    /// view (strongly, which is finding F2) for the life of the test.
+    /// cells to inspect.
     private func makeCalendar(
         start: Date, end: Date, firstWeekday: CalendarView.Style.FirstWeekdayOptions = .monday
     ) -> CalendarView {
-        let style = CalendarView.Style()
+        var style = CalendarView.Style()
         style.firstWeekday = firstWeekday
         style.locale = Locale(identifier: "en_US")
         let view = CalendarView(frame: CGRect(x: 0, y: 0, width: 350, height: 420))
         view.style = style
-        view.dataSource = FixedDataSource(start: start, end: end)
-        view.delegate = RecordingDelegate()
+        let dataSource = FixedDataSource(start: start, end: end)
+        let delegate = RecordingDelegate()
+        retained.objects.append(dataSource)
+        retained.objects.append(delegate)
+        view.dataSource = dataSource
+        view.delegate = delegate
         Self.window.addSubview(view)
         view.layoutIfNeeded()
         return view
@@ -315,12 +324,25 @@ struct CalendarViewTests {
         }
     }
 
-    @Test func eachCalendarShouldOwnItsStyle() {
+    @Test func eachCalendarOwnsItsStyle() {
         let a = CalendarView(frame: .zero)
         let b = CalendarView(frame: .zero)
-        withKnownIssue("Style is a class and Style.Default is shared by every calendar") {
-            #expect(a.style !== b.style)
-        }
+        a.style.headerHeight = 123
+        #expect(a.style.headerHeight == 123)
+        #expect(b.style.headerHeight == CalendarView.Style.default.headerHeight)
+        #expect(a.headerView.style.headerHeight == 123, "in-place mutation restyles the header")
+    }
+
+    @Test func delegateAndDataSourceAreHeldWeakly() {
+        let view = CalendarView(frame: .zero)
+        var dataSource: FixedDataSource? = FixedDataSource(start: Date(), end: Date())
+        var delegate: RecordingDelegate? = RecordingDelegate()
+        view.dataSource = dataSource
+        view.delegate = delegate
+        dataSource = nil
+        delegate = nil
+        #expect(view.dataSource == nil)
+        #expect(view.delegate == nil)
     }
 
     @Test func reusedCellShouldNotKeepTheTodayFlag() {

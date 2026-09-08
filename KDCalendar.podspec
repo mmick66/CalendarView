@@ -17,7 +17,7 @@ Pod::Spec.new do |s|
 
   s.platform     = :ios, "17.0"
 
-  s.swift_versions = ["5.0"]
+  s.swift_versions = ["6.0"]
 
   s.source       = { :git => "https://github.com/mmick66/CalendarView.git", :tag => s.version }
 

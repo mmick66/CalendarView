@@ -27,15 +27,10 @@ import UIKit
 
 open class CalendarDayCell: UICollectionViewCell {
     
-    var style: CalendarView.Style = CalendarView.Style.Default {
+    var style: CalendarView.Style = .default {
         didSet {
             applyTextAndDotStyle()
         }
-    }
-    
-    override open var description: String {
-        let dayString = self.textLabel.text ?? " "
-        return "<DayCell (text:\"\(dayString)\")>"
     }
     
     var eventsCount = 0 {

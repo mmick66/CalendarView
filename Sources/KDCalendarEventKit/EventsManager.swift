@@ -28,39 +28,40 @@ import Foundation
 import KDCalendar
 
 /// Errors reported by the EventKit integration.
-public enum EventsManagerError: Error {
+public enum EventsManagerError: Error, Sendable {
     /// The user has not granted full access to their calendars.
     case authorization
 }
 
-open class EventsManager {
+/// The bridge between the system event store and ``KDCalendar/CalendarEvent`` values.
+///
+/// Every call runs on the main actor. Full calendar access is requested the first time
+/// it is needed; the app must declare `NSCalendarsFullAccessUsageDescription`.
+@MainActor
+public enum EventsManager {
 
     private static let store = EKEventStore()
 
-    static func load(from fromDate: Date, to toDate: Date, complete onComplete: @escaping ([CalendarEvent]?) -> Void) {
-
-        let q = DispatchQueue.main
-
-        guard EKEventStore.authorizationStatus(for: .event) == .fullAccess else {
-
-            return EventsManager.store.requestFullAccessToEvents { granted, _ in
-                guard granted else {
-                    return q.async { onComplete(nil) }
-                }
-                EventsManager.fetch(from: fromDate, to: toDate) { events in
-                    q.async { onComplete(events) }
-                }
-            }
-        }
-
-        EventsManager.fetch(from: fromDate, to: toDate) { events in
-            q.async { onComplete(events) }
-        }
+    /// Whether the app currently holds full access to the user's calendars.
+    public static var hasFullAccess: Bool {
+        EKEventStore.authorizationStatus(for: .event) == .fullAccess
     }
 
-    static func add(event calendarEvent: CalendarEvent) -> Bool {
+    /// Requests full access if needed and returns the events between the two dates.
+    /// - Throws: ``EventsManagerError/authorization`` when access is denied.
+    public static func load(from fromDate: Date, to toDate: Date) async throws -> [CalendarEvent] {
+        if !hasFullAccess {
+            let granted = (try? await store.requestFullAccessToEvents()) ?? false
+            guard granted else { throw EventsManagerError.authorization }
+        }
+        return fetch(from: fromDate, to: toDate)
+    }
 
-        guard EKEventStore.authorizationStatus(for: .event) == .fullAccess else {
+    /// Saves an event to the user's default calendar. Returns `false` when access has not
+    /// been granted or the store refuses the event.
+    public static func add(event calendarEvent: CalendarEvent) -> Bool {
+
+        guard hasFullAccess else {
             return false
         }
 
@@ -79,21 +80,19 @@ open class EventsManager {
         }
     }
 
-    private static func fetch(from fromDate: Date, to toDate: Date, complete onComplete: @escaping ([CalendarEvent]) -> Void) {
+    private static func fetch(from fromDate: Date, to toDate: Date) -> [CalendarEvent] {
 
         let predicate = store.predicateForEvents(withStart: fromDate, end: toDate, calendars: nil)
 
         let secondsFromGMTDifference = TimeInterval(TimeZone.current.secondsFromGMT())
 
-        let events = store.events(matching: predicate).map {
-            return CalendarEvent(
+        return store.events(matching: predicate).map {
+            CalendarEvent(
                 title:      $0.title,
                 startDate:  $0.startDate.addingTimeInterval(secondsFromGMTDifference),
                 endDate:    $0.endDate.addingTimeInterval(secondsFromGMTDifference)
             )
         }
-
-        onComplete(events)
     }
 }
 
@@ -102,28 +101,31 @@ open class EventsManager {
 extension CalendarView {
 
     /// Loads the events from the system calendar that fall inside the data source's range and
-    /// assigns them to `events`. Asks for full calendar access if it has not been granted yet;
-    /// the app must declare `NSCalendarsFullAccessUsageDescription`.
-    public func loadEvents(onComplete: ((Error?) -> Void)? = nil) {
-
+    /// assigns them to ``KDCalendar/CalendarView/events``. Asks for full calendar access if it
+    /// has not been granted yet; the app must declare `NSCalendarsFullAccessUsageDescription`.
+    /// - Throws: ``EventsManagerError/authorization`` when access is denied.
+    public func loadEvents() async throws {
         let range = self.dateRange
+        self.events = try await EventsManager.load(from: range.lowerBound, to: range.upperBound)
+    }
 
-        EventsManager.load(from: range.lowerBound, to: range.upperBound) { [weak self] events in
-
-            guard let self = self else { return }
-
-            if let events = events {
-                self.events = events
+    /// Completion-handler form of ``loadEvents()``. The handler runs on the main actor with
+    /// `nil` on success or ``EventsManagerError/authorization`` when access is denied.
+    public func loadEvents(onComplete: (@MainActor (Error?) -> Void)? = nil) {
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                try await self.loadEvents()
                 onComplete?(nil)
-            } else {
-                onComplete?(EventsManagerError.authorization)
+            } catch {
+                onComplete?(error)
             }
         }
     }
 
     /// Saves a new event to the user's default calendar and shows it in the view.
     /// Returns `false` when access has not been granted or the store refuses the event.
-    @discardableResult public func addEvent(_ title: String, date startDate: Date, duration hours: NSInteger = 1) -> Bool {
+    @discardableResult public func addEvent(_ title: String, date startDate: Date, duration hours: Int = 1) -> Bool {
 
         var components = DateComponents()
         components.hour = hours
@@ -139,8 +141,6 @@ extension CalendarView {
         }
 
         self.events.append(event)
-
-        self.reloadData()
 
         return true
     }

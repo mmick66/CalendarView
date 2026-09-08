@@ -25,7 +25,7 @@
 
 import UIKit
 
-public struct CalendarEvent {
+public struct CalendarEvent: Sendable {
     public let title: String
     public let startDate: Date
     public let endDate:Date
@@ -37,7 +37,8 @@ public struct CalendarEvent {
     }
 }
 
-public protocol CalendarViewDataSource {
+@MainActor
+public protocol CalendarViewDataSource: AnyObject {
     func startDate() -> Date
     func endDate() -> Date
     /* optional */
@@ -58,7 +59,8 @@ extension CalendarViewDataSource {
     }
 }
 
-public protocol CalendarViewDelegate {
+@MainActor
+public protocol CalendarViewDelegate: AnyObject {
     
     func calendar(_ calendar : CalendarView, didScrollToMonth date : Date) -> Void
     func calendar(_ calendar : CalendarView, didSelectDate date : Date, withEvents events: [CalendarEvent]) -> Void
@@ -87,7 +89,7 @@ public class CalendarView: UIView {
         }
     }
     
-    public var style: Style = Style.Default {
+    public var style: Style = .default {
         didSet {
             updateStyle()
         }
@@ -131,7 +133,7 @@ public class CalendarView: UIView {
                 eventsByIndexPath[indexPath] = eventsForIndexPath
             }
             
-            DispatchQueue.main.async { self.collectionView.reloadData() }
+            self.collectionView?.reloadData()
         }
     }
     
@@ -146,8 +148,8 @@ public class CalendarView: UIView {
     public var enableDeselection = true
     public var marksWeekends = true
     
-    public var delegate: CalendarViewDelegate?
-    public var dataSource: CalendarViewDataSource?
+    public weak var delegate: CalendarViewDelegate?
+    public weak var dataSource: CalendarViewDataSource?
     
     public var direction : UICollectionView.ScrollDirection = .horizontal {
         didSet {
@@ -167,7 +169,9 @@ public class CalendarView: UIView {
     
     override open func awakeFromNib() {
         super.awakeFromNib()
-        self.setup()
+        MainActor.assumeIsolated {
+            self.setup()
+        }
     }
     
     // MARK: Create Subviews
