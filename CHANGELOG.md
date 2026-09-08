@@ -4,6 +4,22 @@ All notable changes to KDCalendar are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- An event with a far-off end date, such as an open-ended system event, was
+  bucketed day by day over its whole span and could block the main thread for
+  seconds. Bucketing is clamped to the displayed months.
+- The data source was asked for its range on every cell (about 150 calls per
+  reload); it is asked once per reload.
+- The today marker did not move at midnight or after a clock or time zone
+  change; the view reloads on `NSCalendarDayChanged` and
+  `significantTimeChangeNotification`.
+- Weekends ignored `style.locale` when `style.calendar` had no locale, so a
+  Saudi calendar marked Sunday instead of Friday. `CalendarView.calendar` now
+  carries the style's locale in that case.
+
 ## [2.0.0] - 2026-09-08
 
 The modernisation release. Swift 6, Swift Package Manager, iOS 17 and up. The

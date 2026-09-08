@@ -116,17 +116,20 @@ struct MonthGrid {
 
 extension CalendarView {
 
-    /// The month grid for the data source's current range, rebuilt when the range moves to
-    /// other days. The current month alone without a data source; zero months when the range
-    /// is invalid.
-    var currentMonths: MonthGrid? {
+    /// Asks the data source for its range and rebuilds the month grid when the range moved to
+    /// other days or the calendar changed. The current month alone without a data source; zero
+    /// months when the range is invalid. Called once per reload, not once per cell.
+    @discardableResult
+    func refreshMonths() -> MonthGrid? {
         let start = dataSource?.startDate() ?? Date()
         let end = dataSource?.endDate() ?? start
+        let calendar = self.calendar
         if let months = months,
             calendar.isDate(months.startDay, inSameDayAs: start),
             calendar.isDate(months.endDay, inSameDayAs: end),
             months.calendar == calendar
         {
+            todayIndexPath = months.indexPath(for: Date())
             return months
         }
         months = MonthGrid(start: start, end: end, calendar: calendar, firstWeekday: style.effectiveFirstWeekday)
@@ -134,8 +137,14 @@ extension CalendarView {
             CalendarView.logger.error(
                 "The data source's start date (\(start)) is after its end date (\(end)); showing no months.")
         }
+        todayIndexPath = months?.indexPath(for: Date())
         rebuildEventIndex()
         return months
+    }
+
+    /// The month grid, built on first use. Reloads refresh it from the data source.
+    var currentMonths: MonthGrid? {
+        months ?? refreshMonths()
     }
 
     func invalidateMonths() {
@@ -150,16 +159,19 @@ extension CalendarView {
         currentMonths?.endDay ?? calendar.startOfDay(for: Date())
     }
 
-    var todayIndexPath: IndexPath? {
-        currentMonths?.indexPath(for: Date())
-    }
-
+    /// Buckets every event into the days it covers, clamped to the displayed months so an
+    /// open-ended event costs one loop over the grid, not over the centuries.
     func rebuildEventIndex() {
         eventsByIndexPath.removeAll()
-        guard let months = months else { return }
+        guard let months = months, let first = months.months.first, let lastMonth = months.months.last,
+            let gridEnd = calendar.date(byAdding: .day, value: lastMonth.daysTotal, to: lastMonth.firstDate)
+        else { return }
+        let gridStart = first.firstDate
         for event in events {
-            var day = calendar.startOfDay(for: event.startDate)
-            let last = max(event.startDate, event.endDate)
+            let eventEnd = max(event.startDate, event.endDate)
+            guard event.startDate < gridEnd, eventEnd >= gridStart else { continue }
+            var day = calendar.startOfDay(for: max(event.startDate, gridStart))
+            let last = min(eventEnd, gridEnd)
             repeat {
                 if let indexPath = months.indexPath(for: day) {
                     eventsByIndexPath[indexPath, default: []].append(event)
@@ -195,7 +207,7 @@ extension CalendarView {
 extension CalendarView: UICollectionViewDataSource {
 
     public func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return currentMonths?.numberOfSections ?? 0
+        return refreshMonths()?.numberOfSections ?? 0
     }
 
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
