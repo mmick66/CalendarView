@@ -276,6 +276,11 @@ public class CalendarView: UIView {
 
     required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
+        // A view decoded from an archive brings its old header and grid along; replace them.
+        for subview in subviews where subview is CalendarHeaderView || subview is UICollectionView {
+            subview.removeFromSuperview()
+        }
+        self.setup()
     }
 
     override open func awakeFromNib() {
@@ -286,7 +291,9 @@ public class CalendarView: UIView {
     }
 
     // MARK: Create Subviews
+    /// Builds the header and the grid once; safe to call again.
     private func setup() {
+        guard collectionView == nil else { return }
 
         self.clipsToBounds = true
 
@@ -411,13 +418,17 @@ public class CalendarView: UIView {
 
     internal func updateLayoutDirections() {
         self.collectionView?.semanticContentAttribute = .forceLeftToRight
-        self.headerView?.semanticContentAttribute = forceLtr ? .forceLeftToRight : .unspecified
 
         var isRtl = false
 
         if !forceLtr {
             isRtl = self.effectiveUserInterfaceLayoutDirection == .rightToLeft
         }
+
+        // The header mirrors with the calendar, whether the direction comes from the app or
+        // from this view alone.
+        self.headerView?.semanticContentAttribute = isRtl ? .forceRightToLeft : .forceLeftToRight
+        self.headerView?.setNeedsLayout()
 
         if _isRtl != isRtl {
             _isRtl = isRtl

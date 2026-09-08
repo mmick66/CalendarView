@@ -199,4 +199,70 @@ struct PlatformTests {
         #expect(calendar.selectedDates == [date(2024, 2, 14)])
         #expect(box.dates == [date(2024, 2, 14)], "the sync does not echo back into the binding")
     }
+
+    @Test func swiftUIModifiersReachTheCalendar() {
+        let box = SelectionBox()
+        var style = CalendarView.Style()
+        style.calendar = utc
+        style.locale = Locale(identifier: "en_US")
+        var holiday = style
+        holiday.cellColorDefault = .systemPink
+        let scrolled = SelectionBox()
+        let pressed = SelectionBox()
+        let range = date(2024, 1, 1)...date(2024, 3, 31)
+        let events = [CalendarEvent(title: "a", startDate: date(2024, 2, 5), endDate: date(2024, 2, 6))]
+
+        let host = UIHostingController(
+            rootView: KDCalendarView(range: range, selection: box.binding)
+                .calendarStyle(style)
+                .direction(.vertical)
+                .selectionMode(.range)
+                .allowsDeselection(false)
+                .marksWeekends(false)
+                .scrollEnabled(false)
+                .events(events)
+                .displayDate(date(2024, 2, 14))
+                .canSelect { [utc] in utc.component(.day, from: $0) != 13 }
+                .styleForDate { [utc] in utc.component(.day, from: $0) == 14 ? holiday : nil }
+                .onScrollToMonth { scrolled.dates.append($0) }
+                .onLongPress { date, _ in pressed.dates.append(date) })
+        Self.window.rootViewController = host
+        host.view.frame = Self.window.bounds
+        host.view.layoutIfNeeded()
+
+        guard let calendar = findCalendarView(in: host.view) else {
+            Issue.record("no calendar view hosted")
+            return
+        }
+        #expect(calendar.direction == .vertical)
+        #expect(calendar.selectionMode == .range)
+        #expect(calendar.enableDeselection == false)
+        #expect(calendar.marksWeekends == false)
+        #expect(calendar.isScrollEnabled == false)
+        #expect(calendar.events.count == 1)
+        #expect(calendar.displayDate == date(2024, 2, 1))
+        #expect(scrolled.dates == [date(2024, 2, 1)], "the display date applies before the first month is announced")
+        #expect(calendar.shouldSelect(calendar.indexPathForDate(date(2024, 2, 13))!) == false)
+        #expect(calendar.shouldSelect(calendar.indexPathForDate(date(2024, 2, 12))!) == true)
+        calendar.layoutIfNeeded()
+        let fourteenth =
+            calendar.collectionView.cellForItem(at: calendar.indexPathForDate(date(2024, 2, 14))!) as? CalendarDayCell
+        #expect(fourteenth?.bgView.backgroundColor == .systemPink)
+        calendar.delegate?.calendar(calendar, didLongPressDate: date(2024, 2, 20), withEvents: nil)
+        #expect(pressed.dates == [date(2024, 2, 20)])
+
+        // A range picked in the view reaches the binding as every day in it.
+        calendar.selectDate(date(2024, 2, 5))
+        calendar.selectDate(date(2024, 2, 7))
+        #expect(box.dates == [date(2024, 2, 5), date(2024, 2, 6), date(2024, 2, 7)])
+
+        // New range and events from SwiftUI reach the view.
+        host.rootView = KDCalendarView(range: date(2024, 1, 1)...date(2024, 6, 30), selection: box.binding)
+            .calendarStyle(style)
+            .events(events + [CalendarEvent(title: "b", startDate: date(2024, 3, 1), endDate: date(2024, 3, 2))])
+        host.view.layoutIfNeeded()
+        #expect(calendar.numberOfSections(in: calendar.collectionView) == 6)
+        #expect(calendar.events.count == 2)
+        #expect(calendar.direction == .horizontal, "modifiers not repeated fall back to their defaults")
+    }
 }

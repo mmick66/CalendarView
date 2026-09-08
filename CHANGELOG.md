@@ -4,6 +4,22 @@ All notable changes to KDCalendar are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `CalendarEventStore`, the part of `EKEventStore` the EventKit bridge uses, and
+  `EventsManager.store` to inject a test double. The bridge has tests now.
+
+### Fixed
+
+- `loadEvents()` stopped at the start of the last day of the range, so events
+  later on that day were missed.
+- The header did not mirror when a calendar was right-to-left on its own
+  rather than through the app's layout direction.
+- A `CalendarView` decoded from an archive crashed in the header's
+  `init(coder:)`; the view, header and cells now decode and rebuild themselves.
+
 ## [2.0.1] - 2026-09-08
 
 ### Fixed

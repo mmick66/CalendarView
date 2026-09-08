@@ -32,6 +32,7 @@ jobs:
         run: |
           set -o pipefail
           xcodebuild docbuild -scheme KDCalendar -destination "$DESTINATION" -derivedDataPath DerivedData | xcbeautify --renderer github-actions || xcodebuild docbuild -scheme KDCalendar -destination "$DESTINATION" -derivedDataPath DerivedData
+          xcodebuild docbuild -scheme KDCalendarEventKit -destination "$DESTINATION" -derivedDataPath DerivedData | xcbeautify --renderer github-actions || xcodebuild docbuild -scheme KDCalendarEventKit -destination "$DESTINATION" -derivedDataPath DerivedData
       - name: Build example app
         run: |
           set -o pipefail

@@ -102,14 +102,22 @@ open class CalendarDayCell: UICollectionViewCell {
     let bgView = UIView()
 
     override init(frame: CGRect) {
-
-        self.textLabel.textAlignment = NSTextAlignment.center
-
         super.init(frame: frame)
+        buildSubviews()
+    }
+
+    required public init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+        contentView.subviews.forEach { $0.removeFromSuperview() }
+        subviews.filter { $0 !== contentView }.forEach { $0.removeFromSuperview() }
+        buildSubviews()
+    }
+
+    private func buildSubviews() {
+        self.textLabel.textAlignment = NSTextAlignment.center
 
         self.addSubview(self.bgView)
         self.addSubview(self.textLabel)
-
         self.addSubview(self.dotsView)
 
         self.textLabel.adjustsFontForContentSizeCategory = true
@@ -121,10 +129,6 @@ open class CalendarDayCell: UICollectionViewCell {
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (cell: CalendarDayCell, _) in
             cell.applyStyle()
         }
-    }
-
-    required public init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
     }
 
     override open func layoutSubviews() {

@@ -33,57 +33,84 @@ public enum EventsManagerError: Error, Sendable {
     case authorization
 }
 
-/// The bridge between the system event store and ``KDCalendar/CalendarEvent`` values.
+/// The part of an event store the bridge needs. `EKEventStore` conforms; a test double can
+/// stand in through ``EventsManager/store``.
+@MainActor
+public protocol CalendarEventStore: AnyObject {
+    /// Whether the app holds full access to the user's calendars.
+    var hasFullAccess: Bool { get }
+    /// Asks the user for full access. Returns whether it was granted.
+    func requestFullAccess() async throws -> Bool
+    /// The events that overlap the interval, as `CalendarEvent` values.
+    func events(from start: Date, to end: Date) -> [CalendarEvent]
+    /// Saves a new event to the default calendar.
+    func save(_ event: CalendarEvent) throws
+}
+
+extension EKEventStore: CalendarEventStore {
+
+    public var hasFullAccess: Bool {
+        EKEventStore.authorizationStatus(for: .event) == .fullAccess
+    }
+
+    public func requestFullAccess() async throws -> Bool {
+        try await requestFullAccessToEvents()
+    }
+
+    public func events(from start: Date, to end: Date) -> [CalendarEvent] {
+        let predicate = predicateForEvents(withStart: start, end: end, calendars: nil)
+        return events(matching: predicate).map {
+            CalendarEvent(title: $0.title, startDate: $0.startDate, endDate: $0.endDate)
+        }
+    }
+
+    public func save(_ calendarEvent: CalendarEvent) throws {
+        let event = EKEvent(eventStore: self)
+        event.title = calendarEvent.title
+        event.startDate = calendarEvent.startDate
+        event.endDate = calendarEvent.endDate
+        event.calendar = defaultCalendarForNewEvents
+        try save(event, span: .thisEvent)
+    }
+}
+
+/// The bridge between the system event store and `CalendarEvent` values.
 ///
 /// Every call runs on the main actor. Full calendar access is requested the first time
 /// it is needed; the app must declare `NSCalendarsFullAccessUsageDescription`.
 @MainActor
 public enum EventsManager {
 
-    private static let store = EKEventStore()
+    /// The store every call goes through. `EKEventStore` by default; replace it with a
+    /// ``CalendarEventStore`` of your own to test without calendar access.
+    public static var store: any CalendarEventStore = EKEventStore()
 
     /// Whether the app currently holds full access to the user's calendars.
     public static var hasFullAccess: Bool {
-        EKEventStore.authorizationStatus(for: .event) == .fullAccess
+        store.hasFullAccess
     }
 
     /// Requests full access if needed and returns the events between the two dates.
     /// - Throws: ``EventsManagerError/authorization`` when access is denied.
     public static func load(from fromDate: Date, to toDate: Date) async throws -> [CalendarEvent] {
         if !hasFullAccess {
-            let granted = (try? await store.requestFullAccessToEvents()) ?? false
+            let granted = (try? await store.requestFullAccess()) ?? false
             guard granted else { throw EventsManagerError.authorization }
         }
-        return fetch(from: fromDate, to: toDate)
+        return store.events(from: fromDate, to: toDate)
     }
 
     /// Saves an event to the user's default calendar. Returns `false` when access has not
     /// been granted or the store refuses the event.
     public static func add(event calendarEvent: CalendarEvent) -> Bool {
-
         guard hasFullAccess else {
             return false
         }
-
-        let event = EKEvent(eventStore: store)
-        event.title = calendarEvent.title
-        event.startDate = calendarEvent.startDate
-        event.endDate = calendarEvent.endDate
-        event.calendar = store.defaultCalendarForNewEvents
         do {
-            try store.save(event, span: .thisEvent)
+            try store.save(calendarEvent)
             return true
         } catch {
             return false
-        }
-    }
-
-    private static func fetch(from fromDate: Date, to toDate: Date) -> [CalendarEvent] {
-
-        let predicate = store.predicateForEvents(withStart: fromDate, end: toDate, calendars: nil)
-
-        return store.events(matching: predicate).map {
-            CalendarEvent(title: $0.title, startDate: $0.startDate, endDate: $0.endDate)
         }
     }
 }
@@ -93,12 +120,13 @@ public enum EventsManager {
 extension CalendarView {
 
     /// Loads the events from the system calendar that fall inside the data source's range and
-    /// assigns them to ``KDCalendar/CalendarView/events``. Asks for full calendar access if it
+    /// assigns them to `events`. Asks for full calendar access if it
     /// has not been granted yet; the app must declare `NSCalendarsFullAccessUsageDescription`.
     /// - Throws: ``EventsManagerError/authorization`` when access is denied.
     public func loadEvents() async throws {
         let range = self.dateRange
-        self.events = try await EventsManager.load(from: range.lowerBound, to: range.upperBound)
+        guard let end = calendar.date(byAdding: .day, value: 1, to: range.upperBound) else { return }
+        self.events = try await EventsManager.load(from: range.lowerBound, to: end)
     }
 
     /// Completion-handler form of ``loadEvents()``. The handler runs on the main actor with
