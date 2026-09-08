@@ -30,13 +30,14 @@ public struct KDCalendarView: UIViewRepresentable {
 
     var style = CalendarView.Style.default
     var direction = UICollectionView.ScrollDirection.horizontal
-    var allowsMultipleSelection = true
+    var selectionMode = CalendarView.SelectionMode.multiple
     var allowsDeselection = true
     var marksWeekends = true
     var isScrollEnabled = true
     var events: [CalendarEvent] = []
     var displayDate: Date?
     var canSelect: ((Date) -> Bool)?
+    var styleForDate: ((Date) -> CalendarView.Style?)?
     var onScrollToMonth: ((Date) -> Void)?
     var onLongPress: ((Date, [CalendarEvent]) -> Void)?
 
@@ -62,10 +63,15 @@ public struct KDCalendarView: UIViewRepresentable {
         return copy
     }
 
-    /// Whether more than one day can be selected.
+    /// Whether more than one day can be selected. Shorthand for `.single` or `.multiple`.
     public func allowsMultipleSelection(_ allows: Bool) -> Self {
+        selectionMode(allows ? .multiple : .single)
+    }
+
+    /// How taps combine into a selection: one day, any number of days, or a range.
+    public func selectionMode(_ mode: CalendarView.SelectionMode) -> Self {
         var copy = self
-        copy.allowsMultipleSelection = allows
+        copy.selectionMode = mode
         return copy
     }
 
@@ -111,6 +117,13 @@ public struct KDCalendarView: UIViewRepresentable {
         return copy
     }
 
+    /// A style for one day, or `nil` for the calendar's style.
+    public func styleForDate(_ style: @escaping (Date) -> CalendarView.Style?) -> Self {
+        var copy = self
+        copy.styleForDate = style
+        return copy
+    }
+
     /// Called with the first day of each month the calendar settles on.
     public func onScrollToMonth(_ action: @escaping (Date) -> Void) -> Self {
         var copy = self
@@ -146,7 +159,7 @@ public struct KDCalendarView: UIViewRepresentable {
 
         if view.style != self.style { view.style = self.style }
         if view.direction != self.direction { view.direction = self.direction }
-        view.multipleSelectionEnable = self.allowsMultipleSelection
+        if view.selectionMode != self.selectionMode { view.selectionMode = self.selectionMode }
         view.enableDeselection = self.allowsDeselection
         if view.marksWeekends != self.marksWeekends { view.marksWeekends = self.marksWeekends }
         view.isScrollEnabled = self.isScrollEnabled
@@ -204,6 +217,15 @@ public struct KDCalendarView: UIViewRepresentable {
 
         public func calendar(_ calendar: CalendarView, canSelectDate date: Date) -> Bool {
             parent.canSelect?(date) ?? true
+        }
+
+        public func calendar(_ calendar: CalendarView, styleForDate date: Date) -> CalendarView.Style? {
+            parent.styleForDate?(date)
+        }
+
+        public func calendar(_ calendar: CalendarView, didSelectRange range: ClosedRange<Date>) {
+            guard !isUpdating else { return }
+            parent.selection = calendar.selectedDates
         }
 
         public func calendar(_ calendar: CalendarView, didSelectDate date: Date, withEvents events: [CalendarEvent]) {

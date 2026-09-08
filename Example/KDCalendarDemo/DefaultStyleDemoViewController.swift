@@ -3,6 +3,7 @@ import UIKit
 
 /// The default style, untouched: dynamic colours for dark mode, fonts that follow Dynamic Type,
 /// vertical paging, multiple selection, adjacent days and the calendar's own first weekday.
+/// The delegate greys out Sundays, which cannot be selected, and colours the 15th as a holiday.
 final class DefaultStyleDemoViewController: UIViewController {
 
     private let calendarView = CalendarView(frame: .zero)
@@ -47,7 +48,7 @@ final class DefaultStyleDemoViewController: UIViewController {
         selectionLabel.font = UIFont.preferredFont(forTextStyle: .footnote)
         selectionLabel.numberOfLines = 0
         selectionLabel.adjustsFontForContentSizeCategory = true
-        selectionLabel.text = "Tap days to select several. Swipe up and down for other months."
+        selectionLabel.text = "Tap days to select several. Sundays are disabled, the 15th is a holiday."
 
         let stack = UIStackView(arrangedSubviews: [calendarView, monthLabel, selectionLabel])
         stack.axis = .vertical
@@ -89,5 +90,25 @@ extension DefaultStyleDemoViewController: CalendarViewDelegate {
 
     func calendar(_ calendar: CalendarView, didDeselectDate date: Date) {
         describeSelection()
+    }
+
+    func calendar(_ calendar: CalendarView, canSelectDate date: Date) -> Bool {
+        Calendar.current.component(.weekday, from: date) != 1
+    }
+
+    func calendar(_ calendar: CalendarView, styleForDate date: Date) -> CalendarView.Style? {
+        var style = calendar.style
+        switch Calendar.current.component(.day, from: date) {
+        case 15:
+            style.cellColorDefault = .systemTeal.withAlphaComponent(0.35)
+            style.cellTextColorDefault = .label
+            style.cellTextColorWeekend = .label
+            return style
+        default:
+            guard Calendar.current.component(.weekday, from: date) == 1 else { return nil }
+            style.cellColorDefault = .clear
+            style.cellTextColorWeekend = style.cellColorOutOfRange
+            return style
+        }
     }
 }

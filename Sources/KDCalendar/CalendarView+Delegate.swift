@@ -41,16 +41,19 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         guard let date = self.dateFromIndexPath(indexPath) else { return }
         guard !selectedIndexPaths.contains(indexPath) else { return }
 
-        if !multipleSelectionEnable {
-            for previous in selectedIndexPaths {
-                collectionView.deselectItem(at: previous, animated: false)
+        switch selectionMode {
+        case .single:
+            deselectAll(notifying: true)
+        case .range:
+            if let anchor = rangeAnchor, !rangeIsComplete {
+                completeRange(from: anchor, to: indexPath, tapped: date)
+                return
             }
-            let previousDates = selectedDates
-            selectedIndexPaths.removeAll()
-            selectedDates.removeAll()
-            for previousDate in previousDates {
-                delegate?.calendar(self, didDeselectDate: previousDate)
-            }
+            deselectAll(notifying: true)
+            rangeAnchor = indexPath
+            rangeIsComplete = false
+        case .multiple:
+            break
         }
 
         selectedIndexPaths.append(indexPath)
@@ -60,9 +63,53 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         delegate?.calendar(self, didSelectDate: date, withEvents: eventsForDaySelected)
     }
 
+    /// Fills the range between the anchor and the second tap with every selectable day, in either
+    /// order and across months, then reports the tapped day and the range.
+    private func completeRange(from anchor: IndexPath, to end: IndexPath, tapped: Date) {
+        guard let anchorDate = dateFromIndexPath(anchor) else { return }
+        let lower = min(anchorDate, tapped)
+        let upper = max(anchorDate, tapped)
+        var day = lower
+        while day <= upper {
+            if let indexPath = indexPathForDate(day), !selectedIndexPaths.contains(indexPath), shouldSelect(indexPath) {
+                collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
+                selectedIndexPaths.append(indexPath)
+                selectedDates.append(day)
+            }
+            guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
+            day = next
+        }
+        rangeIsComplete = true
+        delegate?.calendar(self, didSelectDate: tapped, withEvents: eventsByIndexPath[end] ?? [])
+        if let first = selectedDates.min(), let last = selectedDates.max() {
+            delegate?.calendar(self, didSelectRange: first...last)
+        }
+    }
+
+    /// Deselects everything, optionally telling the delegate about each day.
+    private func deselectAll(notifying: Bool) {
+        for previous in selectedIndexPaths {
+            collectionView.deselectItem(at: previous, animated: false)
+        }
+        let previousDates = selectedDates
+        selectedIndexPaths.removeAll()
+        selectedDates.removeAll()
+        rangeAnchor = nil
+        rangeIsComplete = false
+        guard notifying else { return }
+        for previousDate in previousDates {
+            delegate?.calendar(self, didDeselectDate: previousDate)
+        }
+    }
+
     /// Records a deselection the collection view already applied and notifies the delegate.
+    /// In range mode a deselection clears the whole range.
     func didDeselect(_ indexPath: IndexPath) {
         guard let index = selectedIndexPaths.firstIndex(of: indexPath) else { return }
+        if selectionMode == .range {
+            deselectAll(notifying: true)
+            return
+        }
         let date = selectedDates[index]
         selectedIndexPaths.remove(at: index)
         selectedDates.remove(at: index)
