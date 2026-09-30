@@ -143,8 +143,9 @@ struct MonthGrid {
 extension CalendarView {
 
     /// Asks the data source for its range and rebuilds the month grid when the range moved to
-    /// other days or the calendar changed. The current month alone without a data source; zero
-    /// months when the range is invalid. Called once per reload, not once per cell.
+    /// other days or the calendar changed, and the formatters when the calendar changed. The
+    /// current month alone without a data source; zero months when the range is invalid. Called
+    /// once per reload, not once per cell.
     @discardableResult
     func refreshMonths() -> MonthGrid? {
         let start = dataSource?.startDate() ?? Date()
@@ -152,6 +153,9 @@ extension CalendarView {
         // The grid keeps a fixed copy: an autoupdating calendar always equals itself, so
         // comparing it would miss the time zone changes the grid has to follow.
         let calendar = self.calendar.fixed
+        if formatters.calendar != calendar {
+            rebuildFormatters()
+        }
         if let months = months,
             calendar.isDate(months.startDay, inSameDayAs: start),
             calendar.isDate(months.endDay, inSameDayAs: end),

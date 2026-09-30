@@ -283,6 +283,8 @@ struct CalendarViewTests {
         let selectedDay = after.date(from: before.dateComponents([.era, .year, .month, .day], from: now))!
         #expect(view.selectedDates == [selectedDay])
         #expect(view.collectionView.indexPathsForSelectedItems == [view.indexPathForDate(selectedDay)!])
+        #expect(view.formatters.calendar.timeZone == after.timeZone, "the formatters follow the grid")
+        #expect(view.formatters.accessibility.timeZone == after.timeZone)
     }
 
     // MARK: Cell configuration
@@ -456,6 +458,23 @@ struct CalendarViewTests {
         #expect(view.headerView.monthLabel.text == "Bahman 1402")
         #expect(view.numberOfSections(in: view.collectionView) == 3, "Dey, Bahman and Esfand 1402")
         #expect(cell(view, view.indexPathForDate(date(2024, 2, 10))!)?.day == 21)
+    }
+
+    @Test func formattersAreBuiltOncePerStyleWithTheGridsCalendar() {
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10), locale: Locale(identifier: "de_DE"))
+        let formatters = view.formatters
+        #expect(formatters.calendar == view.calendar, "the style's calendar with its locale filled in")
+        #expect(formatters.calendar.locale == Locale(identifier: "de_DE"))
+        view.setDisplayDate(date(2024, 2, 10))
+        view.setDisplayDate(date(2024, 3, 1))
+        view.reloadData()
+        #expect(view.formatters.monthTitle === formatters.monthTitle, "settling on a month reuses them")
+        #expect(view.formatters.accessibility === formatters.accessibility, "so does every cell")
+
+        view.style.weekDayTransform = .uppercase
+        #expect(view.formatters.monthTitle !== formatters.monthTitle, "a new style builds new ones")
+        #expect(view.headerView.formatters.monthTitle === view.formatters.monthTitle, "the header shares them")
+        #expect(view.headerView.dayLabels.first?.text == "MO.")
     }
 
     @Test func setDisplayDateOutsideTheRangeIsIgnored() {

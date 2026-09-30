@@ -228,19 +228,17 @@ public class CalendarView: UIView {
         set { collectionView?.isScrollEnabled = newValue }
     }
 
-    /// Formats the full date for VoiceOver, in the style's locale and calendar.
-    private(set) lazy var accessibilityDateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .full
-        formatter.timeStyle = .none
-        return formatter
-    }()
+    /// The date formatters for the style and the calendar, rebuilt when either changes.
+    private(set) var formatters = Formatters(style: .default)
+
+    /// Builds the formatters again for the current style and restyles the header with them.
+    func rebuildFormatters() {
+        formatters = Formatters(style: style)
+        headerView?.setStyle(style, formatters: formatters)
+    }
 
     func accessibilityLabel(for date: Date, isToday: Bool, eventsCount: Int) -> String {
-        accessibilityDateFormatter.calendar = style.calendar
-        accessibilityDateFormatter.timeZone = style.calendar.timeZone
-        accessibilityDateFormatter.locale = style.locale
-        var parts = [accessibilityDateFormatter.string(from: date)]
+        var parts = [formatters.accessibility.string(from: date)]
         if isToday {
             parts.append(
                 String(localized: "Today", bundle: .kdCalendar, comment: "VoiceOver suffix for the current day"))
@@ -293,7 +291,7 @@ public class CalendarView: UIView {
 
         /* Header View */
         self.headerView = CalendarHeaderView(frame: CGRect.zero)
-        self.headerView.style = style
+        self.headerView.setStyle(style, formatters: formatters)
         self.addSubview(self.headerView)
 
         /* Layout */
@@ -445,7 +443,7 @@ public class CalendarView: UIView {
     }
 
     internal func updateStyle() {
-        self.headerView?.style = style
+        rebuildFormatters()
         let previousCalendar = months?.calendar
         self.invalidateMonths()
         if let previousCalendar {

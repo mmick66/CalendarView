@@ -148,14 +148,9 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
     }
 
     func displayDateOnHeader(_ date: Date) {
-        let formatter = DateFormatter()
-        formatter.calendar = style.calendar
-        formatter.timeZone = style.calendar.timeZone
-        formatter.locale = style.locale
-        formatter.setLocalizedDateFormatFromTemplate("yMMMM")
-
         self.headerView.monthLabel.text =
-            dataSource?.headerString(date) ?? formatter.string(from: date).capitalized(with: style.locale)
+            dataSource?.headerString(date)
+            ?? formatters.monthTitle.string(from: date).capitalized(with: style.locale)
 
         self.displayDate = date
     }
