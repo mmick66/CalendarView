@@ -32,6 +32,10 @@ All notable changes to KDCalendar are documented here. The format follows
 - `loadEvents()` and `EventsManager.load(from:to:)` reported an error thrown
   while asking for calendar access as `EventsManagerError.authorization`. They
   throw that error now.
+- A dynamic `cellBorderColor` or `cellSelectedBorderColor` could take the
+  wrong appearance, because it was resolved against whatever trait collection
+  was current rather than the cell's. Day cells now resolve it against their
+  own traits.
 - `loadEvents()` queried EventKit on the main thread, which could hitch
   scrolling for a long range or a busy calendar. `EKEventStore` now runs the
   query off the main actor, and `CalendarEventStore.events(from:to:)` is

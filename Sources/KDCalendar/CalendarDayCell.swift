@@ -201,7 +201,7 @@ open class CalendarDayCell: UICollectionViewCell {
         self.textLabel.font = style.cellFont
         self.textLabel.textColor = appearance.textColor
         self.bgView.backgroundColor = appearance.backgroundColor
-        self.bgView.layer.borderColor = appearance.borderColor.cgColor
+        self.bgView.layer.borderColor = appearance.borderColor.resolvedColor(with: traitCollection).cgColor
         self.bgView.layer.borderWidth = appearance.borderWidth
         self.isAccessibilityElement = appearance.isAccessibilityElement
         self.accessibilityTraits = appearance.accessibilityTraits

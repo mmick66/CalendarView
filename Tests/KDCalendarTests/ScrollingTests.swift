@@ -338,6 +338,26 @@ struct ScrollingTests {
         #expect(selected.bgView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.black)
     }
 
+    @Test func cellBordersResolveAgainstTheCellsOwnAppearance() {
+        let dynamic = UIColor { $0.userInterfaceStyle == .dark ? .white : .black }
+        let dayCell = CalendarDayCell(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
+        Self.window.addSubview(dayCell)
+        dayCell.traitOverrides.userInterfaceStyle = .dark
+        dayCell.layoutIfNeeded()
+        #expect(dayCell.traitCollection.userInterfaceStyle == .dark)
+        // The current trait collection is light, as it can be during cellForItemAt.
+        UITraitCollection(userInterfaceStyle: .light).performAsCurrent {
+            var style = CalendarView.Style()
+            style.cellBorderColor = dynamic
+            dayCell.configuration = DayCellConfiguration(day: 7, style: style)
+            #expect(dayCell.bgView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.white)
+            style.cellSelectedBorderColor = dynamic
+            dayCell.configuration = DayCellConfiguration(day: 7, style: style)
+            dayCell.isSelected = true
+            #expect(dayCell.bgView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.white)
+        }
+    }
+
     // MARK: Archived views
 
     @Test func aViewDecodedFromAnArchiveWorks() throws {
