@@ -44,6 +44,12 @@ All notable changes to KDCalendar are documented here. The format follows
   `showAdjacentDays` a neighbouring month's day was read out as another date.
   Reuse clears the label, and VoiceOver skips adjacent days, which cannot be
   selected.
+- Changing `selectionMode` dropped selected days without telling the delegate:
+  switching to `.single` keeps only the last day and switching to `.range`
+  clears the selection. The delegate now receives `didDeselectDate` for each
+  day dropped. `KDCalendarView` drops them from the binding too, where it used
+  to reapply them in the new mode's shape, so switching to `.range` filled the
+  days between them; a selection set together with the new mode still wins.
 
 ## [2.0.1] - 2026-09-08
 

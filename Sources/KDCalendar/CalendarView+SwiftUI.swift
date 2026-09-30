@@ -164,7 +164,14 @@ public struct KDCalendarView: UIViewRepresentable {
 
         if view.style != self.style { view.style = self.style }
         if view.direction != self.direction { view.direction = self.direction }
-        if view.selectionMode != self.selectionMode { view.selectionMode = self.selectionMode }
+        // A new mode drops the days it cannot hold. Unless the binding brings a selection of its
+        // own, the binding drops them too rather than being reapplied in the new mode's shape.
+        var bindingFollowsView = false
+        if view.selectionMode != self.selectionMode {
+            let bindingIsShown = self.selection.map { view.calendar.startOfDay(for: $0) } == view.selectedDates
+            view.selectionMode = self.selectionMode
+            bindingFollowsView = bindingIsShown
+        }
         view.enableDeselection = self.allowsDeselection
         if view.marksWeekends != self.marksWeekends { view.marksWeekends = self.marksWeekends }
         view.isScrollEnabled = self.isScrollEnabled
@@ -185,7 +192,11 @@ public struct KDCalendarView: UIViewRepresentable {
         // pair them into ranges or keep only the last, so they are applied as a whole.
         let calendar = view.calendar
         let wanted = self.selection.map { calendar.startOfDay(for: $0) }
-        if wanted != view.selectedDates {
+        if bindingFollowsView {
+            if wanted != view.selectedDates {
+                coordinator.correctSelection(self.selection, to: view.selectedDates)
+            }
+        } else if wanted != view.selectedDates {
             view.setSelection(wanted)
             if view.selectedDates != wanted {
                 coordinator.correctSelection(self.selection, to: view.selectedDates)

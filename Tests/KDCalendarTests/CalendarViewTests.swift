@@ -28,6 +28,8 @@ struct CalendarViewTests {
         var scrolledTo: [Date] = []
         var selected: [Date] = []
         var deselected: [Date] = []
+        /// The view's selection at each `didDeselectDate`.
+        var selectionWhenDeselected: [[Date]] = []
         var canSelect: (Date) -> Bool = { _ in true }
 
         func calendar(_ calendar: CalendarView, didScrollToMonth date: Date) { scrolledTo.append(date) }
@@ -35,7 +37,10 @@ struct CalendarViewTests {
             selected.append(date)
         }
         func calendar(_ calendar: CalendarView, canSelectDate date: Date) -> Bool { canSelect(date) }
-        func calendar(_ calendar: CalendarView, didDeselectDate date: Date) { deselected.append(date) }
+        func calendar(_ calendar: CalendarView, didDeselectDate date: Date) {
+            deselected.append(date)
+            selectionWhenDeselected.append(calendar.selectedDates)
+        }
         func calendar(_ calendar: CalendarView, didLongPressDate date: Date, withEvents events: [CalendarEvent]?) {}
     }
 
@@ -693,6 +698,40 @@ struct CalendarViewTests {
         #expect(view.selectedDates == [])
         #expect(delegate(of: view).deselected == [])
         #expect(view.collectionView.indexPathsForSelectedItems == [])
+    }
+
+    @Test func changingTheSelectionModeReportsTheDaysItDrops() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        view.selectDate(date(2024, 1, 8))
+        view.selectDate(date(2024, 1, 10))
+        view.selectDate(date(2024, 1, 12))
+
+        // Single mode keeps the last day; the delegate hears once the view shows it alone.
+        view.selectionMode = .single
+        #expect(view.selectedDates == [date(2024, 1, 12)])
+        #expect(view.collectionView.indexPathsForSelectedItems == [IndexPath(item: 11, section: 0)])
+        #expect(delegate(of: view).deselected == [date(2024, 1, 8), date(2024, 1, 10)])
+        #expect(delegate(of: view).selectionWhenDeselected == [[date(2024, 1, 12)], [date(2024, 1, 12)]])
+
+        // Back to multiple drops nothing.
+        view.selectionMode = .multiple
+        view.selectDate(date(2024, 1, 20))
+        #expect(view.selectedDates == [date(2024, 1, 12), date(2024, 1, 20)])
+        #expect(delegate(of: view).deselected.count == 2)
+
+        // Range mode starts clean.
+        view.selectionMode = .range
+        #expect(view.selectedDates == [])
+        #expect(view.collectionView.indexPathsForSelectedItems == [])
+        #expect(delegate(of: view).deselected.suffix(2) == [date(2024, 1, 12), date(2024, 1, 20)])
+        #expect(delegate(of: view).selectionWhenDeselected.suffix(2) == [[], []])
+
+        // Setting the same mode again, or single mode with one day, drops nothing.
+        view.selectionMode = .range
+        view.selectDate(date(2024, 1, 5))
+        view.selectionMode = .single
+        #expect(view.selectedDates == [date(2024, 1, 5)])
+        #expect(delegate(of: view).deselected.count == 4)
     }
 
     @Test func outOfRangeDaysAreNotSelectable() {

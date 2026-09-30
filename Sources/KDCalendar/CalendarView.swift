@@ -183,22 +183,30 @@ public class CalendarView: UIView {
     }
 
     /// How taps and ``selectDate(_:)`` combine into a selection. `.multiple` by default.
+    ///
+    /// Switching to `.single` keeps only the most recently selected day, and switching to
+    /// `.range` clears the selection. The delegate receives `didDeselectDate` for each day dropped.
     public var selectionMode: SelectionMode = .multiple {
         didSet {
             guard selectionMode != oldValue else { return }
             rangeAnchor = nil
+            let dropped: [Date]
             switch selectionMode {
             case .single:
                 guard selectedDates.count > 1 else { return }
-                let keep = selectedDates.last!
-                for indexPath in selectedDates.dropLast().compactMap({ indexPathForDate($0) }) {
+                dropped = Array(selectedDates.dropLast())
+                for indexPath in dropped.compactMap({ indexPathForDate($0) }) {
                     collectionView?.deselectItem(at: indexPath, animated: false)
                 }
-                selectedDates = [keep]
+                selectedDates = [selectedDates.last!]
             case .range:
+                dropped = selectedDates
                 clearAllSelectedDates()
             case .multiple:
-                break
+                return
+            }
+            for date in dropped {
+                delegate?.calendar(self, didDeselectDate: date)
             }
         }
     }

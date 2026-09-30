@@ -426,4 +426,56 @@ struct PlatformTests {
         #expect(calendar.selectedDates == [date(2024, 1, 5)])
         #expect(box.dates == [date(2024, 1, 5)])
     }
+
+    @Test func swiftUIModeChangeLeavesTheBindingWithTheDaysKept() async {
+        let box = SelectionBox()
+        var style = CalendarView.Style()
+        style.calendar = utc
+        style.locale = Locale(identifier: "en_US")
+        let range = date(2024, 1, 1)...date(2024, 3, 31)
+        var mode = CalendarView.SelectionMode.multiple
+        func view() -> KDCalendarView {
+            KDCalendarView(range: range, selection: box.binding).calendarStyle(style).selectionMode(mode)
+        }
+        guard let hosted = hostCalendar(view()) else { return }
+        let (host, calendar) = hosted
+
+        // As in the demo: three days in multiple mode, then the picker switches to single.
+        for day in [8, 10, 12] { calendar.selectDate(date(2024, 1, day)) }
+        #expect(box.dates == [date(2024, 1, 8), date(2024, 1, 10), date(2024, 1, 12)])
+        mode = .single
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        await settle()
+        #expect(calendar.selectedDates == [date(2024, 1, 12)])
+        #expect(box.dates == [date(2024, 1, 12)])
+
+        // Range mode starts clean rather than filling the days in between.
+        mode = .multiple
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        for day in [8, 10] { calendar.selectDate(date(2024, 1, day)) }
+        #expect(box.dates == [date(2024, 1, 12), date(2024, 1, 8), date(2024, 1, 10)])
+        mode = .range
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        await settle()
+        #expect(calendar.selectedDates == [])
+        #expect(box.dates == [])
+
+        // A selection that comes with the new mode is applied in its shape.
+        mode = .multiple
+        box.dates = [date(2024, 2, 9), date(2024, 2, 5)]
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        await settle()
+        #expect(calendar.selectedDates == [date(2024, 2, 9), date(2024, 2, 5)])
+        mode = .range
+        box.dates = [date(2024, 2, 20), date(2024, 2, 22)]
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        await settle()
+        #expect(calendar.selectedDates == (20...22).map { date(2024, 2, $0) })
+        #expect(box.dates == (20...22).map { date(2024, 2, $0) })
+    }
 }
