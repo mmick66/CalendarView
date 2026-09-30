@@ -21,6 +21,13 @@ All notable changes to KDCalendar are documented here. The format follows
 - `CalendarEvent` is `Equatable` and `Hashable`, comparing title, start and end
   date, so apps can diff or deduplicate their events.
 
+### Changed
+
+- Right to left, `CalendarFlowLayout` mirrors the cell frames instead of the
+  view scaling its collection view, and every cell, by -1. No view carries a
+  transform any more, so hit-testing and snapshots see the real frames. The
+  collection view's `semanticContentAttribute` follows `forceLtr`.
+
 ### Fixed
 
 - Cell borders kept their old colour when Increase Contrast (or another trait

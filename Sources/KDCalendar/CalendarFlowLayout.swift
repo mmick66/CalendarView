@@ -31,6 +31,9 @@ import UIKit
 /// It is a flow layout for its `itemSize` and `scrollDirection`, but it does not flow: the
 /// content size and the cells in a rect come from the page grid, so a size that is not a
 /// whole number of cells cannot wrap a row and leave cells out.
+///
+/// Right to left, the days of a week run from right to left and a horizontal calendar puts its
+/// first month on the last page. The frames are mirrored here rather than with transforms.
 open class CalendarFlowLayout: UICollectionViewFlowLayout {
 
     static let columns = 7
@@ -42,6 +45,22 @@ open class CalendarFlowLayout: UICollectionViewFlowLayout {
 
     private var isVertical: Bool {
         scrollDirection == .vertical
+    }
+
+    // The frames below mirror themselves right to left; UIKit must not flip them again.
+    override open var flipsHorizontallyInOppositeLayoutDirection: Bool { false }
+
+    /// Whether the collection view runs right to left.
+    var isRightToLeft: Bool {
+        collectionView?.effectiveUserInterfaceLayoutDirection == .rightToLeft
+    }
+
+    /// Maps a section to its page along the scrolling axis, and a page back to its section.
+    ///
+    /// Right to left, a horizontal calendar puts its first month on the last page.
+    func mirroredPage(_ index: Int) -> Int {
+        guard let collectionView, isRightToLeft, !isVertical else { return index }
+        return collectionView.numberOfSections - 1 - index
     }
 
     override open var collectionViewContentSize: CGSize {
@@ -70,7 +89,8 @@ open class CalendarFlowLayout: UICollectionViewFlowLayout {
         guard first <= last else { return [] }
 
         var result: [UICollectionViewLayoutAttributes] = []
-        for section in first...last {
+        for page in first...last {
+            let section = mirroredPage(page)
             for item in 0..<collectionView.numberOfItems(inSection: section) {
                 let attributes = self.attributes(for: IndexPath(item: item, section: section))
                 if attributes.frame.intersects(rect) {
@@ -93,9 +113,10 @@ open class CalendarFlowLayout: UICollectionViewFlowLayout {
 
     private func attributes(for indexPath: IndexPath) -> UICollectionViewLayoutAttributes {
         let attributes = UICollectionViewLayoutAttributes(forCellWith: indexPath)
-        let page = CGFloat(indexPath.section)
+        let page = CGFloat(mirroredPage(indexPath.section))
+        let column = indexPath.item % Self.columns
         var origin = CGPoint(
-            x: CGFloat(indexPath.item % Self.columns) * itemSize.width,
+            x: CGFloat(isRightToLeft ? Self.columns - 1 - column : column) * itemSize.width,
             y: CGFloat(indexPath.item / Self.columns) * itemSize.height
         )
         if isVertical {
