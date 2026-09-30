@@ -125,7 +125,7 @@ open class CalendarDayCell: UICollectionViewCell {
         self.dotsView.isHidden = true
         self.applyStyle()
 
-        // Border colours are CGColors, which do not follow appearance changes on their own.
+        // Border colours are CGColors resolved against the cell's traits, so they are reapplied when those change.
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (cell: CalendarDayCell, _) in
             cell.applyStyle()
         }
@@ -171,11 +171,11 @@ open class CalendarDayCell: UICollectionViewCell {
         self.textLabel.font = style.cellFont
 
         if isSelected {
-            self.bgView.layer.borderColor = style.cellSelectedBorderColor.cgColor
+            self.bgView.layer.borderColor = style.cellSelectedBorderColor.resolvedColor(with: traitCollection).cgColor
             self.bgView.layer.borderWidth = style.cellSelectedBorderWidth
             self.bgView.backgroundColor = style.cellSelectedColor
         } else {
-            self.bgView.layer.borderColor = style.cellBorderColor.cgColor
+            self.bgView.layer.borderColor = style.cellBorderColor.resolvedColor(with: traitCollection).cgColor
             self.bgView.layer.borderWidth = style.cellBorderWidth
             if isAdjacent {
                 self.bgView.backgroundColor = .clear

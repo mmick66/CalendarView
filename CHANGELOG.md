@@ -15,6 +15,10 @@ All notable changes to KDCalendar are documented here. The format follows
 
 ### Fixed
 
+- A dynamic `cellBorderColor` or `cellSelectedBorderColor` could take the
+  wrong appearance, because it was resolved against whatever trait collection
+  was current rather than the cell's. Day cells now resolve it against their
+  own traits.
 - `loadEvents()` queried EventKit on the main thread, which could hitch
   scrolling for a long range or a busy calendar. `EKEventStore` now runs the
   query off the main actor, and `CalendarEventStore.events(from:to:)` is
