@@ -140,6 +140,11 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         animationTargetMonth = nil
     }
 
+    public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        guard !decelerate else { return }  // scrollViewDidEndDecelerating reports once it settles
+        self.updateAndNotifyScrolling()
+    }
+
     public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         animationTargetMonth = nil
         self.updateAndNotifyScrolling()

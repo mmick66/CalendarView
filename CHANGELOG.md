@@ -15,6 +15,9 @@ All notable changes to KDCalendar are documented here. The format follows
 
 ### Fixed
 
+- A drag released without deceleration, such as one let go exactly on a page,
+  left the header and `didScrollToMonth` on the old month. The view now reports
+  the month when such a drag ends.
 - `firstWeekday = .automatic` ignored `Style.locale` when `Style.calendar` had
   no locale, as a calendar made with `Calendar(identifier:)` has none: weeks
   started on Sunday whatever the locale. It follows the locale now, as weekends

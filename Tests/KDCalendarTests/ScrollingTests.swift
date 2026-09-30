@@ -163,6 +163,26 @@ struct ScrollingTests {
         #expect(delegate(of: view).scrolledTo.last == date(2024, 3, 1))
     }
 
+    @Test func aDragReleasedOnAPageBoundaryReportsThatMonth() {
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
+        view.scrollViewWillBeginDragging(view.collectionView)
+        view.collectionView.contentOffset = CGPoint(x: view.collectionView.bounds.width, y: 0)
+        // Released exactly on February's page: UIKit does not decelerate, so no other callback follows.
+        view.scrollViewDidEndDragging(view.collectionView, willDecelerate: false)
+        #expect(view.displayDate == date(2024, 2, 1))
+        #expect(view.headerView.monthLabel.text == "February 2024")
+        #expect(delegate(of: view).scrolledTo == [date(2024, 1, 1), date(2024, 2, 1)])
+
+        // A drag that will decelerate waits for the deceleration to end.
+        view.scrollViewWillBeginDragging(view.collectionView)
+        view.collectionView.contentOffset = CGPoint(x: 1.6 * view.collectionView.bounds.width, y: 0)
+        view.scrollViewDidEndDragging(view.collectionView, willDecelerate: true)
+        #expect(view.displayDate == date(2024, 2, 1))
+        view.collectionView.contentOffset = CGPoint(x: 2 * view.collectionView.bounds.width, y: 0)
+        view.scrollViewDidEndDecelerating(view.collectionView)
+        #expect(delegate(of: view).scrolledTo == [date(2024, 1, 1), date(2024, 2, 1), date(2024, 3, 1)])
+    }
+
     // MARK: Vertical paging
 
     @Test func verticalPagingStacksMonthsAndScrollsOnTheYAxis() {
