@@ -257,11 +257,6 @@ extension CalendarView: UICollectionViewDataSource {
             collectionView.dequeueReusableCell(withReuseIdentifier: cellReuseIdentifier, for: indexPath)
             as! CalendarDayCell
 
-        dayCell.transform =
-            _isRtl
-            ? CGAffineTransform(scaleX: -1.0, y: 1.0)
-            : CGAffineTransform.identity
-
         var configuration = DayCellConfiguration(style: style)
         switch currentMonths?.content(at: indexPath) {
         case .day(let date, let dayOfMonth):

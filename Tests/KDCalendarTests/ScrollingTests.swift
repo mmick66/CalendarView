@@ -183,6 +183,42 @@ struct ScrollingTests {
         #expect(delegate(of: view).scrolledTo == [date(2024, 1, 1), date(2024, 2, 1), date(2024, 3, 1)])
     }
 
+    @Test func anAnimatedScrollBeforeTheFirstLayoutReportsTheMonth() {
+        // SwiftUI sets the month during its update, before the view has a size. The offset does
+        // not move, so UIKit never reports the end of an animation.
+        // The same order as KDCalendarView: data source and delegate first, then the style.
+        let view = CalendarView(frame: .zero)
+        let dataSource = FixedDataSource(start: date(2024, 1, 15), end: date(2024, 3, 10))
+        let delegate = RecordingDelegate()
+        retained.objects.append(dataSource)
+        retained.objects.append(delegate)
+        view.dataSource = dataSource
+        view.delegate = delegate
+        var style = CalendarView.Style()
+        style.calendar = utc
+        view.style = style
+        view.setDisplayDate(date(2024, 2, 10), animated: true)
+        #expect(view.animationTargetMonth == nil, "no animation is waited for")
+        view.frame = CGRect(x: 0, y: 0, width: 350, height: 420)
+        Self.window.addSubview(view)
+        view.layoutIfNeeded()
+        #expect(delegate.scrolledTo == [date(2024, 2, 1)])
+        #expect(view.displayDate == date(2024, 2, 1))
+        #expect(view.collectionView.contentOffset.x == view.collectionView.bounds.width)
+    }
+
+    @Test func anAnimatedScrollToTheMonthOnScreenDoesNotWait() {
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
+        view.setDisplayDate(date(2024, 2, 10))
+        view.setDisplayDate(date(2024, 2, 20), animated: true)
+        #expect(view.animationTargetMonth == nil, "the offset does not move, so no callback comes")
+        #expect(delegate(of: view).scrolledTo == [date(2024, 1, 1), date(2024, 2, 1)])
+        // A drag that ends on another month still reports it.
+        view.collectionView.contentOffset = CGPoint(x: 2 * view.collectionView.bounds.width, y: 0)
+        view.scrollViewDidEndDecelerating(view.collectionView)
+        #expect(delegate(of: view).scrolledTo.last == date(2024, 3, 1))
+    }
+
     // MARK: Vertical paging
 
     @Test func verticalPagingStacksMonthsAndScrollsOnTheYAxis() {
@@ -217,6 +253,36 @@ struct ScrollingTests {
         #expect(view.collectionView.contentOffset == CGPoint(x: view.collectionView.bounds.width, y: 0))
     }
 
+    /// At some widths a flow of the items wraps six days to a row, which must not leak into the
+    /// page geometry: the content stays a whole number of pages and every day of the last page
+    /// shows. The size is whole pixels at 3x, as Auto Layout makes it, so the content offset is
+    /// not rounded off a page.
+    @Test(arguments: [UICollectionView.ScrollDirection.horizontal, .vertical])
+    func fractionalSizesKeepWholePagesAndEveryCell(direction: UICollectionView.ScrollDirection) {
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10), direction: direction)
+        view.frame.size = CGSize(width: 258 + 1 / 3, height: view.style.headerHeight + 300)
+        view.layoutIfNeeded()
+        view.setDisplayDate(date(2024, 3, 10))
+        view.layoutIfNeeded()
+
+        let page = view.collectionView.bounds.size
+        let pages = CGFloat(view.collectionView.numberOfSections)
+        let content = view.flowLayout.collectionViewContentSize
+        switch direction {
+        case .vertical: #expect(content == CGSize(width: page.width, height: pages * page.height))
+        default: #expect(content == CGSize(width: pages * page.width, height: page.height))
+        }
+
+        let visible = view.collectionView.indexPathsForVisibleItems
+        #expect(visible.count == 42)
+        #expect(visible.allSatisfy { $0.section == 2 })
+        let onPage = view.flowLayout.layoutAttributesForElements(in: view.collectionView.bounds) ?? []
+        #expect(Set(onPage.map(\.indexPath)) == Set((0..<42).map { IndexPath(item: $0, section: 2) }))
+        for attributes in onPage {
+            #expect(view.collectionView.bounds.contains(attributes.center))
+        }
+    }
+
     // MARK: Long press
 
     @Test func longPressReportsTheDayAndItsEvents() {
@@ -249,27 +315,64 @@ struct ScrollingTests {
 
     // MARK: Right to left
 
-    @Test func rightToLeftLayoutMirrorsTheGridUnlessForcedLeftToRight() {
+    @Test func rightToLeftLayoutMirrorsTheGridUnlessForcedLeftToRight() throws {
         let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
         view.semanticContentAttribute = .forceRightToLeft
         #expect(view.effectiveUserInterfaceLayoutDirection == .rightToLeft)
         view.forceLtr = true
-        #expect(view.collectionView.transform == .identity)
+        view.layoutIfNeeded()
+        #expect(view.collectionView.effectiveUserInterfaceLayoutDirection == .leftToRight)
+        #expect(cell(view, IndexPath(item: 0, section: 0))?.frame.minX == 0)
 
         view.forceLtr = false
         view.layoutIfNeeded()
-        #expect(view.collectionView.transform == CGAffineTransform(scaleX: -1, y: 1))
-        #expect(
-            cell(view, IndexPath(item: 0, section: 0))?.transform == CGAffineTransform(scaleX: -1, y: 1),
-            "cells flip back")
+        #expect(view.collectionView.effectiveUserInterfaceLayoutDirection == .rightToLeft)
+        let first = try #require(cell(view, IndexPath(item: 0, section: 0)))
+        #expect(first.frame.maxX == view.collectionView.bounds.width, "Monday sits on the right")
+        #expect(first.frame.minX > (cell(view, IndexPath(item: 6, section: 0))?.frame.minX ?? .infinity))
         #expect(
             view.headerView.dayLabels.first!.frame.minX > view.headerView.dayLabels.last!.frame.minX,
             "Monday sits on the right")
+        #expect(view.collectionView.transform == .identity, "the layout mirrors the frames, not the views")
+        #expect(first.transform == .identity)
 
         view.forceLtr = true
         view.layoutIfNeeded()
-        #expect(view.collectionView.transform == .identity)
-        #expect(cell(view, IndexPath(item: 0, section: 0))?.transform == .identity)
+        #expect(cell(view, IndexPath(item: 0, section: 0))?.frame.minX == 0)
+    }
+
+    @Test func rightToLeftMonthsRunFromRightToLeft() throws {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 3, 31))
+        view.semanticContentAttribute = .forceRightToLeft
+        view.forceLtr = false
+        view.layoutIfNeeded()
+        let width = view.collectionView.bounds.width
+        #expect(view.displayDate == date(2024, 1, 1))
+        #expect(view.collectionView.contentOffset.x == 2 * width, "the first month is the last page")
+        #expect(cell(view, IndexPath(item: 0, section: 0))?.frame.maxX == 3 * width)
+
+        view.goToNextMonth()
+        finishAnimation(view, at: CGPoint(x: width, y: 0))
+        #expect(view.displayDate == date(2024, 2, 1))
+
+        view.setDisplayDate(date(2024, 3, 15))
+        #expect(view.collectionView.contentOffset.x == 0)
+        #expect(delegate(of: view).scrolledTo.last == date(2024, 3, 1))
+
+        view.collectionView.contentOffset = CGPoint(x: 2 * width, y: 0)
+        view.scrollViewDidEndDecelerating(view.collectionView)
+        view.layoutIfNeeded()
+        #expect(view.displayDate == date(2024, 1, 1), "swiping right goes back a month")
+
+        let gesture = FakeLongPress()
+        gesture.point = try #require(cell(view, IndexPath(item: 9, section: 0))).center
+        view.handleLongPress(gesture: gesture)
+        #expect(delegate(of: view).longPressed.last?.0 == date(2024, 1, 10), "hit-testing follows the frames")
+
+        view.forceLtr = true
+        view.layoutIfNeeded()
+        #expect(view.collectionView.contentOffset.x == 0, "the displayed month stays on screen")
+        #expect(view.displayDate == date(2024, 1, 1))
     }
 
     // MARK: Appearance
@@ -300,6 +403,26 @@ struct ScrollingTests {
         view.traitOverrides.accessibilityContrast = .high
         view.layoutIfNeeded()
         #expect(selected.bgView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.black)
+    }
+
+    @Test func cellBordersResolveAgainstTheCellsOwnAppearance() {
+        let dynamic = UIColor { $0.userInterfaceStyle == .dark ? .white : .black }
+        let dayCell = CalendarDayCell(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
+        Self.window.addSubview(dayCell)
+        dayCell.traitOverrides.userInterfaceStyle = .dark
+        dayCell.layoutIfNeeded()
+        #expect(dayCell.traitCollection.userInterfaceStyle == .dark)
+        // The current trait collection is light, as it can be during cellForItemAt.
+        UITraitCollection(userInterfaceStyle: .light).performAsCurrent {
+            var style = CalendarView.Style()
+            style.cellBorderColor = dynamic
+            dayCell.configuration = DayCellConfiguration(day: 7, style: style)
+            #expect(dayCell.bgView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.white)
+            style.cellSelectedBorderColor = dynamic
+            dayCell.configuration = DayCellConfiguration(day: 7, style: style)
+            dayCell.isSelected = true
+            #expect(dayCell.bgView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.white)
+        }
     }
 
     // MARK: Archived views

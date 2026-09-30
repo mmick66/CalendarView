@@ -21,6 +21,13 @@ All notable changes to KDCalendar are documented here. The format follows
 - `CalendarEvent` is `Equatable` and `Hashable`, comparing title, start and end
   date, so apps can diff or deduplicate their events.
 
+### Changed
+
+- Right to left, `CalendarFlowLayout` mirrors the cell frames instead of the
+  view scaling its collection view, and every cell, by -1. No view carries a
+  transform any more, so hit-testing and snapshots see the real frames. The
+  collection view's `semanticContentAttribute` follows `forceLtr`.
+
 ### Fixed
 
 - Cell borders kept their old colour when Increase Contrast (or another trait
@@ -32,6 +39,10 @@ All notable changes to KDCalendar are documented here. The format follows
 - `loadEvents()` and `EventsManager.load(from:to:)` reported an error thrown
   while asking for calendar access as `EventsManagerError.authorization`. They
   throw that error now.
+- A dynamic `cellBorderColor` or `cellSelectedBorderColor` could take the
+  wrong appearance, because it was resolved against whatever trait collection
+  was current rather than the cell's. Day cells now resolve it against their
+  own traits.
 - `loadEvents()` queried EventKit on the main thread, which could hitch
   scrolling for a long range or a busy calendar. `EKEventStore` now runs the
   query off the main actor, and `CalendarEventStore.events(from:to:)` is
@@ -45,6 +56,12 @@ All notable changes to KDCalendar are documented here. The format follows
   alone built when `style` was set first. Until the next reload or layout,
   `setDisplayDate`, `selectDate` and `indexPathForDate` ignored the data
   source's days. Assigning a data source now reloads the calendar from it.
+- At some sizes that are not a whole number of cells, such as a width of
+  258⅓ points, the grid lost days: `CalendarFlowLayout` moved each day into
+  its page but kept the flow layout's content size and its choice of visible
+  cells, and the flow wrapped six days to a row. The content was then not a
+  whole number of pages and days on screen were left blank. The layout now
+  computes both from the page grid.
 - A drag released without deceleration, such as one let go exactly on a page,
   left the header and `didScrollToMonth` on the old month. The view now reports
   the month when such a drag ends.
@@ -52,6 +69,11 @@ All notable changes to KDCalendar are documented here. The format follows
   no locale, as a calendar made with `Calendar(identifier:)` has none: weeks
   started on Sunday whatever the locale. It follows the locale now, as weekends
   already did.
+- `setDisplayDate(_:animated: true)` never reported `didScrollToMonth` when the
+  view had no size yet or the month was already on screen, because UIKit sends
+  no end-of-animation callback when the offset does not move. SwiftUI's
+  `onScrollToMonth` missed the first month of an animated update this way. Such
+  scrolls now report at once, as non-animated ones do.
 - `loadEvents()` stopped at the start of the last day of the range, so events
   later on that day were missed.
 - `loadEvents()` missed every event after the first four years of a longer

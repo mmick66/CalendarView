@@ -404,31 +404,20 @@ public class CalendarView: UIView {
         )
     }
 
-    internal var _isRtl = false
-
     internal func updateLayoutDirections() {
-        self.collectionView.semanticContentAttribute = .forceLeftToRight
-
-        var isRtl = false
-
-        if !forceLtr {
-            isRtl = self.effectiveUserInterfaceLayoutDirection == .rightToLeft
-        }
+        let isRtl = !forceLtr && self.effectiveUserInterfaceLayoutDirection == .rightToLeft
+        let attribute: UISemanticContentAttribute = isRtl ? .forceRightToLeft : .forceLeftToRight
 
         // The header mirrors with the calendar, whether the direction comes from the app or
         // from this view alone.
-        self.headerView.semanticContentAttribute = isRtl ? .forceRightToLeft : .forceLeftToRight
+        self.headerView.semanticContentAttribute = attribute
         self.headerView.setNeedsLayout()
 
-        if _isRtl != isRtl {
-            _isRtl = isRtl
-
-            self.collectionView.transform =
-                isRtl
-                ? CGAffineTransform(scaleX: -1.0, y: 1.0)
-                : CGAffineTransform.identity
-            self.reloadData()
-        }
+        // The layout mirrors its frames when the collection view runs right to left.
+        guard collectionView.semanticContentAttribute != attribute else { return }
+        collectionView.semanticContentAttribute = attribute
+        flowLayout.invalidateLayout()
+        resetDisplayDate()
     }
 
     internal func resetDisplayDate() {
@@ -473,12 +462,13 @@ public class CalendarView: UIView {
         var point = CGPoint.zero
 
         guard let section = self.indexPathForDate(date)?.section else { return point }
+        let page = flowLayout.mirroredPage(section)
 
         switch self.direction {
-        case .horizontal: point.x = CGFloat(section) * self.collectionView.frame.size.width
-        case .vertical: point.y = CGFloat(section) * self.collectionView.frame.size.height
+        case .horizontal: point.x = CGFloat(page) * self.collectionView.bounds.width
+        case .vertical: point.y = CGFloat(page) * self.collectionView.bounds.height
         @unknown default:
-            point.x = CGFloat(section) * self.collectionView.frame.size.width
+            point.x = CGFloat(page) * self.collectionView.bounds.width
         }
 
         return point
@@ -508,8 +498,9 @@ extension CalendarView {
 
     /// Scrolls to the month containing `date`. Dates outside the data source's months are ignored.
     ///
-    /// The delegate receives `didScrollToMonth` once the month is on screen: immediately when
-    /// `animated` is `false`, when the animation ends otherwise.
+    /// The delegate receives `didScrollToMonth` once the month is on screen: when the animation
+    /// ends, or immediately when `animated` is `false`, the view has no size yet or the month
+    /// is already on screen.
     public func setDisplayDate(_ date: Date, animated: Bool = false) {
         guard let indexPath = self.indexPathForDate(date),
             let month = self.months?.firstDay(ofSection: indexPath.section)
@@ -520,8 +511,14 @@ extension CalendarView {
         self.displayDateOnHeader(month)
 
         collectionView.layoutIfNeeded()
+        let offset = self.scrollViewOffset(for: month)
+        // UIKit sends no end-of-animation callback when the offset does not change, which is
+        // always the case before the first layout, so those scrolls report at once.
+        let animated =
+            animated && collectionView.bounds.width > 0 && collectionView.bounds.height > 0
+            && collectionView.contentOffset != offset
         animationTargetMonth = animated ? month : nil
-        collectionView.setContentOffset(self.scrollViewOffset(for: month), animated: animated)
+        collectionView.setContentOffset(offset, animated: animated)
         if !animated {
             self.notifyScrolled(to: month)
         }
