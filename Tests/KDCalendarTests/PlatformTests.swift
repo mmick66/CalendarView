@@ -254,6 +254,48 @@ struct PlatformTests {
         #expect(box.dates == [date(2024, 3, 15)])
     }
 
+    @Test func swiftUIRangeChangeDropsTheLeftDaysFromTheBinding() async {
+        let box = SelectionBox()
+        var style = CalendarView.Style()
+        style.calendar = utc
+        style.locale = Locale(identifier: "en_US")
+        var range = date(2024, 3, 1)...date(2024, 4, 30)
+        var mode = CalendarView.SelectionMode.multiple
+        func view() -> KDCalendarView {
+            KDCalendarView(range: range, selection: box.binding).calendarStyle(style).selectionMode(mode)
+        }
+        guard let hosted = hostCalendar(view()) else { return }
+        let (host, calendar) = hosted
+
+        // A range that now ends in March leaves 20 April out of both the view and the binding.
+        calendar.selectDate(date(2024, 3, 15))
+        calendar.selectDate(date(2024, 4, 20))
+        #expect(box.dates == [date(2024, 3, 15), date(2024, 4, 20)])
+        range = date(2024, 3, 1)...date(2024, 3, 31)
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        await settle()
+        #expect(calendar.selectedDates == [date(2024, 3, 15)])
+        #expect(box.dates == [date(2024, 3, 15)])
+
+        // A picked range is cut at the new end.
+        range = date(2024, 3, 1)...date(2024, 4, 30)
+        mode = .range
+        box.dates = []
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        calendar.selectDate(date(2024, 3, 28))
+        calendar.selectDate(date(2024, 4, 2))
+        #expect(box.dates.count == 6)
+        range = date(2024, 3, 1)...date(2024, 3, 30)
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        await settle()
+        let kept = (28...30).map { date(2024, 3, $0) }
+        #expect(calendar.selectedDates == kept)
+        #expect(box.dates == kept)
+    }
+
     @Test func swiftUIModifiersReachTheCalendar() {
         let box = SelectionBox()
         var style = CalendarView.Style()
