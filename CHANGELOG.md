@@ -8,13 +8,22 @@ All notable changes to KDCalendar are documented here. The format follows
 
 ### Added
 
-- `CalendarEventStore`, the part of `EKEventStore` the EventKit bridge uses, and
-  `EventsManager.store` to inject a test double. The bridge has tests now.
+- `CalendarEventStore`, the part of `EKEventStore` the EventKit bridge uses.
+  Every EventKit call takes a `store` argument, defaulting to the shared
+  `EventsManager.store`, so a test double can stand in. The bridge has tests
+  now.
+- `EventsManager.save(_:store:)` and `CalendarView.saveEvent(_:store:)`, which
+  throw `EventsManagerError.authorization` without access, or the store's own
+  error when it refuses the event. `add(event:)` and `addEvent(_:date:duration:)`
+  still return `false` for either.
 - `Style.resolvedCalendar`: `Style.calendar`, given `Style.locale` when it has
   no locale of its own. `CalendarView.calendar` returns it.
 
 ### Fixed
 
+- `loadEvents()` and `EventsManager.load(from:to:)` reported an error thrown
+  while asking for calendar access as `EventsManagerError.authorization`. They
+  throw that error now.
 - `loadEvents()` queried EventKit on the main thread, which could hitch
   scrolling for a long range or a busy calendar. `EKEventStore` now runs the
   query off the main actor, and `CalendarEventStore.events(from:to:)` is

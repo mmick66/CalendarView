@@ -6,11 +6,10 @@ import UIKit
 @testable import KDCalendarEventKit
 
 /// The EventKit bridge, driven by a fake store so no calendar access is needed.
-///
-/// Serialized because every test swaps `EventsManager.store`.
-@Suite(.serialized)
 @MainActor
 struct EventKitTests {
+
+    struct StoreError: Error, Equatable {}
 
     final class FakeStore: CalendarEventStore {
         var hasFullAccess = false
@@ -23,7 +22,7 @@ struct EventKitTests {
 
         func requestFullAccess() async throws -> Bool {
             requests += 1
-            if requestFails { throw EventsManagerError.authorization }
+            if requestFails { throw StoreError() }
             hasFullAccess = grantsAccess
             return grantsAccess
         }
@@ -34,7 +33,7 @@ struct EventKitTests {
         }
 
         func save(_ event: CalendarEvent) throws {
-            if saveFails { throw EventsManagerError.authorization }
+            if saveFails { throw StoreError() }
             stored.append(event)
         }
     }
@@ -57,17 +56,11 @@ struct EventKitTests {
     }()
 
     let store = FakeStore()
-    let originalStore: any CalendarEventStore
 
     final class Retained {
         var objects: [AnyObject] = []
     }
     let retained = Retained()
-
-    init() {
-        originalStore = EventsManager.store
-        EventsManager.store = store
-    }
 
     private func date(_ year: Int, _ month: Int, _ day: Int, hour: Int = 0) -> Date {
         utc.date(from: DateComponents(year: year, month: month, day: day, hour: hour))!
@@ -89,56 +82,62 @@ struct EventKitTests {
         return view
     }
 
-    private func restore() {
-        EventsManager.store = originalStore
-    }
-
     // MARK: EventsManager
 
     @Test func loadAsksForAccessOnceAndReturnsTheEvents() async throws {
-        defer { restore() }
         store.stored = [event("a", date(2024, 1, 10)), event("b", date(2024, 3, 1))]
-        let events = try await EventsManager.load(from: date(2024, 1, 1), to: date(2024, 2, 1))
+        let events = try await EventsManager.load(from: date(2024, 1, 1), to: date(2024, 2, 1), store: store)
         #expect(store.requests == 1)
         #expect(events.map(\.title) == ["a"])
         #expect(store.queried.count == 1)
-        _ = try await EventsManager.load(from: date(2024, 1, 1), to: date(2024, 2, 1))
+        _ = try await EventsManager.load(from: date(2024, 1, 1), to: date(2024, 2, 1), store: store)
         #expect(store.requests == 1, "access is not requested again once granted")
-        #expect(EventsManager.hasFullAccess == true)
+        #expect(store.hasFullAccess == true)
     }
 
     @Test func loadThrowsWhenAccessIsDenied() async {
-        defer { restore() }
         store.grantsAccess = false
         await #expect(throws: EventsManagerError.authorization) {
-            try await EventsManager.load(from: date(2024, 1, 1), to: date(2024, 2, 1))
+            try await EventsManager.load(from: date(2024, 1, 1), to: date(2024, 2, 1), store: store)
         }
         #expect(store.queried.isEmpty)
     }
 
-    @Test func loadTreatsARequestFailureAsDenied() async {
-        defer { restore() }
+    @Test func loadPassesOnTheErrorOfAFailedRequest() async {
         store.requestFails = true
-        await #expect(throws: EventsManagerError.authorization) {
-            try await EventsManager.load(from: date(2024, 1, 1), to: date(2024, 2, 1))
+        await #expect(throws: StoreError()) {
+            try await EventsManager.load(from: date(2024, 1, 1), to: date(2024, 2, 1), store: store)
         }
     }
 
-    @Test func addRequiresAccessAndReportsStoreFailures() {
-        defer { restore() }
+    @Test func saveRequiresAccessAndPassesOnStoreFailures() throws {
         let sample = event("dinner", date(2024, 1, 10, hour: 19))
-        #expect(EventsManager.add(event: sample) == false)
+        #expect(throws: EventsManagerError.authorization) {
+            try EventsManager.save(sample, store: store)
+        }
+        #expect(store.requests == 0, "saving does not ask for access")
         #expect(store.stored.isEmpty)
         store.hasFullAccess = true
-        #expect(EventsManager.add(event: sample) == true)
+        try EventsManager.save(sample, store: store)
         #expect(store.stored.map(\.title) == ["dinner"])
         store.saveFails = true
-        #expect(EventsManager.add(event: sample) == false)
+        #expect(throws: StoreError()) {
+            try EventsManager.save(sample, store: store)
+        }
+        #expect(store.stored.count == 1)
+    }
+
+    @Test func addReportsEveryFailureAsFalse() {
+        let sample = event("dinner", date(2024, 1, 10, hour: 19))
+        #expect(EventsManager.add(event: sample, store: store) == false)
+        store.hasFullAccess = true
+        #expect(EventsManager.add(event: sample, store: store) == true)
+        store.saveFails = true
+        #expect(EventsManager.add(event: sample, store: store) == false)
         #expect(store.stored.count == 1)
     }
 
     @Test func aShortIntervalIsQueriedInOneChunk() {
-        defer { restore() }
         let chunks = EventsManager.queryIntervals(from: date(2024, 1, 1), to: date(2025, 1, 1))
         #expect(chunks.count == 1)
         #expect(chunks.first?.start == date(2024, 1, 1))
@@ -153,7 +152,6 @@ struct EventKitTests {
     }
 
     @Test func aLongIntervalIsSplitIntoContiguousChunksUnderFourYears() {
-        defer { restore() }
         let start = date(2020, 1, 1)
         let end = date(2031, 1, 1)
         let chunks = EventsManager.queryIntervals(from: start, to: end)
@@ -173,14 +171,13 @@ struct EventKitTests {
     // MARK: CalendarView integration
 
     @Test func loadEventsPassesARangeLongerThanFourYearsWhole() async throws {
-        defer { restore() }
         store.hasFullAccess = true
         store.stored = [
             event("early", date(2020, 6, 1)),
             event("late", date(2029, 6, 1)),
         ]
         let view = makeCalendar(start: date(2020, 1, 1), end: date(2030, 12, 31))
-        try await view.loadEvents()
+        try await view.loadEvents(store: store)
         #expect(store.queried.count == 1, "the store, not the manager, splits the range for EventKit")
         #expect(store.queried.first?.0 == date(2020, 1, 1))
         #expect(store.queried.first?.1 == date(2031, 1, 1))
@@ -188,7 +185,6 @@ struct EventKitTests {
     }
 
     @Test func loadEventsCoversTheWholeRangeIncludingTheLastDay() async throws {
-        defer { restore() }
         store.hasFullAccess = true
         store.stored = [
             event("first", date(2024, 1, 15, hour: 9)),
@@ -196,7 +192,7 @@ struct EventKitTests {
             event("after", date(2024, 3, 11)),
         ]
         let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
-        try await view.loadEvents()
+        try await view.loadEvents(store: store)
         #expect(view.events.map(\.title) == ["first", "last day"])
         #expect(store.queried.first?.0 == date(2024, 1, 15))
         #expect(store.queried.first?.1 == date(2024, 3, 11), "the query runs to the end of the last day")
@@ -204,12 +200,11 @@ struct EventKitTests {
     }
 
     @Test func completionFormReportsSuccessAndDenialOnTheMainActor() async {
-        defer { restore() }
         store.stored = [event("a", date(2024, 1, 10))]
         let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
 
         let success: Error? = await withCheckedContinuation { continuation in
-            view.loadEvents { error in
+            view.loadEvents(store: store) { error in
                 #expect(Thread.isMainThread)
                 continuation.resume(returning: error)
             }
@@ -220,30 +215,41 @@ struct EventKitTests {
         store.hasFullAccess = false
         store.grantsAccess = false
         let failure: Error? = await withCheckedContinuation { continuation in
-            view.loadEvents { continuation.resume(returning: $0) }
+            view.loadEvents(store: store) { continuation.resume(returning: $0) }
         }
         #expect(failure as? EventsManagerError == .authorization)
         #expect(view.events.count == 1, "a failed load keeps the previous events")
     }
 
     @Test func addEventSavesForTheGivenDurationAndShowsADot() {
-        defer { restore() }
         store.hasFullAccess = true
         let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
-        #expect(view.addEvent("Lunch", date: date(2024, 1, 10, hour: 12), duration: 2) == true)
+        #expect(view.addEvent("Lunch", date: date(2024, 1, 10, hour: 12), duration: 2, store: store) == true)
         #expect(store.stored.first?.startDate == date(2024, 1, 10, hour: 12))
         #expect(store.stored.first?.endDate == date(2024, 1, 10, hour: 14))
         #expect(view.events.map(\.title) == ["Lunch"])
         #expect(view.eventsByIndexPath[IndexPath(item: 9, section: 0)]?.count == 1)
 
         store.hasFullAccess = false
-        #expect(view.addEvent("Nope", date: date(2024, 1, 11)) == false)
+        #expect(view.addEvent("Nope", date: date(2024, 1, 11), store: store) == false)
         #expect(view.events.count == 1)
     }
 
-    @Test func theDefaultStoreIsTheSystemEventStore() {
-        defer { restore() }
-        #expect(originalStore is EKEventStore)
+    @Test func saveEventSaysWhyTheEventWasNotShown() throws {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        let sample = event("Lunch", date(2024, 1, 10, hour: 12))
+        #expect(throws: EventsManagerError.authorization) {
+            try view.saveEvent(sample, store: store)
+        }
+        store.hasFullAccess = true
+        store.saveFails = true
+        #expect(throws: StoreError()) {
+            try view.saveEvent(sample, store: store)
+        }
+        #expect(view.events.isEmpty)
+        store.saveFails = false
+        try view.saveEvent(sample, store: store)
+        #expect(view.events.map(\.title) == ["Lunch"])
     }
 
     /// Records the thread each EventKit query runs on, and finds nothing.
@@ -257,7 +263,6 @@ struct EventKitTests {
     }
 
     @Test func theSystemStoreQueriesOffTheMainThread() async {
-        defer { restore() }
         let systemStore = ThreadRecordingStore()
         let events = await systemStore.events(from: date(2020, 1, 1), to: date(2031, 1, 1))
         #expect(events.isEmpty)

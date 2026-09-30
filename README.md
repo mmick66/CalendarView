@@ -183,6 +183,7 @@ import KDCalendarEventKit
 
 try await calendarView.loadEvents()                     // or the completion form
 calendarView.addEvent("Dinner", date: date, duration: 2) // hours; false if access is missing
+try calendarView.saveEvent(event)                        // throws the reason instead
 ```
 
 ### SwiftUI
