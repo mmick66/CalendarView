@@ -155,8 +155,10 @@ open class CalendarDayCell: UICollectionViewCell {
         self.dotsView.isHidden = true
         self.applyStyle()
 
-        // Border colours are CGColors, which do not follow appearance changes on their own.
-        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (cell: CalendarDayCell, _) in
+        // Border colours are CGColors, which do not follow appearance changes on their own:
+        // reapply them whenever a trait a dynamic colour may depend on changes (style, contrast, level...).
+        registerForTraitChanges(UITraitCollection.systemTraitsAffectingColorAppearance) {
+            (cell: CalendarDayCell, _) in
             cell.applyStyle()
         }
     }

@@ -23,6 +23,9 @@ All notable changes to KDCalendar are documented here. The format follows
 
 ### Fixed
 
+- Cell borders kept their old colour when Increase Contrast (or another trait
+  a dynamic colour can depend on, besides light and dark mode) changed. They
+  are reapplied on any trait change that affects colour appearance now.
 - With `showAdjacentDays` on, the cells before the first month stayed empty
   while the cells after the last month showed the next month's days. The first
   month now shows the end of the previous month too.

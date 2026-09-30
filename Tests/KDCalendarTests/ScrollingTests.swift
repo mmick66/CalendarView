@@ -288,6 +288,20 @@ struct ScrollingTests {
         #expect(selected.bgView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.white)
     }
 
+    @Test func cellBordersFollowAContrastChange() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        view.style.cellSelectedBorderColor = UIColor { $0.accessibilityContrast == .high ? .black : .gray }
+        view.selectDate(date(2024, 1, 10))
+        view.layoutIfNeeded()
+        let selected = cell(view, IndexPath(item: 9, section: 0))!
+        view.traitOverrides.accessibilityContrast = .normal
+        view.layoutIfNeeded()
+        #expect(selected.bgView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.gray)
+        view.traitOverrides.accessibilityContrast = .high
+        view.layoutIfNeeded()
+        #expect(selected.bgView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.black)
+    }
+
     // MARK: Archived views
 
     @Test func aViewDecodedFromAnArchiveWorks() throws {
