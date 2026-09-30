@@ -408,31 +408,21 @@ public class CalendarView: UIView {
         )
     }
 
-    internal var _isRtl = false
-
     internal func updateLayoutDirections() {
-        self.collectionView?.semanticContentAttribute = .forceLeftToRight
-
-        var isRtl = false
-
-        if !forceLtr {
-            isRtl = self.effectiveUserInterfaceLayoutDirection == .rightToLeft
-        }
+        let isRtl = !forceLtr && self.effectiveUserInterfaceLayoutDirection == .rightToLeft
+        let attribute: UISemanticContentAttribute = isRtl ? .forceRightToLeft : .forceLeftToRight
 
         // The header mirrors with the calendar, whether the direction comes from the app or
         // from this view alone.
-        self.headerView?.semanticContentAttribute = isRtl ? .forceRightToLeft : .forceLeftToRight
+        self.headerView?.semanticContentAttribute = attribute
         self.headerView?.setNeedsLayout()
 
-        if _isRtl != isRtl {
-            _isRtl = isRtl
-
-            self.collectionView?.transform =
-                isRtl
-                ? CGAffineTransform(scaleX: -1.0, y: 1.0)
-                : CGAffineTransform.identity
-            self.reloadData()
-        }
+        // The layout mirrors its frames when the collection view runs right to left.
+        guard let collectionView = self.collectionView, collectionView.semanticContentAttribute != attribute
+        else { return }
+        collectionView.semanticContentAttribute = attribute
+        flowLayout.invalidateLayout()
+        resetDisplayDate()
     }
 
     internal func resetDisplayDate() {
@@ -477,12 +467,13 @@ public class CalendarView: UIView {
         var point = CGPoint.zero
 
         guard let section = self.indexPathForDate(date)?.section else { return point }
+        let page = flowLayout.mirroredPage(section)
 
         switch self.direction {
-        case .horizontal: point.x = CGFloat(section) * self.collectionView.frame.size.width
-        case .vertical: point.y = CGFloat(section) * self.collectionView.frame.size.height
+        case .horizontal: point.x = CGFloat(page) * self.collectionView.frame.size.width
+        case .vertical: point.y = CGFloat(page) * self.collectionView.frame.size.height
         @unknown default:
-            point.x = CGFloat(section) * self.collectionView.frame.size.width
+            point.x = CGFloat(page) * self.collectionView.frame.size.width
         }
 
         return point

@@ -254,10 +254,6 @@ extension CalendarView: UICollectionViewDataSource {
             as! CalendarDayCell
 
         dayCell.style = style
-        dayCell.transform =
-            _isRtl
-            ? CGAffineTransform(scaleX: -1.0, y: 1.0)
-            : CGAffineTransform.identity
 
         guard let months = currentMonths else { return dayCell }
 

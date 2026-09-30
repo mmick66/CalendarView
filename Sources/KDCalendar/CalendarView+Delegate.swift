@@ -144,7 +144,7 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
 
         guard length > 0 else { return months.firstDay(ofSection: 0) }
         let page = min(max(Int((offset / length).rounded()), 0), months.numberOfSections - 1)
-        return months.firstDay(ofSection: page)
+        return months.firstDay(ofSection: flowLayout.mirroredPage(page))
     }
 
     func displayDateOnHeader(_ date: Date) {

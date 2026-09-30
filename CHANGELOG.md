@@ -13,6 +13,13 @@ All notable changes to KDCalendar are documented here. The format follows
 - `Style.resolvedCalendar`: `Style.calendar`, given `Style.locale` when it has
   no locale of its own. `CalendarView.calendar` returns it.
 
+### Changed
+
+- Right to left, `CalendarFlowLayout` mirrors the cell frames instead of the
+  view scaling its collection view, and every cell, by -1. No view carries a
+  transform any more, so hit-testing and snapshots see the real frames. The
+  collection view's `semanticContentAttribute` follows `forceLtr`.
+
 ### Fixed
 
 - `loadEvents()` queried EventKit on the main thread, which could hitch

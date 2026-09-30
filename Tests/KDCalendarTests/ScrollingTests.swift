@@ -249,27 +249,64 @@ struct ScrollingTests {
 
     // MARK: Right to left
 
-    @Test func rightToLeftLayoutMirrorsTheGridUnlessForcedLeftToRight() {
+    @Test func rightToLeftLayoutMirrorsTheGridUnlessForcedLeftToRight() throws {
         let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
         view.semanticContentAttribute = .forceRightToLeft
         #expect(view.effectiveUserInterfaceLayoutDirection == .rightToLeft)
         view.forceLtr = true
-        #expect(view.collectionView.transform == .identity)
+        view.layoutIfNeeded()
+        #expect(view.collectionView.effectiveUserInterfaceLayoutDirection == .leftToRight)
+        #expect(cell(view, IndexPath(item: 0, section: 0))?.frame.minX == 0)
 
         view.forceLtr = false
         view.layoutIfNeeded()
-        #expect(view.collectionView.transform == CGAffineTransform(scaleX: -1, y: 1))
-        #expect(
-            cell(view, IndexPath(item: 0, section: 0))?.transform == CGAffineTransform(scaleX: -1, y: 1),
-            "cells flip back")
+        #expect(view.collectionView.effectiveUserInterfaceLayoutDirection == .rightToLeft)
+        let first = try #require(cell(view, IndexPath(item: 0, section: 0)))
+        #expect(first.frame.maxX == view.collectionView.bounds.width, "Monday sits on the right")
+        #expect(first.frame.minX > (cell(view, IndexPath(item: 6, section: 0))?.frame.minX ?? .infinity))
         #expect(
             view.headerView.dayLabels.first!.frame.minX > view.headerView.dayLabels.last!.frame.minX,
             "Monday sits on the right")
+        #expect(view.collectionView.transform == .identity, "the layout mirrors the frames, not the views")
+        #expect(first.transform == .identity)
 
         view.forceLtr = true
         view.layoutIfNeeded()
-        #expect(view.collectionView.transform == .identity)
-        #expect(cell(view, IndexPath(item: 0, section: 0))?.transform == .identity)
+        #expect(cell(view, IndexPath(item: 0, section: 0))?.frame.minX == 0)
+    }
+
+    @Test func rightToLeftMonthsRunFromRightToLeft() throws {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 3, 31))
+        view.semanticContentAttribute = .forceRightToLeft
+        view.forceLtr = false
+        view.layoutIfNeeded()
+        let width = view.collectionView.bounds.width
+        #expect(view.displayDate == date(2024, 1, 1))
+        #expect(view.collectionView.contentOffset.x == 2 * width, "the first month is the last page")
+        #expect(cell(view, IndexPath(item: 0, section: 0))?.frame.maxX == 3 * width)
+
+        view.goToNextMonth()
+        finishAnimation(view, at: CGPoint(x: width, y: 0))
+        #expect(view.displayDate == date(2024, 2, 1))
+
+        view.setDisplayDate(date(2024, 3, 15))
+        #expect(view.collectionView.contentOffset.x == 0)
+        #expect(delegate(of: view).scrolledTo.last == date(2024, 3, 1))
+
+        view.collectionView.contentOffset = CGPoint(x: 2 * width, y: 0)
+        view.scrollViewDidEndDecelerating(view.collectionView)
+        view.layoutIfNeeded()
+        #expect(view.displayDate == date(2024, 1, 1), "swiping right goes back a month")
+
+        let gesture = FakeLongPress()
+        gesture.point = try #require(cell(view, IndexPath(item: 9, section: 0))).center
+        view.handleLongPress(gesture: gesture)
+        #expect(delegate(of: view).longPressed.last?.0 == date(2024, 1, 10), "hit-testing follows the frames")
+
+        view.forceLtr = true
+        view.layoutIfNeeded()
+        #expect(view.collectionView.contentOffset.x == 0, "the displayed month stays on screen")
+        #expect(view.displayDate == date(2024, 1, 1))
     }
 
     // MARK: Appearance
