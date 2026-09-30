@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "KDCalendar"
-  s.version      = "2.0.0"
+  s.version      = "2.0.1"
   s.summary      = "A calendar component with native events support. Prefer Swift Package Manager; CocoaPods support ends after 2.0."
 
   s.description  = <<-DESC
@@ -9,7 +9,7 @@ Pod::Spec.new do |s|
                    DESC
 
   s.homepage     = "https://github.com/mmick66/CalendarView"
-  s.screenshots  = "https://raw.githubusercontent.com/mmick66/CalendarView/master/Assets/screenshots.png"
+  s.screenshots  = "https://raw.githubusercontent.com/mmick66/CalendarView/main/Assets/screenshots.png"
 
   s.license      = { :type => "MIT", :file => "LICENSE" }
 

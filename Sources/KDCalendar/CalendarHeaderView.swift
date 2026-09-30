@@ -39,7 +39,17 @@ open class CalendarHeaderView: UIView {
 
     public override init(frame: CGRect) {
         super.init(frame: frame)
+        buildLabels()
+    }
 
+    required public init?(coder: NSCoder) {
+        super.init(coder: coder)
+        // Labels decoded from an archive are replaced by fresh ones; the style recreates the text.
+        subviews.forEach { $0.removeFromSuperview() }
+        buildLabels()
+    }
+
+    private func buildLabels() {
         self.translatesAutoresizingMaskIntoConstraints = false
 
         monthLabel = UILabel()
@@ -49,6 +59,7 @@ open class CalendarHeaderView: UIView {
         monthLabel.accessibilityTraits = .header
         self.addSubview(monthLabel)
 
+        dayLabels.removeAll()
         for _ in 0..<7 {
             let label = UILabel()
             label.translatesAutoresizingMaskIntoConstraints = false
@@ -58,6 +69,7 @@ open class CalendarHeaderView: UIView {
             dayLabels.append(label)
             self.addSubview(label)
         }
+        updateStyle()
     }
 
     public func updateStyle() {
@@ -87,10 +99,6 @@ open class CalendarHeaderView: UIView {
         }
 
         self.backgroundColor = style.weekdaysBackgroundColor
-    }
-
-    required public init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
 
     override open func layoutSubviews() {
