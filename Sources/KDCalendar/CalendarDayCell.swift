@@ -96,7 +96,7 @@ struct DayCellConfiguration: Equatable {
     }
 }
 
-/// One day in the month grid. Its look is derived from ``configuration`` and the selection.
+/// One day in the month grid. Its look is derived from the day it is configured with and whether it is selected.
 open class CalendarDayCell: UICollectionViewCell {
 
     var configuration = DayCellConfiguration() {
