@@ -28,7 +28,7 @@ struct EventKitTests {
             return grantsAccess
         }
 
-        func events(from start: Date, to end: Date) -> [CalendarEvent] {
+        func events(from start: Date, to end: Date) async -> [CalendarEvent] {
             queried.append((start, end))
             return stored.filter { $0.startDate < end && $0.endDate >= start }
         }
@@ -244,5 +244,26 @@ struct EventKitTests {
     @Test func theDefaultStoreIsTheSystemEventStore() {
         defer { restore() }
         #expect(originalStore is EKEventStore)
+    }
+
+    /// Records the thread each EventKit query runs on, and finds nothing.
+    final class ThreadRecordingStore: EKEventStore, @unchecked Sendable {
+        nonisolated(unsafe) var queriedOnMainThread: [Bool] = []
+
+        override func events(matching predicate: NSPredicate) -> [EKEvent] {
+            queriedOnMainThread.append(Thread.isMainThread)
+            return []
+        }
+    }
+
+    @Test func theSystemStoreQueriesOffTheMainThread() async {
+        defer { restore() }
+        let systemStore = ThreadRecordingStore()
+        let events = await systemStore.events(from: date(2020, 1, 1), to: date(2031, 1, 1))
+        #expect(events.isEmpty)
+        #expect(
+            systemStore.queriedOnMainThread == [false, false, false],
+            "one query per chunk, none on the main thread"
+        )
     }
 }

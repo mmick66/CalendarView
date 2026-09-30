@@ -15,6 +15,10 @@ All notable changes to KDCalendar are documented here. The format follows
 
 ### Fixed
 
+- `loadEvents()` queried EventKit on the main thread, which could hitch
+  scrolling for a long range or a busy calendar. `EKEventStore` now runs the
+  query off the main actor, and `CalendarEventStore.events(from:to:)` is
+  `async`.
 - The default `Style.calendar` and `Style.locale` were snapshots of the user's
   settings taken at launch, so after the device changed time zone "today" and
   the grid stayed in the old zone. They are `Calendar.autoupdatingCurrent` and

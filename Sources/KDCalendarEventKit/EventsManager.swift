@@ -41,8 +41,9 @@ public protocol CalendarEventStore: AnyObject {
     var hasFullAccess: Bool { get }
     /// Asks the user for full access. Returns whether it was granted.
     func requestFullAccess() async throws -> Bool
-    /// The events that overlap the interval, as `CalendarEvent` values.
-    func events(from start: Date, to end: Date) -> [CalendarEvent]
+    /// The events that overlap the interval, as `CalendarEvent` values. `EKEventStore` runs
+    /// the query off the main actor.
+    func events(from start: Date, to end: Date) async -> [CalendarEvent]
     /// Saves a new event to the default calendar.
     func save(_ event: CalendarEvent) throws
 }
@@ -59,8 +60,8 @@ extension EKEventStore: CalendarEventStore {
 
     /// Queries the interval in chunks shorter than four years, since EventKit shortens a
     /// longer interval to its first four years. An event that overlaps two chunks is
-    /// returned once.
-    public func events(from start: Date, to end: Date) -> [CalendarEvent] {
+    /// returned once. The query is synchronous and can be slow, so it runs off the main actor.
+    public nonisolated func events(from start: Date, to end: Date) async -> [CalendarEvent] {
         struct Occurrence: Hashable {
             let identifier: String?
             let startDate: Date?
@@ -91,8 +92,9 @@ extension EKEventStore: CalendarEventStore {
 
 /// The bridge between the system event store and `CalendarEvent` values.
 ///
-/// Every call runs on the main actor. Full calendar access is requested the first time
-/// it is needed; the app must declare `NSCalendarsFullAccessUsageDescription`.
+/// Every call is made on the main actor, though `EKEventStore` runs its queries off it. Full
+/// calendar access is requested the first time it is needed; the app must declare
+/// `NSCalendarsFullAccessUsageDescription`.
 @MainActor
 public enum EventsManager {
 
@@ -130,7 +132,7 @@ public enum EventsManager {
             let granted = (try? await store.requestFullAccess()) ?? false
             guard granted else { throw EventsManagerError.authorization }
         }
-        return store.events(from: fromDate, to: toDate)
+        return await store.events(from: fromDate, to: toDate)
     }
 
     /// Saves an event to the user's default calendar. Returns `false` when access has not
