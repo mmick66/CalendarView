@@ -49,6 +49,12 @@ All notable changes to KDCalendar are documented here. The format follows
   alone built when `style` was set first. Until the next reload or layout,
   `setDisplayDate`, `selectDate` and `indexPathForDate` ignored the data
   source's days. Assigning a data source now reloads the calendar from it.
+- At some sizes that are not a whole number of cells, such as a width of
+  258⅓ points, the grid lost days: `CalendarFlowLayout` moved each day into
+  its page but kept the flow layout's content size and its choice of visible
+  cells, and the flow wrapped six days to a row. The content was then not a
+  whole number of pages and days on screen were left blank. The layout now
+  computes both from the page grid.
 - A drag released without deceleration, such as one let go exactly on a page,
   left the header and `didScrollToMonth` on the old month. The view now reports
   the month when such a drag ends.
