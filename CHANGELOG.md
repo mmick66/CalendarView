@@ -19,6 +19,13 @@ All notable changes to KDCalendar are documented here. The format follows
   rather than through the app's layout direction.
 - A `CalendarView` decoded from an archive crashed in the header's
   `init(coder:)`; the view, header and cells now decode and rebuild themselves.
+- The selection was stored as index paths that went stale when the grid was
+  rebuilt: after the range gained or lost a month, the first weekday changed or
+  the time zone changed, another day was highlighted, `deselectDate` did
+  nothing, and a grid that lost months crashed on reload. The selection is kept
+  as days now and `selectedIndexPaths` is derived from the current grid. A
+  reload deselects the days that left the range and tells the delegate with
+  `didDeselectDate`.
 
 ## [2.0.1] - 2026-09-08
 

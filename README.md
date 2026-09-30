@@ -121,6 +121,8 @@ calendarView.enableDeselection = false   // taps cannot deselect; deselectDate s
 
 In `.single` mode selecting a day deselects the previous one and reports it. In `.range` mode the first tap picks one end, the second picks the other and every selectable day between them is selected, in either order and across months; the delegate then receives `didSelectRange`. A third tap starts a new range and tapping a selected day clears it. `multipleSelectionEnable` still works and maps to `.single` and `.multiple`.
 
+The selection is kept as days. When `reloadData()` or a new style rebuilds the grid, the same days stay selected wherever they land; days that are no longer in range are deselected and reported with `didDeselectDate`.
+
 ### Styling
 
 `CalendarView.Style` is a value. Change what you need and assign it, or mutate the view's style in place.

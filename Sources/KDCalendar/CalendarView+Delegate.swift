@@ -39,7 +39,7 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
     /// Records a selection the collection view already applied and notifies the delegate.
     func didSelect(_ indexPath: IndexPath) {
         guard let date = self.dateFromIndexPath(indexPath) else { return }
-        guard !selectedIndexPaths.contains(indexPath) else { return }
+        guard !selectedDates.contains(date) else { return }
 
         switch selectionMode {
         case .single:
@@ -50,13 +50,12 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
                 return
             }
             deselectAll(notifying: true)
-            rangeAnchor = indexPath
+            rangeAnchor = date
             rangeIsComplete = false
         case .multiple:
             break
         }
 
-        selectedIndexPaths.append(indexPath)
         selectedDates.append(date)
 
         let eventsForDaySelected = eventsByIndexPath[indexPath] ?? []
@@ -65,16 +64,16 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
 
     /// Fills the range between the anchor and the second tap with every selectable day, in either
     /// order and across months, then reports the tapped day and the range.
-    private func completeRange(from anchor: IndexPath, to end: IndexPath, tapped: Date) {
-        guard let anchorDate = dateFromIndexPath(anchor) else { return }
-        let lower = min(anchorDate, tapped)
-        let upper = max(anchorDate, tapped)
+    private func completeRange(from anchor: Date, to end: IndexPath, tapped: Date) {
+        let lower = min(anchor, tapped)
+        let upper = max(anchor, tapped)
         var day = lower
         while day <= upper {
-            if let indexPath = indexPathForDate(day), !selectedIndexPaths.contains(indexPath), shouldSelect(indexPath) {
+            if let indexPath = indexPathForDate(day), let date = dateFromIndexPath(indexPath),
+                !selectedDates.contains(date), shouldSelect(indexPath)
+            {
                 collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
-                selectedIndexPaths.append(indexPath)
-                selectedDates.append(day)
+                selectedDates.append(date)
             }
             guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
             day = next
@@ -92,7 +91,6 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
             collectionView.deselectItem(at: previous, animated: false)
         }
         let previousDates = selectedDates
-        selectedIndexPaths.removeAll()
         selectedDates.removeAll()
         rangeAnchor = nil
         rangeIsComplete = false
@@ -105,13 +103,13 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
     /// Records a deselection the collection view already applied and notifies the delegate.
     /// In range mode a deselection clears the whole range.
     func didDeselect(_ indexPath: IndexPath) {
-        guard let index = selectedIndexPaths.firstIndex(of: indexPath) else { return }
+        guard let date = self.dateFromIndexPath(indexPath), let index = selectedDates.firstIndex(of: date) else {
+            return
+        }
         if selectionMode == .range {
             deselectAll(notifying: true)
             return
         }
-        let date = selectedDates[index]
-        selectedIndexPaths.remove(at: index)
         selectedDates.remove(at: index)
         delegate?.calendar(self, didDeselectDate: date)
     }
