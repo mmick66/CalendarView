@@ -100,8 +100,8 @@ public class CalendarView: UIView {
     /// The reuse identifier of the day cells.
     public let cellReuseIdentifier = "CalendarDayCell"
 
-    var headerView: CalendarHeaderView!
-    var collectionView: UICollectionView!
+    let headerView = CalendarHeaderView(frame: .zero)
+    let collectionView = UICollectionView(frame: .zero, collectionViewLayout: CalendarFlowLayout())
 
     /// Whether the grid always runs left to right. When `false` the grid mirrors in
     /// right-to-left layouts.
@@ -224,8 +224,8 @@ public class CalendarView: UIView {
 
     /// Whether the user can scroll between months. Programmatic scrolling always works.
     public var isScrollEnabled: Bool {
-        get { collectionView?.isScrollEnabled ?? true }
-        set { collectionView?.isScrollEnabled = newValue }
+        get { collectionView.isScrollEnabled }
+        set { collectionView.isScrollEnabled = newValue }
     }
 
     /// The date formatters for the style and the calendar, rebuilt when either changes.
@@ -234,7 +234,7 @@ public class CalendarView: UIView {
     /// Builds the formatters again for the current style and restyles the header with them.
     func rebuildFormatters() {
         formatters = Formatters(style: style)
-        headerView?.setStyle(style, formatters: formatters)
+        headerView.setStyle(style, formatters: formatters)
     }
 
     func accessibilityLabel(for date: Date, isToday: Bool, eventsCount: Int) -> String {
@@ -283,26 +283,24 @@ public class CalendarView: UIView {
     }
 
     // MARK: Create Subviews
-    /// Builds the header and the grid once; safe to call again.
+    /// Configures the header and the grid and adds them once; safe to call again.
     private func setup() {
-        guard collectionView == nil else { return }
+        guard collectionView.superview == nil else { return }
 
         self.clipsToBounds = true
 
         /* Header View */
-        self.headerView = CalendarHeaderView(frame: CGRect.zero)
         self.headerView.setStyle(style, formatters: formatters)
         self.addSubview(self.headerView)
 
         /* Layout */
-        let layout = CalendarFlowLayout()
+        let layout = flowLayout
         layout.scrollDirection = self.direction
         layout.sectionInset = UIEdgeInsets.zero
         layout.minimumInteritemSpacing = 0
         layout.minimumLineSpacing = 0
 
         /* Collection View */
-        self.collectionView = UICollectionView(frame: CGRect.zero, collectionViewLayout: layout)
         self.collectionView.dataSource = self
         self.collectionView.delegate = self
         self.collectionView.isPagingEnabled = true
@@ -362,14 +360,14 @@ public class CalendarView: UIView {
 
         super.layoutSubviews()
 
-        self.headerView?.frame = CGRect(
+        self.headerView.frame = CGRect(
             x: 0.0,
             y: 0.0,
             width: self.bounds.size.width,
             height: style.headerHeight
         )
 
-        self.collectionView?.frame = CGRect(
+        self.collectionView.frame = CGRect(
             x: 0.0,
             y: style.headerHeight,
             width: self.bounds.size.width,
@@ -395,11 +393,6 @@ public class CalendarView: UIView {
     }
 
     private func cellSize(in bounds: CGRect) -> CGSize {
-        guard let collectionView = self.collectionView
-        else {
-            return .zero
-        }
-
         return CGSize(
             width: collectionView.bounds.width / 7.0,  // number of days in week
             height: collectionView.bounds.height / 6.0  // maximum number of rows
@@ -409,7 +402,7 @@ public class CalendarView: UIView {
     internal var _isRtl = false
 
     internal func updateLayoutDirections() {
-        self.collectionView?.semanticContentAttribute = .forceLeftToRight
+        self.collectionView.semanticContentAttribute = .forceLeftToRight
 
         var isRtl = false
 
@@ -419,13 +412,13 @@ public class CalendarView: UIView {
 
         // The header mirrors with the calendar, whether the direction comes from the app or
         // from this view alone.
-        self.headerView?.semanticContentAttribute = isRtl ? .forceRightToLeft : .forceLeftToRight
-        self.headerView?.setNeedsLayout()
+        self.headerView.semanticContentAttribute = isRtl ? .forceRightToLeft : .forceLeftToRight
+        self.headerView.setNeedsLayout()
 
         if _isRtl != isRtl {
             _isRtl = isRtl
 
-            self.collectionView?.transform =
+            self.collectionView.transform =
                 isRtl
                 ? CGAffineTransform(scaleX: -1.0, y: 1.0)
                 : CGAffineTransform.identity
@@ -434,7 +427,7 @@ public class CalendarView: UIView {
     }
 
     internal func resetDisplayDate() {
-        guard let displayDate = self.displayDate, let collectionView = self.collectionView else { return }
+        guard let displayDate = self.displayDate else { return }
 
         collectionView.setContentOffset(
             self.scrollViewOffset(for: displayDate),
@@ -495,7 +488,6 @@ extension CalendarView {
     /// Selected days stay selected wherever the new grid puts them. Days that are no longer in
     /// range are deselected, and the delegate receives `didDeselectDate` for each.
     public func reloadData() {
-        guard let collectionView = self.collectionView else { return }
         refreshMonths()
         let change = selection.retain { date in
             indexPathForDate(date).map { !isOutOfRange($0) } ?? false
@@ -522,7 +514,6 @@ extension CalendarView {
 
         self.displayDateOnHeader(month)
 
-        guard let collectionView = self.collectionView else { return }
         collectionView.layoutIfNeeded()
         animationTargetMonth = animated ? month : nil
         collectionView.setContentOffset(self.scrollViewOffset(for: month), animated: animated)
@@ -601,7 +592,6 @@ extension CalendarView {
 
     /// Selects and deselects the cells of the days `change` added and removed.
     func show(_ change: SelectionState.Change) {
-        guard let collectionView else { return }
         for indexPath in change.deselected.compactMap({ indexPathForDate($0) }) {
             collectionView.deselectItem(at: indexPath, animated: false)
         }

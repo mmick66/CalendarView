@@ -31,9 +31,9 @@ open class CalendarHeaderView: UIView {
     /// The weekday names come from here; the calendar view builds them once per style.
     private(set) var formatters = CalendarView.Formatters(style: .default)
 
-    var monthLabel: UILabel!
+    let monthLabel = UILabel()
 
-    var dayLabels = [UILabel]()
+    let dayLabels = (0..<7).map { _ in UILabel() }
 
     public override init(frame: CGRect) {
         super.init(frame: frame)
@@ -48,23 +48,14 @@ open class CalendarHeaderView: UIView {
     }
 
     private func buildLabels() {
-        self.translatesAutoresizingMaskIntoConstraints = false
-
-        monthLabel = UILabel()
-        monthLabel.translatesAutoresizingMaskIntoConstraints = false
         monthLabel.backgroundColor = UIColor.clear
         monthLabel.adjustsFontForContentSizeCategory = true
         monthLabel.accessibilityTraits = .header
         self.addSubview(monthLabel)
 
-        dayLabels.removeAll()
-        for _ in 0..<7 {
-            let label = UILabel()
-            label.translatesAutoresizingMaskIntoConstraints = false
+        for label in dayLabels {
             label.backgroundColor = UIColor.clear
             label.adjustsFontForContentSizeCategory = true
-
-            dayLabels.append(label)
             self.addSubview(label)
         }
         updateStyle()
@@ -106,7 +97,7 @@ open class CalendarHeaderView: UIView {
 
         let isRtl = self.effectiveUserInterfaceLayoutDirection == .rightToLeft
 
-        self.monthLabel?.frame = CGRect(
+        self.monthLabel.frame = CGRect(
             x: 0.0,
             y: style.headerTopMargin,
             width: self.bounds.size.width,
