@@ -179,7 +179,7 @@ public struct KDCalendarView: UIViewRepresentable {
             coordinator.range = self.range
             view.reloadData()
         }
-        if !coordinator.sameEvents(as: self.events) {
+        if coordinator.events != self.events {
             coordinator.events = self.events
             view.events = self.events
         }
@@ -216,13 +216,6 @@ public struct KDCalendarView: UIViewRepresentable {
         init(_ parent: KDCalendarView) {
             self.parent = parent
             self.range = parent.range
-        }
-
-        func sameEvents(as other: [CalendarEvent]) -> Bool {
-            events.count == other.count
-                && zip(events, other).allSatisfy {
-                    $0.title == $1.title && $0.startDate == $1.startDate && $0.endDate == $1.endDate
-                }
         }
 
         /// Replaces a binding value the view could not hold as given with what the view shows.

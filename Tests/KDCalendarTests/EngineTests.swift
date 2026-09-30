@@ -184,6 +184,16 @@ struct EngineTests {
         #expect(view.eventsByIndexPath.values.flatMap { $0 }.filter { $0.title == "elsewhere" }.isEmpty)
     }
 
+    @Test func eventsCompareByTitleAndDates() {
+        let utc = calendar("UTC")
+        let event = CalendarEvent(title: "a", startDate: date(utc, 2024, 1, 1), endDate: date(utc, 2024, 1, 2))
+        let same = CalendarEvent(title: "a", startDate: date(utc, 2024, 1, 1), endDate: date(utc, 2024, 1, 2))
+        #expect(event == same)
+        #expect(event != CalendarEvent(title: "b", startDate: event.startDate, endDate: event.endDate))
+        #expect(event != CalendarEvent(title: "a", startDate: event.startDate, endDate: date(utc, 2024, 1, 3)))
+        #expect(Set([event, same]).count == 1)
+    }
+
     // MARK: Data source traffic
 
     @Test func theDataSourceIsAskedOncePerReloadNotOncePerCell() {

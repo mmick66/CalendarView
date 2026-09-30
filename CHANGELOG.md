@@ -18,6 +18,8 @@ All notable changes to KDCalendar are documented here. The format follows
   still return `false` for either.
 - `Style.resolvedCalendar`: `Style.calendar`, given `Style.locale` when it has
   no locale of its own. `CalendarView.calendar` returns it.
+- `CalendarEvent` is `Equatable` and `Hashable`, comparing title, start and end
+  date, so apps can diff or deduplicate their events.
 
 ### Fixed
 

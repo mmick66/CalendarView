@@ -27,7 +27,7 @@ import OSLog
 import UIKit
 
 /// An event shown as a dot on every day it covers.
-public struct CalendarEvent: Sendable {
+public struct CalendarEvent: Sendable, Hashable {
     public let title: String
     public let startDate: Date
     public let endDate: Date
