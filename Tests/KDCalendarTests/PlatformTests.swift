@@ -200,6 +200,34 @@ struct PlatformTests {
         #expect(box.dates == [date(2024, 2, 14)], "the sync does not echo back into the binding")
     }
 
+    @Test func swiftUIRangeChangeKeepsTheSelectedDayHighlighted() {
+        let box = SelectionBox()
+        var style = CalendarView.Style()
+        style.calendar = utc
+        style.locale = Locale(identifier: "en_US")
+        let host = UIHostingController(
+            rootView: KDCalendarView(range: date(2024, 3, 1)...date(2024, 4, 30), selection: box.binding)
+                .calendarStyle(style))
+        Self.window.rootViewController = host
+        host.view.frame = Self.window.bounds
+        host.view.layoutIfNeeded()
+        guard let calendar = findCalendarView(in: host.view) else {
+            Issue.record("no calendar view hosted")
+            return
+        }
+        calendar.selectDate(date(2024, 3, 15))
+
+        // An earlier start adds February in front of March.
+        host.rootView = KDCalendarView(range: date(2024, 2, 10)...date(2024, 4, 30), selection: box.binding)
+            .calendarStyle(style)
+        host.view.layoutIfNeeded()
+        let indexPath = calendar.indexPathForDate(date(2024, 3, 15))!
+        #expect(indexPath.section == 1)
+        #expect(calendar.selectedDates == [date(2024, 3, 15)])
+        #expect(calendar.collectionView.indexPathsForSelectedItems == [indexPath])
+        #expect(box.dates == [date(2024, 3, 15)])
+    }
+
     @Test func swiftUIModifiersReachTheCalendar() {
         let box = SelectionBox()
         var style = CalendarView.Style()

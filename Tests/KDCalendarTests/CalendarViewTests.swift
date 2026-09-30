@@ -539,6 +539,135 @@ struct CalendarViewTests {
         #expect(view.collectionView.indexPathsForSelectedItems == [IndexPath(item: 9, section: 0)])
     }
 
+    // MARK: Selection across grid rebuilds
+
+    private func dataSource(of view: CalendarView) -> FixedDataSource {
+        view.dataSource as! FixedDataSource
+    }
+
+    @Test func selectionFollowsItsDayWhenTheRangeGainsAMonth() {
+        let view = makeCalendar(start: date(2024, 3, 1), end: date(2024, 4, 30))
+        view.selectDate(date(2024, 3, 15))
+        let before = view.indexPathForDate(date(2024, 3, 15))!
+
+        // February joins the grid, so March moves to the second page.
+        dataSource(of: view).start = date(2024, 2, 10)
+        view.reloadData()
+
+        let after = view.indexPathForDate(date(2024, 3, 15))!
+        #expect(after.section == before.section + 1)
+        #expect(view.selectedDates == [date(2024, 3, 15)])
+        #expect(view.selectedIndexPaths == [after])
+        #expect(view.collectionView.indexPathsForSelectedItems == [after])
+        #expect(delegate(of: view).deselected == [])
+        view.setDisplayDate(date(2024, 3, 15))
+        view.layoutIfNeeded()
+        #expect(cell(view, after)?.isSelected == true)
+
+        // The old cell shows another day now, and tapping it selects that day.
+        let other = view.dateFromIndexPath(before)!
+        #expect(other == date(2024, 2, 16))
+        view.collectionView.selectItem(at: before, animated: false, scrollPosition: [])
+        view.collectionView(view.collectionView, didSelectItemAt: before)
+        #expect(view.selectedDates == [date(2024, 3, 15), other])
+
+        view.deselectDate(date(2024, 3, 15))
+        #expect(view.selectedDates == [other])
+        #expect(delegate(of: view).deselected == [date(2024, 3, 15)])
+        #expect(view.collectionView.indexPathsForSelectedItems == [before])
+    }
+
+    @Test func tappingASelectedDayAfterTheGridMovedDeselectsIt() {
+        let view = makeCalendar(start: date(2024, 3, 1), end: date(2024, 4, 30))
+        view.selectDate(date(2024, 3, 15))
+        dataSource(of: view).start = date(2024, 2, 10)
+        view.reloadData()
+
+        let indexPath = view.indexPathForDate(date(2024, 3, 15))!
+        #expect(view.collectionView(view.collectionView, shouldDeselectItemAt: indexPath) == true)
+        view.collectionView.deselectItem(at: indexPath, animated: false)
+        view.collectionView(view.collectionView, didDeselectItemAt: indexPath)
+        #expect(view.selectedDates == [])
+        #expect(delegate(of: view).deselected == [date(2024, 3, 15)])
+        #expect(view.collectionView.indexPathsForSelectedItems == [])
+    }
+
+    @Test func selectionFollowsItsDayWhenTheFirstWeekdayChanges() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        view.selectDate(date(2024, 1, 10))
+        #expect(view.selectedIndexPaths == [IndexPath(item: 9, section: 0)])
+
+        view.style.firstWeekday = .sunday
+        #expect(view.selectedDates == [date(2024, 1, 10)])
+        #expect(view.selectedIndexPaths == [IndexPath(item: 10, section: 0)])
+        #expect(view.collectionView.indexPathsForSelectedItems == [IndexPath(item: 10, section: 0)])
+        view.layoutIfNeeded()
+        #expect(cell(view, IndexPath(item: 10, section: 0))?.isSelected == true)
+        #expect(cell(view, IndexPath(item: 9, section: 0))?.isSelected == false)
+
+        view.deselectDate(date(2024, 1, 10))
+        #expect(view.selectedDates == [])
+        #expect(view.collectionView.indexPathsForSelectedItems == [])
+    }
+
+    @Test func selectedDaysThatLeaveTheRangeAreDeselectedAndReported() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 3, 31))
+        view.selectDate(date(2024, 1, 10))
+        view.selectDate(date(2024, 2, 3))
+        view.selectDate(date(2024, 2, 20))
+        view.selectDate(date(2024, 3, 5))
+
+        // Down to one month: January and March leave the grid, and 3 February is still on the
+        // page but before the new start.
+        dataSource(of: view).start = date(2024, 2, 5)
+        dataSource(of: view).end = date(2024, 2, 29)
+        view.reloadData()
+        view.layoutIfNeeded()
+
+        #expect(view.numberOfSections(in: view.collectionView) == 1)
+        #expect(view.selectedDates == [date(2024, 2, 20)])
+        #expect(delegate(of: view).deselected == [date(2024, 1, 10), date(2024, 2, 3), date(2024, 3, 5)])
+        #expect(view.collectionView.indexPathsForSelectedItems == [view.indexPathForDate(date(2024, 2, 20))!])
+    }
+
+    @Test func aRangeAnchorFollowsItsDayAndGoesWithIt() {
+        let view = makeCalendar(start: date(2024, 3, 1), end: date(2024, 4, 30))
+        view.selectionMode = .range
+        view.selectDate(date(2024, 3, 15))
+        dataSource(of: view).start = date(2024, 2, 10)
+        view.reloadData()
+        view.selectDate(date(2024, 3, 18))
+        #expect(view.selectedDates == [date(2024, 3, 15), date(2024, 3, 16), date(2024, 3, 17), date(2024, 3, 18)])
+
+        // A new anchor that leaves the range takes the half-picked range with it.
+        view.selectDate(date(2024, 4, 20))
+        dataSource(of: view).end = date(2024, 3, 31)
+        view.reloadData()
+        #expect(view.selectedDates == [])
+        #expect(delegate(of: view).deselected.last == date(2024, 4, 20))
+        view.selectDate(date(2024, 3, 1))
+        #expect(view.selectedDates == [date(2024, 3, 1)], "the next tap starts a new range")
+    }
+
+    @Test func selectionKeepsItsDayWhenTheTimeZoneChanges() {
+        let view = makeCalendar(start: date(2024, 3, 10), end: date(2024, 3, 20))
+        view.selectDate(date(2024, 3, 15))
+
+        // Midnight UTC is the evening before in New York.
+        var newYork = utc
+        newYork.timeZone = TimeZone(identifier: "America/New_York")!
+        view.style.calendar = newYork
+        let fifteenth = newYork.date(from: DateComponents(year: 2024, month: 3, day: 15))!
+        #expect(view.selectedDates == [fifteenth])
+        #expect(view.selectedIndexPaths == [view.indexPathForDate(fifteenth)!])
+        #expect(view.collectionView.indexPathsForSelectedItems == view.selectedIndexPaths)
+        #expect(delegate(of: view).deselected == [])
+
+        view.deselectDate(fifteenth)
+        #expect(view.selectedDates == [])
+        #expect(delegate(of: view).deselected == [fifteenth])
+    }
+
     @Test func clearAllSelectedDatesDoesNotNotify() {
         let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
         view.selectDate(date(2024, 1, 10))
