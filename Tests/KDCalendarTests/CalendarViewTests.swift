@@ -597,6 +597,59 @@ struct CalendarViewTests {
         #expect(delegate(of: view).deselected == [date(2024, 1, 10)])
     }
 
+    @Test func setSelectionKeepsEverySelectableDayInMultipleModeWithoutNotifying() {
+        let view = makeCalendar(start: date(2024, 1, 3), end: date(2024, 1, 31))
+        delegate(of: view).canSelect = { [utc] in utc.component(.day, from: $0) != 10 }
+        view.selectDate(date(2024, 1, 20))
+        view.setSelection([
+            date(2024, 1, 12, hour: 9), date(2024, 1, 2), date(2024, 1, 10), date(2024, 1, 5), date(2024, 1, 12),
+        ])
+        #expect(view.selectedDates == [date(2024, 1, 12), date(2024, 1, 5)], "in order, once, in range and allowed")
+        #expect(
+            Set(view.collectionView.indexPathsForSelectedItems ?? []) == [
+                IndexPath(item: 11, section: 0), IndexPath(item: 4, section: 0),
+            ])
+        #expect(delegate(of: view).selected == [date(2024, 1, 20)])
+        #expect(delegate(of: view).deselected == [])
+    }
+
+    @Test func setSelectionKeepsTheLastSelectableDayInSingleMode() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        view.selectionMode = .single
+        delegate(of: view).canSelect = { [utc] in utc.component(.day, from: $0) != 10 }
+        view.setSelection([date(2024, 1, 5), date(2024, 1, 8), date(2024, 1, 10)])
+        #expect(view.selectedDates == [date(2024, 1, 8)])
+        #expect(view.collectionView.indexPathsForSelectedItems == [IndexPath(item: 7, section: 0)])
+        view.selectDate(date(2024, 1, 12))
+        #expect(view.selectedDates == [date(2024, 1, 12)], "a later selection still replaces it")
+    }
+
+    @Test func setSelectionFillsARangeFromTheEarliestDayToTheLatest() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 2, 29))
+        view.selectionMode = .range
+        delegate(of: view).canSelect = { [utc] in utc.component(.day, from: $0) != 10 }
+        view.setSelection([date(2024, 1, 12), date(2024, 1, 8), date(2024, 1, 11)])
+        #expect(view.selectedDates == [date(2024, 1, 8), date(2024, 1, 9), date(2024, 1, 11), date(2024, 1, 12)])
+        #expect(Set(view.collectionView.indexPathsForSelectedItems ?? []).count == 4)
+        view.selectDate(date(2024, 1, 20))
+        #expect(view.selectedDates == [date(2024, 1, 20)], "the range is complete, so the next day starts a new one")
+
+        // A lone day is the first end of a range.
+        view.setSelection([date(2024, 1, 30)])
+        #expect(view.selectedDates == [date(2024, 1, 30)])
+        view.selectDate(date(2024, 2, 2))
+        #expect(view.selectedDates == [date(2024, 1, 30), date(2024, 1, 31), date(2024, 2, 1), date(2024, 2, 2)])
+        #expect(delegate(of: view).selected == [date(2024, 1, 20), date(2024, 2, 2)], "only the taps are reported")
+
+        // Ends outside the data source's range keep the days inside it.
+        view.setSelection([date(2023, 6, 1), date(2024, 1, 2)])
+        #expect(view.selectedDates == [date(2024, 1, 1), date(2024, 1, 2)])
+
+        view.setSelection([])
+        #expect(view.selectedDates == [])
+        #expect(view.collectionView.indexPathsForSelectedItems == [])
+    }
+
     // MARK: Style and references
 
     @Test func eachCalendarOwnsItsStyle() {
