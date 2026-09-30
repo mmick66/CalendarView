@@ -100,13 +100,39 @@ struct MonthGrid {
         return IndexPath(item: months[section].firstDay + dayOfMonth - 1, section: section)
     }
 
-    /// The day a cell shows, or `nil` for the empty cells before and after the month.
-    func date(at indexPath: IndexPath) -> Date? {
-        guard months.indices.contains(indexPath.section) else { return nil }
+    /// What a cell shows.
+    enum Content: Equatable {
+        /// A day of the month, at the start of the day, and its number in the month.
+        case day(Date, dayOfMonth: Int)
+        /// A day of the previous month, in the cells before the first day.
+        case leading(dayOfMonth: Int)
+        /// A day of the next month, in the cells after the last day.
+        case trailing(dayOfMonth: Int)
+        /// Nothing: a cell before the first displayed month or outside the grid.
+        case empty
+    }
+
+    /// What the cell at `indexPath` shows. The cells around a month hold the neighbouring
+    /// months' days, except before the first month, which has no previous month to borrow from.
+    func content(at indexPath: IndexPath) -> Content {
+        guard months.indices.contains(indexPath.section) else { return .empty }
         let month = months[indexPath.section]
         let offset = indexPath.item - month.firstDay
-        guard offset >= 0, offset < month.daysTotal else { return nil }
-        return calendar.date(byAdding: .day, value: offset, to: month.firstDate)
+        if offset < 0 {
+            guard indexPath.section > 0 else { return .empty }
+            return .leading(dayOfMonth: months[indexPath.section - 1].daysTotal + offset + 1)
+        }
+        if offset >= month.daysTotal {
+            return .trailing(dayOfMonth: offset - month.daysTotal + 1)
+        }
+        guard let date = calendar.date(byAdding: .day, value: offset, to: month.firstDate) else { return .empty }
+        return .day(date, dayOfMonth: offset + 1)
+    }
+
+    /// The day a cell shows, or `nil` for the empty cells before and after the month.
+    func date(at indexPath: IndexPath) -> Date? {
+        guard case .day(let date, _) = content(at: indexPath) else { return nil }
+        return date
     }
 
     func isOutOfRange(_ indexPath: IndexPath) -> Bool {
@@ -233,42 +259,28 @@ extension CalendarView: UICollectionViewDataSource {
             ? CGAffineTransform(scaleX: -1.0, y: 1.0)
             : CGAffineTransform.identity
 
-        guard let months = currentMonths, months.months.indices.contains(indexPath.section) else { return dayCell }
-        let month = months.months[indexPath.section]
+        guard let months = currentMonths else { return dayCell }
 
-        let firstDayIndex = month.firstDay
-        let lastDayIndex = firstDayIndex + month.daysTotal
-        let isInRange = (firstDayIndex..<lastDayIndex).contains(indexPath.item)
-
-        if isInRange {
-            if let date = months.date(at: indexPath), let dayStyle = delegate?.calendar(self, styleForDate: date) {
+        switch months.content(at: indexPath) {
+        case .day(let date, let dayOfMonth):
+            if let dayStyle = delegate?.calendar(self, styleForDate: date) {
                 dayCell.style = dayStyle
             }
-            dayCell.day = indexPath.item - firstDayIndex + 1
+            dayCell.day = dayOfMonth
+            dayCell.date = date
             dayCell.isOutOfRange = months.isOutOfRange(indexPath)
             dayCell.isToday = indexPath == todayIndexPath
-            if marksWeekends, let date = months.date(at: indexPath) {
+            if marksWeekends {
                 dayCell.isWeekend = calendar.isDateInWeekend(date)
             }
             dayCell.eventsCount = eventsByIndexPath[indexPath]?.count ?? 0
-            dayCell.date = months.date(at: indexPath)
-            if let date = dayCell.date {
-                dayCell.accessibilityLabel = accessibilityLabel(
-                    for: date, isToday: dayCell.isToday, eventsCount: dayCell.eventsCount)
-            }
-        } else if style.showAdjacentDays {
-            if indexPath.item < firstDayIndex {
-                if indexPath.section > 0 {
-                    dayCell.day = months.months[indexPath.section - 1].daysTotal - firstDayIndex + indexPath.item + 1
-                } else {
-                    dayCell.isHidden = true
-                }
-            } else {
-                dayCell.day = indexPath.item - lastDayIndex + 1
-            }
+            dayCell.accessibilityLabel = accessibilityLabel(
+                for: date, isToday: dayCell.isToday, eventsCount: dayCell.eventsCount)
+        case .leading(let dayOfMonth) where style.showAdjacentDays,
+            .trailing(let dayOfMonth) where style.showAdjacentDays:
+            dayCell.day = dayOfMonth
             dayCell.isAdjacent = true
-            dayCell.eventsCount = 0
-        } else {
+        case .leading, .trailing, .empty:
             dayCell.isHidden = true
         }
 

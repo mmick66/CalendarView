@@ -112,6 +112,36 @@ struct EngineTests {
         #expect(view.selectedDates == [])
     }
 
+    // MARK: Cell content
+
+    @Test func cellContentCoversTheMonthAndItsNeighbours() throws {
+        let utc = calendar("UTC")
+        // January 2024 starts on a Monday, February on a Thursday (Monday-first: items 0 and 3).
+        let grid = try #require(
+            MonthGrid(start: date(utc, 2024, 1, 1), end: date(utc, 2024, 2, 29), calendar: utc, firstWeekday: 2))
+        #expect(grid.content(at: IndexPath(item: 0, section: 0)) == .day(date(utc, 2024, 1, 1), dayOfMonth: 1))
+        #expect(grid.content(at: IndexPath(item: 30, section: 0)) == .day(date(utc, 2024, 1, 31), dayOfMonth: 31))
+        #expect(grid.content(at: IndexPath(item: 31, section: 0)) == .trailing(dayOfMonth: 1))
+        #expect(grid.content(at: IndexPath(item: 41, section: 0)) == .trailing(dayOfMonth: 11))
+        #expect(grid.content(at: IndexPath(item: 0, section: 1)) == .leading(dayOfMonth: 29))
+        #expect(grid.content(at: IndexPath(item: 2, section: 1)) == .leading(dayOfMonth: 31))
+        #expect(grid.content(at: IndexPath(item: 3, section: 1)) == .day(date(utc, 2024, 2, 1), dayOfMonth: 1))
+        #expect(grid.content(at: IndexPath(item: 31, section: 1)) == .day(date(utc, 2024, 2, 29), dayOfMonth: 29))
+        #expect(grid.content(at: IndexPath(item: 32, section: 1)) == .trailing(dayOfMonth: 1))
+        #expect(grid.content(at: IndexPath(item: 0, section: 2)) == .empty, "outside the grid")
+        #expect(grid.date(at: IndexPath(item: 31, section: 0)) == nil)
+    }
+
+    @Test func theFirstMonthHasNoLeadingDays() throws {
+        let utc = calendar("UTC")
+        let grid = try #require(
+            MonthGrid(start: date(utc, 2024, 2, 1), end: date(utc, 2024, 2, 29), calendar: utc, firstWeekday: 2))
+        for item in 0..<3 {
+            #expect(grid.content(at: IndexPath(item: item, section: 0)) == .empty, "item \(item)")
+        }
+        #expect(grid.content(at: IndexPath(item: 3, section: 0)) == .day(date(utc, 2024, 2, 1), dayOfMonth: 1))
+    }
+
     // MARK: Events
 
     @Test func anEventWithAFarEndDateIsClampedToTheGrid() {
