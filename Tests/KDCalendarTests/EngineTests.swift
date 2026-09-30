@@ -184,6 +184,24 @@ struct EngineTests {
         #expect(view.eventsByIndexPath.values.flatMap { $0 }.filter { $0.title == "elsewhere" }.isEmpty)
     }
 
+    @Test func anEventEndingJustAfterASkippedMidnightKeepsItsLastDay() throws {
+        // Adding a day to 8 September 2024 in Santiago lands on 01:00, so a walk that does not
+        // return to the start of each day reaches the 10th after this event has ended at 00:30.
+        let santiago = calendar("America/Santiago")
+        let view = makeCalendar(start: date(santiago, 2024, 9, 1), end: date(santiago, 2024, 9, 30), calendar: santiago)
+        view.events = [
+            CalendarEvent(
+                title: "a", startDate: date(santiago, 2024, 9, 6, hour: 10),
+                endDate: date(santiago, 2024, 9, 10).addingTimeInterval(30 * 60))
+        ]
+        for day in 6...10 {
+            let indexPath = try #require(view.indexPathForDate(date(santiago, 2024, 9, day, hour: 12)))
+            #expect(view.eventsByIndexPath[indexPath]?.map(\.title) == ["a"], "day \(day)")
+        }
+        let after = try #require(view.indexPathForDate(date(santiago, 2024, 9, 11, hour: 12)))
+        #expect(view.eventsByIndexPath[after] == nil)
+    }
+
     @Test func eventsCompareByTitleAndDates() {
         let utc = calendar("UTC")
         let event = CalendarEvent(title: "a", startDate: date(utc, 2024, 1, 1), endDate: date(utc, 2024, 1, 2))

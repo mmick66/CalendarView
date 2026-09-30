@@ -211,8 +211,9 @@ extension CalendarView {
                 if let indexPath = months.indexPath(for: day) {
                     eventsByIndexPath[indexPath, default: []].append(event)
                 }
+                // Where a DST change skips midnight, adding a day lands after it, so return to the start.
                 guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
-                day = next
+                day = calendar.startOfDay(for: next)
             } while day < last
         }
     }
