@@ -508,8 +508,9 @@ extension CalendarView {
 
     /// Scrolls to the month containing `date`. Dates outside the data source's months are ignored.
     ///
-    /// The delegate receives `didScrollToMonth` once the month is on screen: immediately when
-    /// `animated` is `false`, when the animation ends otherwise.
+    /// The delegate receives `didScrollToMonth` once the month is on screen: when the animation
+    /// ends, or immediately when `animated` is `false`, the view has no size yet or the month
+    /// is already on screen.
     public func setDisplayDate(_ date: Date, animated: Bool = false) {
         guard let indexPath = self.indexPathForDate(date),
             let month = self.months?.firstDay(ofSection: indexPath.section)
@@ -520,8 +521,14 @@ extension CalendarView {
         self.displayDateOnHeader(month)
 
         collectionView.layoutIfNeeded()
+        let offset = self.scrollViewOffset(for: month)
+        // UIKit sends no end-of-animation callback when the offset does not change, which is
+        // always the case before the first layout, so those scrolls report at once.
+        let animated =
+            animated && collectionView.bounds.width > 0 && collectionView.bounds.height > 0
+            && collectionView.contentOffset != offset
         animationTargetMonth = animated ? month : nil
-        collectionView.setContentOffset(self.scrollViewOffset(for: month), animated: animated)
+        collectionView.setContentOffset(offset, animated: animated)
         if !animated {
             self.notifyScrolled(to: month)
         }
