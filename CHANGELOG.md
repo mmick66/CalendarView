@@ -26,6 +26,11 @@ All notable changes to KDCalendar are documented here. The format follows
   as days now and `selectedIndexPaths` is derived from the current grid. A
   reload deselects the days that left the range and tells the delegate with
   `didDeselectDate`.
+- `KDCalendarView` replayed an assigned selection as taps, so in `.range` mode
+  a week became its last day and in `.single` mode several days showed only
+  the last while the binding kept them all. The binding is now applied as a
+  whole in the shape of the selection mode, and set to the days the calendar
+  shows when they differ.
 
 ## [2.0.1] - 2026-09-08
 

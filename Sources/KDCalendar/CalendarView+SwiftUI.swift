@@ -20,12 +20,17 @@ import SwiftUI
 /// ```
 ///
 /// The selection binding is two-way: taps update it, and assigning to it selects or deselects
-/// days in the view.
+/// days in the view. An assigned value is applied as a whole, not as a series of taps, in the
+/// shape of the selection mode: `.multiple` keeps every day, `.single` keeps the last one, and
+/// `.range` selects every day from the earliest to the latest (a lone day is the first end of a
+/// range that the next tap completes). Days out of range or refused by ``canSelect(_:)`` are
+/// dropped. When the view cannot show the value as given, the binding is set to the days it shows.
 public struct KDCalendarView: UIViewRepresentable {
 
     /// The first and last selectable days.
     public var range: ClosedRange<Date>
-    /// The selected days, in selection order.
+    /// The selected days, in selection order. See the type's discussion for how an assigned value
+    /// is shaped by the selection mode.
     @Binding public var selection: [Date]
 
     var style = CalendarView.Style.default
@@ -176,14 +181,15 @@ public struct KDCalendarView: UIViewRepresentable {
             view.setDisplayDate(displayDate, animated: context.transaction.animation != nil)
         }
 
-        // Bring the view's selection in line with the binding.
+        // Bring the view's selection in line with the binding. Replaying the days as taps would
+        // pair them into ranges or keep only the last, so they are applied as a whole.
         let calendar = view.calendar
         let wanted = self.selection.map { calendar.startOfDay(for: $0) }
-        for date in view.selectedDates where !wanted.contains(date) {
-            view.deselectDate(date)
-        }
-        for date in wanted where !view.selectedDates.contains(date) {
-            view.selectDate(date)
+        if wanted != view.selectedDates {
+            view.setSelection(wanted)
+            if view.selectedDates != wanted {
+                coordinator.correctSelection(self.selection, to: view.selectedDates)
+            }
         }
     }
 
@@ -206,6 +212,16 @@ public struct KDCalendarView: UIViewRepresentable {
                 && zip(events, other).allSatisfy {
                     $0.title == $1.title && $0.startDate == $1.startDate && $0.endDate == $1.endDate
                 }
+        }
+
+        /// Replaces a binding value the view could not hold as given with what the view shows.
+        /// State must not change during a view update, so this waits for the update to end, and
+        /// gives up if a tap or the app changed the binding in the meantime.
+        func correctSelection(_ requested: [Date], to shown: [Date]) {
+            Task { @MainActor in
+                guard self.parent.selection == requested else { return }
+                self.parent.selection = shown
+            }
         }
 
         public func startDate() -> Date { range.lowerBound }

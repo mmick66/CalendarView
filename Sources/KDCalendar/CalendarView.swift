@@ -617,6 +617,46 @@ extension CalendarView {
         rangeIsComplete = false
     }
 
+    /// Replaces the selection with `dates` as the selection mode holds them, without replaying
+    /// taps and without notifying the delegate. `.multiple` keeps every selectable day in order,
+    /// `.single` keeps the last one, and `.range` selects every selectable day from the earliest
+    /// date to the latest; a lone day in `.range` mode is the first end of a new range.
+    func setSelection(_ dates: [Date]) {
+        var days = [Date]()
+        for day in dates.map({ calendar.startOfDay(for: $0) }) where !days.contains(day) {
+            days.append(day)
+        }
+        let isRange = selectionMode == .range && days.count > 1
+        if isRange, let lower = days.min(), let upper = days.max() {
+            // Only days in range can be selected, so far-off ends cost nothing.
+            let bounds = dateRange
+            days.removeAll()
+            var day = max(lower, bounds.lowerBound)
+            while day <= min(upper, bounds.upperBound) {
+                days.append(day)
+                guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
+                day = next
+            }
+        }
+        var selection = days.compactMap { day -> (IndexPath, Date)? in
+            guard let indexPath = indexPathForDate(day), shouldSelect(indexPath) else { return nil }
+            return (indexPath, day)
+        }
+        if selectionMode == .single {
+            selection = Array(selection.suffix(1))
+        }
+
+        clearAllSelectedDates()
+        for (indexPath, day) in selection {
+            collectionView?.selectItem(at: indexPath, animated: false, scrollPosition: [])
+            selectedDates.append(day)
+        }
+        if selectionMode == .range {
+            rangeAnchor = selectedDates.first
+            rangeIsComplete = isRange && rangeAnchor != nil
+        }
+    }
+
     func goToMonth(offsetBy offset: Int) {
 
         guard let displayDate = self.displayDate else { return }

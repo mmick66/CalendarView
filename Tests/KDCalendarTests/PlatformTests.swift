@@ -293,4 +293,111 @@ struct PlatformTests {
         #expect(calendar.events.count == 2)
         #expect(calendar.direction == .horizontal, "modifiers not repeated fall back to their defaults")
     }
+
+    /// Hosts `view` in the window and returns the host with the calendar inside it.
+    private func hostCalendar(_ view: KDCalendarView) -> (UIHostingController<KDCalendarView>, CalendarView)? {
+        let host = UIHostingController(rootView: view)
+        Self.window.rootViewController = host
+        host.view.frame = Self.window.bounds
+        host.view.layoutIfNeeded()
+        guard let calendar = findCalendarView(in: host.view) else {
+            Issue.record("no calendar view hosted")
+            return nil
+        }
+        return (host, calendar)
+    }
+
+    /// Lets work queued on the main actor run, such as the wrapper correcting its binding.
+    private func settle() async {
+        for _ in 0..<5 { await Task.yield() }
+    }
+
+    @Test func swiftUIRangeSetFromTheBindingSelectsEveryDayInIt() async {
+        let box = SelectionBox()
+        var style = CalendarView.Style()
+        style.calendar = utc
+        style.locale = Locale(identifier: "en_US")
+        let range = date(2024, 1, 1)...date(2024, 3, 31)
+        func view() -> KDCalendarView {
+            KDCalendarView(range: range, selection: box.binding).calendarStyle(style).selectionMode(.range)
+        }
+        guard let hosted = hostCalendar(view()) else { return }
+        let (host, calendar) = hosted
+
+        // A whole week, as the demo's "Select this week" sets it.
+        let week = (8...14).map { date(2024, 1, $0) }
+        box.dates = week
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        await settle()
+        #expect(calendar.selectedDates == week)
+        #expect(box.dates == week)
+        #expect(box.changes == 0, "a value the view shows as given is left alone")
+
+        // The ends of a range fill in, and the binding learns the days between them.
+        box.dates = [date(2024, 2, 9), date(2024, 2, 5)]
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        await settle()
+        let filled = (5...9).map { date(2024, 2, $0) }
+        #expect(calendar.selectedDates == filled)
+        #expect(box.dates == filled)
+        #expect(box.changes == 1)
+
+        // The range is complete: the next tap starts a new one and the one after completes it.
+        calendar.selectDate(date(2024, 2, 20))
+        #expect(box.dates == [date(2024, 2, 20)])
+        calendar.selectDate(date(2024, 2, 22))
+        #expect(box.dates == (20...22).map { date(2024, 2, $0) })
+    }
+
+    @Test func swiftUIBindingIsCorrectedToWhatTheViewShows() async {
+        let box = SelectionBox()
+        var style = CalendarView.Style()
+        style.calendar = utc
+        style.locale = Locale(identifier: "en_US")
+        let range = date(2024, 1, 1)...date(2024, 3, 31)
+        var mode = CalendarView.SelectionMode.single
+        func view() -> KDCalendarView {
+            KDCalendarView(range: range, selection: box.binding)
+                .calendarStyle(style)
+                .selectionMode(mode)
+                .canSelect { [utc] in utc.component(.day, from: $0) != 13 }
+        }
+        guard let hosted = hostCalendar(view()) else { return }
+        let (host, calendar) = hosted
+
+        // Single mode keeps the last day, not each one in turn.
+        box.dates = [date(2024, 1, 8), date(2024, 1, 10), date(2024, 1, 12)]
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        await settle()
+        #expect(calendar.selectedDates == [date(2024, 1, 12)])
+        #expect(box.dates == [date(2024, 1, 12)])
+
+        // A correction gives way to a newer value.
+        box.dates = [date(2024, 1, 8), date(2024, 1, 10)]
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        box.dates = [date(2024, 1, 20)]
+        await settle()
+        #expect(box.dates == [date(2024, 1, 20)])
+
+        // Refused days are dropped; a time of day alone is not worth a correction.
+        mode = .multiple
+        let changes = box.changes
+        let morning = utc.date(byAdding: .hour, value: 9, to: date(2024, 1, 5))!
+        box.dates = [morning]
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        await settle()
+        #expect(calendar.selectedDates == [date(2024, 1, 5)])
+        #expect(box.changes == changes)
+        box.dates = [morning, date(2024, 1, 13)]
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        await settle()
+        #expect(calendar.selectedDates == [date(2024, 1, 5)])
+        #expect(box.dates == [date(2024, 1, 5)])
+    }
 }

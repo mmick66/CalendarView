@@ -206,7 +206,7 @@ struct ContentView: View {
 }
 ```
 
-Taps update the binding; assigning to it selects or deselects days.
+Taps update the binding; assigning to it selects or deselects days. An assigned value takes the shape of the selection mode: `.single` keeps the last day and `.range` selects every day from the earliest to the latest. When the calendar cannot show the value as given, the binding is set to the days it shows.
 
 ## Example app
 
