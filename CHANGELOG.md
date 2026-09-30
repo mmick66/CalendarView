@@ -13,6 +13,11 @@ All notable changes to KDCalendar are documented here. The format follows
 
 ### Fixed
 
+- `setDisplayDate(_:animated: true)` never reported `didScrollToMonth` when the
+  view had no size yet or the month was already on screen, because UIKit sends
+  no end-of-animation callback when the offset does not move. SwiftUI's
+  `onScrollToMonth` missed the first month of an animated update this way. Such
+  scrolls now report at once, as non-animated ones do.
 - `loadEvents()` stopped at the start of the last day of the range, so events
   later on that day were missed.
 - `loadEvents()` missed every event after the first four years of a longer

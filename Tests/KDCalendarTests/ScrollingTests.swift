@@ -163,6 +163,42 @@ struct ScrollingTests {
         #expect(delegate(of: view).scrolledTo.last == date(2024, 3, 1))
     }
 
+    @Test func anAnimatedScrollBeforeTheFirstLayoutReportsTheMonth() {
+        // SwiftUI sets the month during its update, before the view has a size. The offset does
+        // not move, so UIKit never reports the end of an animation.
+        // The same order as KDCalendarView: data source and delegate first, then the style.
+        let view = CalendarView(frame: .zero)
+        let dataSource = FixedDataSource(start: date(2024, 1, 15), end: date(2024, 3, 10))
+        let delegate = RecordingDelegate()
+        retained.objects.append(dataSource)
+        retained.objects.append(delegate)
+        view.dataSource = dataSource
+        view.delegate = delegate
+        var style = CalendarView.Style()
+        style.calendar = utc
+        view.style = style
+        view.setDisplayDate(date(2024, 2, 10), animated: true)
+        #expect(view.animationTargetMonth == nil, "no animation is waited for")
+        view.frame = CGRect(x: 0, y: 0, width: 350, height: 420)
+        Self.window.addSubview(view)
+        view.layoutIfNeeded()
+        #expect(delegate.scrolledTo == [date(2024, 2, 1)])
+        #expect(view.displayDate == date(2024, 2, 1))
+        #expect(view.collectionView.contentOffset.x == view.collectionView.bounds.width)
+    }
+
+    @Test func anAnimatedScrollToTheMonthOnScreenDoesNotWait() {
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
+        view.setDisplayDate(date(2024, 2, 10))
+        view.setDisplayDate(date(2024, 2, 20), animated: true)
+        #expect(view.animationTargetMonth == nil, "the offset does not move, so no callback comes")
+        #expect(delegate(of: view).scrolledTo == [date(2024, 1, 1), date(2024, 2, 1)])
+        // A drag that ends on another month still reports it.
+        view.collectionView.contentOffset = CGPoint(x: 2 * view.collectionView.bounds.width, y: 0)
+        view.scrollViewDidEndDecelerating(view.collectionView)
+        #expect(delegate(of: view).scrolledTo.last == date(2024, 3, 1))
+    }
+
     // MARK: Vertical paging
 
     @Test func verticalPagingStacksMonthsAndScrollsOnTheYAxis() {
