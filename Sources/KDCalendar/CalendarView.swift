@@ -118,14 +118,10 @@ public class CalendarView: UIView {
         }
     }
 
-    /// The calendar used for every date computation: `style.calendar`, given `style.locale`
-    /// when it has no locale of its own so that weekends and week numbering follow the locale.
+    /// The calendar used for every date computation: ``Style/resolvedCalendar``, that is
+    /// `style.calendar`, given `style.locale` when it has no locale of its own.
     public var calendar: Calendar {
-        var calendar = style.calendar
-        if calendar.locale == nil || calendar.locale?.identifier.isEmpty == true {
-            calendar.locale = style.locale
-        }
-        return calendar
+        style.resolvedCalendar
     }
 
     /// The days the data source currently spans, from `startDate()` to `endDate()`, at the

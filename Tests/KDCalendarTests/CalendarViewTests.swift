@@ -134,6 +134,24 @@ struct CalendarViewTests {
         #expect(automatic.headerView.dayLabels.map(\.text) == ["Wed", "Thu", "Fri", "Sat", "Sun", "Mon", "Tue"])
     }
 
+    @Test func automaticFirstWeekdayFollowsTheStyleLocaleWhenTheCalendarHasNone() {
+        // `utc` is made with Calendar(identifier:), so it has no locale and says Sunday.
+        let british = makeCalendar(
+            start: date(2024, 1, 10), end: date(2024, 1, 20), firstWeekday: .automatic,
+            locale: Locale(identifier: "en_GB"))
+        #expect(british.style.effectiveFirstWeekday == 2)
+        #expect(british.calendar.firstWeekday == 2)
+        #expect(british.getCachedSectionInfo(0)?.firstDay == 0)
+        #expect(british.headerView.dayLabels.first?.text == "Mon")
+
+        let american = makeCalendar(
+            start: date(2024, 1, 10), end: date(2024, 1, 20), firstWeekday: .automatic,
+            locale: Locale(identifier: "en_US"))
+        #expect(american.style.effectiveFirstWeekday == 1)
+        #expect(american.getCachedSectionInfo(0)?.firstDay == 1)
+        #expect(american.headerView.dayLabels.first?.text == "Sun")
+    }
+
     @Test func numberOfSectionsCoversEveryMonthTouchedByTheRange() {
         let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
         #expect(view.numberOfSections(in: view.collectionView) == 3)

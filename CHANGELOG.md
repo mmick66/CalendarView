@@ -10,9 +10,15 @@ All notable changes to KDCalendar are documented here. The format follows
 
 - `CalendarEventStore`, the part of `EKEventStore` the EventKit bridge uses, and
   `EventsManager.store` to inject a test double. The bridge has tests now.
+- `Style.resolvedCalendar`: `Style.calendar`, given `Style.locale` when it has
+  no locale of its own. `CalendarView.calendar` returns it.
 
 ### Fixed
 
+- `firstWeekday = .automatic` ignored `Style.locale` when `Style.calendar` had
+  no locale, as a calendar made with `Calendar(identifier:)` has none: weeks
+  started on Sunday whatever the locale. It follows the locale now, as weekends
+  already did.
 - `loadEvents()` stopped at the start of the last day of the range, so events
   later on that day were missed.
 - `loadEvents()` missed every event after the first four years of a longer

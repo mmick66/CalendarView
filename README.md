@@ -85,12 +85,12 @@ The view holds both weakly, so keep them alive yourself. A view controller that 
 
 ### Dates
 
-Every date the view computes or hands out is the start of a day in `calendarView.calendar`, which is `style.calendar` and defaults to `Calendar.current`. `didScrollToMonth` receives the first day of the month. To work in another time zone or calendar, set one on the style:
+Every date the view computes or hands out is the start of a day in `calendarView.calendar`, which is `style.calendar` (given `style.locale` when it has no locale of its own) and defaults to `Calendar.current`. `didScrollToMonth` receives the first day of the month. To work in another time zone or calendar, set one on the style:
 
 ```swift
 var style = CalendarView.Style()
 style.calendar = Calendar(identifier: .persian)
-style.firstWeekday = .automatic       // the calendar's own first weekday
+style.firstWeekday = .automatic       // the calendar's, or style.locale's if it has no locale
 calendarView.style = style
 ```
 

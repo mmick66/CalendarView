@@ -56,7 +56,8 @@ extension CalendarView {
             case sunday
             case monday
             case saturday
-            /// The first weekday of ``Style/calendar``, which follows its locale.
+            /// The first weekday of ``Style/resolvedCalendar``: the calendar's own, which follows
+            /// its locale, or ``Style/locale``'s when the calendar has no locale.
             case automatic
         }
 
@@ -173,13 +174,23 @@ extension CalendarView {
         /// How the weekday labels are cased.
         public var weekDayTransform = WeekDaysTransform.capitalized
 
+        /// ``calendar``, given ``locale`` when it has no locale of its own so that weekends, week
+        /// numbering and the automatic first weekday follow the locale.
+        public var resolvedCalendar: Calendar {
+            var calendar = calendar
+            if calendar.locale == nil || calendar.locale?.identifier.isEmpty == true {
+                calendar.locale = locale
+            }
+            return calendar
+        }
+
         /// The first weekday as a `Calendar` weekday number, 1 for Sunday through 7 for Saturday.
         public var effectiveFirstWeekday: Int {
             switch firstWeekday {
             case .sunday: return 1
             case .monday: return 2
             case .saturday: return 7
-            case .automatic: return calendar.firstWeekday
+            case .automatic: return resolvedCalendar.firstWeekday
             }
         }
     }
