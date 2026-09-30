@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "CalendarView",
+  "project_id": "4f931056-ac3e-4b12-91cb-77e0107df16d"
+}
