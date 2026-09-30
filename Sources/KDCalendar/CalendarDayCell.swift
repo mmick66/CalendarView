@@ -88,6 +88,7 @@ open class CalendarDayCell: UICollectionViewCell {
         eventsCount = 0
         date = nil
         day = nil
+        accessibilityLabel = nil
         isHidden = false
         applyStyle()
     }
@@ -121,7 +122,6 @@ open class CalendarDayCell: UICollectionViewCell {
         self.addSubview(self.dotsView)
 
         self.textLabel.adjustsFontForContentSizeCategory = true
-        self.isAccessibilityElement = true
         self.dotsView.isHidden = true
         self.applyStyle()
 
@@ -163,9 +163,9 @@ open class CalendarDayCell: UICollectionViewCell {
         }
     }
 
-    /// Derives every colour from the flags. Precedence for the text: selected, out of range,
-    /// today, adjacent, weekend, default. The background marks today unless out of range, and
-    /// adjacent days have none.
+    /// Derives every colour and the accessibility state from the flags. Precedence for the text:
+    /// selected, out of range, today, adjacent, weekend, default. The background marks today
+    /// unless out of range, and adjacent days have none.
     private func applyStyle() {
         self.dotsView.backgroundColor = style.cellEventColor
         self.textLabel.font = style.cellFont
@@ -184,6 +184,8 @@ open class CalendarDayCell: UICollectionViewCell {
             }
         }
 
+        // Adjacent days are only context for the grid and cannot be selected, so VoiceOver skips them.
+        self.isAccessibilityElement = !isAdjacent
         var traits: UIAccessibilityTraits = .button
         if isSelected { traits.insert(.selected) }
         if isOutOfRange || isAdjacent { traits.insert(.notEnabled) }
