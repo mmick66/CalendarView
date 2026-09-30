@@ -495,10 +495,10 @@ public class CalendarView: UIView {
         guard let section = self.indexPathForDate(date)?.section else { return point }
 
         switch self.direction {
-        case .horizontal: point.x = CGFloat(section) * self.collectionView.frame.size.width
-        case .vertical: point.y = CGFloat(section) * self.collectionView.frame.size.height
+        case .horizontal: point.x = CGFloat(section) * self.collectionView.bounds.width
+        case .vertical: point.y = CGFloat(section) * self.collectionView.bounds.height
         @unknown default:
-            point.x = CGFloat(section) * self.collectionView.frame.size.width
+            point.x = CGFloat(section) * self.collectionView.bounds.width
         }
 
         return point

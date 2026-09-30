@@ -217,6 +217,36 @@ struct ScrollingTests {
         #expect(view.collectionView.contentOffset == CGPoint(x: view.collectionView.bounds.width, y: 0))
     }
 
+    /// At some widths a flow of the items wraps six days to a row, which must not leak into the
+    /// page geometry: the content stays a whole number of pages and every day of the last page
+    /// shows. The size is whole pixels at 3x, as Auto Layout makes it, so the content offset is
+    /// not rounded off a page.
+    @Test(arguments: [UICollectionView.ScrollDirection.horizontal, .vertical])
+    func fractionalSizesKeepWholePagesAndEveryCell(direction: UICollectionView.ScrollDirection) {
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10), direction: direction)
+        view.frame.size = CGSize(width: 258 + 1 / 3, height: view.style.headerHeight + 300)
+        view.layoutIfNeeded()
+        view.setDisplayDate(date(2024, 3, 10))
+        view.layoutIfNeeded()
+
+        let page = view.collectionView.bounds.size
+        let pages = CGFloat(view.collectionView.numberOfSections)
+        let content = view.flowLayout.collectionViewContentSize
+        switch direction {
+        case .vertical: #expect(content == CGSize(width: page.width, height: pages * page.height))
+        default: #expect(content == CGSize(width: pages * page.width, height: page.height))
+        }
+
+        let visible = view.collectionView.indexPathsForVisibleItems
+        #expect(visible.count == 42)
+        #expect(visible.allSatisfy { $0.section == 2 })
+        let onPage = view.flowLayout.layoutAttributesForElements(in: view.collectionView.bounds) ?? []
+        #expect(Set(onPage.map(\.indexPath)) == Set((0..<42).map { IndexPath(item: $0, section: 2) }))
+        for attributes in onPage {
+            #expect(view.collectionView.bounds.contains(attributes.center))
+        }
+    }
+
     // MARK: Long press
 
     @Test func longPressReportsTheDayAndItsEvents() {
