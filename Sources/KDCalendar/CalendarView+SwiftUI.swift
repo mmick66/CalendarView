@@ -238,8 +238,14 @@ public struct KDCalendarView: UIViewRepresentable {
         public func startDate() -> Date { range.lowerBound }
         public func endDate() -> Date { range.upperBound }
 
+        // A display date applied by updateUIView announces its month during the view update,
+        // where the action must not change state, so the action waits for the update to end.
         public func calendar(_ calendar: CalendarView, didScrollToMonth date: Date) {
-            parent.onScrollToMonth?(date)
+            guard isUpdating else {
+                parent.onScrollToMonth?(date)
+                return
+            }
+            Task { @MainActor in self.parent.onScrollToMonth?(date) }
         }
 
         public func calendar(_ calendar: CalendarView, canSelectDate date: Date) -> Bool {

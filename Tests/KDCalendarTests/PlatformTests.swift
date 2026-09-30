@@ -296,7 +296,7 @@ struct PlatformTests {
         #expect(box.dates == kept)
     }
 
-    @Test func swiftUIModifiersReachTheCalendar() {
+    @Test func swiftUIModifiersReachTheCalendar() async {
         let box = SelectionBox()
         var style = CalendarView.Style()
         style.calendar = utc
@@ -337,6 +337,7 @@ struct PlatformTests {
         #expect(calendar.isScrollEnabled == false)
         #expect(calendar.events.count == 1)
         #expect(calendar.displayDate == date(2024, 2, 1))
+        await settle()
         #expect(scrolled.dates == [date(2024, 2, 1)], "the display date applies before the first month is announced")
         #expect(calendar.shouldSelect(calendar.indexPathForDate(date(2024, 2, 13))!) == false)
         #expect(calendar.shouldSelect(calendar.indexPathForDate(date(2024, 2, 12))!) == true)
@@ -360,6 +361,39 @@ struct PlatformTests {
         #expect(calendar.numberOfSections(in: calendar.collectionView) == 6)
         #expect(calendar.events.count == 2)
         #expect(calendar.direction == .horizontal, "modifiers not repeated fall back to their defaults")
+    }
+
+    @Test func swiftUIDisplayDateChangeReportsTheMonthAfterTheViewUpdate() async {
+        let box = SelectionBox()
+        let scrolled = SelectionBox()
+        var style = CalendarView.Style()
+        style.calendar = utc
+        style.locale = Locale(identifier: "en_US")
+        var displayDate = date(2024, 1, 10)
+        func view() -> KDCalendarView {
+            KDCalendarView(range: date(2024, 1, 1)...date(2024, 6, 30), selection: box.binding)
+                .calendarStyle(style)
+                .displayDate(displayDate)
+                .onScrollToMonth { scrolled.dates.append($0) }
+        }
+        guard let hosted = hostCalendar(view()) else { return }
+        let (host, calendar) = hosted
+        await settle()
+        scrolled.dates = []
+
+        // The month is applied during the update, but announced only once the update has ended,
+        // so the action may change state.
+        displayDate = date(2024, 4, 20)
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        #expect(calendar.displayDate == date(2024, 4, 1))
+        #expect(scrolled.dates == [])
+        await settle()
+        #expect(scrolled.dates == [date(2024, 4, 1)])
+
+        // A scroll outside a view update is still announced right away.
+        calendar.setDisplayDate(date(2024, 5, 3))
+        #expect(scrolled.dates == [date(2024, 4, 1), date(2024, 5, 1)])
     }
 
     /// Hosts `view` in the window and returns the host with the calendar inside it.
