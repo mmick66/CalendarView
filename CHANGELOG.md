@@ -15,6 +15,9 @@ All notable changes to KDCalendar are documented here. The format follows
 
 - `loadEvents()` stopped at the start of the last day of the range, so events
   later on that day were missed.
+- `loadEvents()` missed every event after the first four years of a longer
+  range, because EventKit shortens a query to four years. The `EKEventStore`
+  bridge now queries such a range in chunks.
 - The header did not mirror when a calendar was right-to-left on its own
   rather than through the app's layout direction.
 - A `CalendarView` decoded from an archive crashed in the header's

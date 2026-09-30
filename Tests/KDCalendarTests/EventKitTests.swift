@@ -137,7 +137,55 @@ struct EventKitTests {
         #expect(store.stored.count == 1)
     }
 
+    @Test func aShortIntervalIsQueriedInOneChunk() {
+        defer { restore() }
+        let chunks = EventsManager.queryIntervals(from: date(2024, 1, 1), to: date(2025, 1, 1))
+        #expect(chunks.count == 1)
+        #expect(chunks.first?.start == date(2024, 1, 1))
+        #expect(chunks.first?.end == date(2025, 1, 1))
+
+        let exact = date(2024, 1, 1).addingTimeInterval(EventsManager.maximumQueryLength)
+        #expect(EventsManager.queryIntervals(from: date(2024, 1, 1), to: exact).count == 1)
+
+        let backwards = EventsManager.queryIntervals(from: date(2025, 1, 1), to: date(2024, 1, 1))
+        #expect(backwards.count == 1)
+        #expect(backwards.first?.start == date(2025, 1, 1))
+    }
+
+    @Test func aLongIntervalIsSplitIntoContiguousChunksUnderFourYears() {
+        defer { restore() }
+        let start = date(2020, 1, 1)
+        let end = date(2031, 1, 1)
+        let chunks = EventsManager.queryIntervals(from: start, to: end)
+        #expect(chunks.count == 3)
+        #expect(chunks.first?.start == start)
+        #expect(chunks.last?.end == end)
+        for (previous, next) in zip(chunks, chunks.dropFirst()) {
+            #expect(previous.end == next.start, "no gap or overlap between chunks")
+        }
+        for chunk in chunks {
+            #expect(chunk.end > chunk.start)
+            // EventKit's limit is four calendar years; the shortest such span is 1460 days.
+            #expect(chunk.end.timeIntervalSince(chunk.start) < 1460 * 24 * 60 * 60)
+        }
+    }
+
     // MARK: CalendarView integration
+
+    @Test func loadEventsPassesARangeLongerThanFourYearsWhole() async throws {
+        defer { restore() }
+        store.hasFullAccess = true
+        store.stored = [
+            event("early", date(2020, 6, 1)),
+            event("late", date(2029, 6, 1)),
+        ]
+        let view = makeCalendar(start: date(2020, 1, 1), end: date(2030, 12, 31))
+        try await view.loadEvents()
+        #expect(store.queried.count == 1, "the store, not the manager, splits the range for EventKit")
+        #expect(store.queried.first?.0 == date(2020, 1, 1))
+        #expect(store.queried.first?.1 == date(2031, 1, 1))
+        #expect(view.events.map(\.title) == ["early", "late"])
+    }
 
     @Test func loadEventsCoversTheWholeRangeIncludingTheLastDay() async throws {
         defer { restore() }
