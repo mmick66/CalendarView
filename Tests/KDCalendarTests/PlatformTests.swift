@@ -109,6 +109,32 @@ struct PlatformTests {
         #expect(view.headerView.monthLabel.accessibilityTraits.contains(.header) == true)
     }
 
+    @Test func reusedCellsDoNotKeepTheirVoiceOverLabelAsAdjacentDays() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 3, 31))
+        view.style.showAdjacentDays = true
+        view.layoutIfNeeded()
+        // January 2024 starts on a Monday, so the 5th is item 4.
+        let reused = cell(view, IndexPath(item: 4, section: 0))!
+        #expect(reused.accessibilityLabel == "Friday, January 5, 2024")
+        reused.prepareForReuse()
+        #expect(reused.accessibilityLabel == nil)
+        reused.isAdjacent = true
+        #expect(reused.isAccessibilityElement == false, "adjacent days cannot be selected")
+        reused.isAdjacent = false
+        #expect(reused.isAccessibilityElement == true)
+        // Scrolling recycles in-month cells as adjacent days of the next months.
+        for month in [2, 3] {
+            view.setDisplayDate(date(2024, month, 1))
+            view.layoutIfNeeded()
+        }
+        let adjacent = view.collectionView.visibleCells.compactMap { $0 as? CalendarDayCell }.filter(\.isAdjacent)
+        #expect(!adjacent.isEmpty)
+        for dayCell in adjacent {
+            #expect(dayCell.accessibilityLabel == nil)
+            #expect(dayCell.isAccessibilityElement == false)
+        }
+    }
+
     @Test func todayIsSpokenAsSuch() {
         let now = Date()
         let local = Calendar.current

@@ -31,6 +31,10 @@ All notable changes to KDCalendar are documented here. The format follows
   the last while the binding kept them all. The binding is now applied as a
   whole in the shape of the selection mode, and set to the days the calendar
   shows when they differ.
+- A reused cell kept the VoiceOver label of the day it showed before, so with
+  `showAdjacentDays` a neighbouring month's day was read out as another date.
+  Reuse clears the label, and VoiceOver skips adjacent days, which cannot be
+  selected.
 
 ## [2.0.1] - 2026-09-08
 
