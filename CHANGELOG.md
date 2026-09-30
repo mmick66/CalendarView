@@ -15,6 +15,11 @@ All notable changes to KDCalendar are documented here. The format follows
 
 ### Fixed
 
+- The default `Style.calendar` and `Style.locale` were snapshots of the user's
+  settings taken at launch, so after the device changed time zone "today" and
+  the grid stayed in the old zone. They are `Calendar.autoupdatingCurrent` and
+  `Locale.autoupdatingCurrent` now, and the view rebuilds its grid, keeping the
+  selected days, when the time zone changes.
 - A drag released without deceleration, such as one let go exactly on a page,
   left the header and `didScrollToMonth` on the old month. The view now reports
   the month when such a drag ends.

@@ -249,8 +249,40 @@ struct CalendarViewTests {
         #expect(cell(view, indexPath)?.day == local.component(.day, from: now))
     }
 
-    @Test func theDefaultCalendarIsTheUsersCurrentOne() {
-        #expect(CalendarView.Style().calendar == Calendar.current)
+    @Test func theDefaultCalendarAndLocaleFollowTheUsersSettings() {
+        #expect(CalendarView.Style().calendar == Calendar.autoupdatingCurrent)
+        #expect(CalendarView.Style().locale == Locale.autoupdatingCurrent)
+    }
+
+    @Test func theDefaultCalendarFollowsTheDeviceToAnotherTimeZone() {
+        let original = NSTimeZone.default
+        defer { NSTimeZone.default = original }
+        NSTimeZone.default = TimeZone(identifier: "America/New_York")!
+        let before = Calendar.current
+        let now = Date()
+        // Midnights in New York, which stay on the same days once the device moves east, so only
+        // the calendar can tell the view that its grid is stale.
+        let view = makeCalendar(
+            start: before.startOfDay(for: before.date(byAdding: .month, value: -1, to: now)!),
+            end: before.startOfDay(for: before.date(byAdding: .month, value: 1, to: now)!),
+            calendar: CalendarView.Style().calendar)
+        view.selectDate(now)
+        #expect(view.dateFromIndexPath(view.todayIndexPath!) == before.startOfDay(for: now))
+
+        NSTimeZone.default = TimeZone(identifier: "Europe/Athens")!
+        NotificationCenter.default.post(name: UIApplication.significantTimeChangeNotification, object: nil)
+        view.setDisplayDate(now)
+        view.layoutIfNeeded()
+
+        let after = Calendar.current
+        let today = view.todayIndexPath!
+        #expect(view.dateFromIndexPath(today) == after.startOfDay(for: now))
+        #expect(cell(view, today)?.isToday == true)
+        #expect(cell(view, today)?.day == after.component(.day, from: now))
+        // The selected day stays the same calendar day, now at midnight in the new zone.
+        let selectedDay = after.date(from: before.dateComponents([.era, .year, .month, .day], from: now))!
+        #expect(view.selectedDates == [selectedDay])
+        #expect(view.collectionView.indexPathsForSelectedItems == [view.indexPathForDate(selectedDay)!])
     }
 
     // MARK: Cell configuration

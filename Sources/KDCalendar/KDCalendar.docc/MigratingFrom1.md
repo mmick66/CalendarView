@@ -32,7 +32,7 @@ restyles the view, because ``CalendarView/Style`` is a value.
 
 ## Behaviour changes
 
-- The default calendar is `Calendar.current` instead of Gregorian in UTC. "Today",
+- The default calendar is `Calendar.autoupdatingCurrent` instead of Gregorian in UTC. "Today",
   `selectDate(_:)`, the selected dates and every date passed to the delegate use the
   same calendar, at the start of the day. To keep the 1.x behaviour set
   `style.calendar` to a Gregorian calendar with the UTC time zone.

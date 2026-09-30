@@ -123,7 +123,9 @@ extension CalendarView {
     func refreshMonths() -> MonthGrid? {
         let start = dataSource?.startDate() ?? Date()
         let end = dataSource?.endDate() ?? start
-        let calendar = self.calendar
+        // The grid keeps a fixed copy: an autoupdating calendar always equals itself, so
+        // comparing it would miss the time zone changes the grid has to follow.
+        let calendar = self.calendar.fixed
         if let months = months,
             calendar.isDate(months.startDay, inSameDayAs: start),
             calendar.isDate(months.endDay, inSameDayAs: end),
@@ -132,7 +134,11 @@ extension CalendarView {
             todayIndexPath = months.indexPath(for: Date())
             return months
         }
+        let previousCalendar = months?.calendar
         months = MonthGrid(start: start, end: end, calendar: calendar, firstWeekday: style.effectiveFirstWeekday)
+        if let previousCalendar {
+            moveSelection(from: previousCalendar)
+        }
         if months == nil {
             CalendarView.logger.error(
                 "The data source's start date (\(start)) is after its end date (\(end)); showing no months.")
@@ -267,5 +273,20 @@ extension CalendarView: UICollectionViewDataSource {
         }
 
         return dayCell
+    }
+}
+
+extension Calendar {
+
+    /// This calendar with the settings it has now. An autoupdating calendar, such as
+    /// `Calendar.autoupdatingCurrent`, would follow later changes to the user's settings.
+    var fixed: Calendar {
+        guard self == .autoupdatingCurrent else { return self }
+        var calendar = Calendar(identifier: identifier)
+        calendar.locale = locale
+        calendar.timeZone = timeZone
+        calendar.firstWeekday = firstWeekday
+        calendar.minimumDaysInFirstWeek = minimumDaysInFirstWeek
+        return calendar
     }
 }

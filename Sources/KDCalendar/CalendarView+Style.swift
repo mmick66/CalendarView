@@ -164,12 +164,15 @@ extension CalendarView {
 
         // MARK: Locale and calendar
 
-        /// The locale for the month title and weekday labels.
-        public var locale = Locale.current
+        /// The locale for the month title and weekday labels. Defaults to the user's locale,
+        /// following it when it changes.
+        public var locale = Locale.autoupdatingCurrent
 
         /// The calendar, and with it the time zone, every date is interpreted in. Defaults to
-        /// the user's current calendar. Set a Gregorian calendar in UTC to get the 1.x behaviour.
-        public var calendar: Calendar = Calendar.current
+        /// the user's calendar, following it when it changes, so the grid and today's marker
+        /// move with the device's time zone. Set a Gregorian calendar in UTC to get the 1.x
+        /// behaviour.
+        public var calendar: Calendar = Calendar.autoupdatingCurrent
 
         /// How the weekday labels are cased.
         public var weekDayTransform = WeekDaysTransform.capitalized

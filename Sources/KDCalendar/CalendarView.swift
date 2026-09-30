@@ -457,7 +457,7 @@ public class CalendarView: UIView {
 
     /// Keeps the same days selected when the calendar moves to another time zone. A selected day
     /// is the start of that day in the old time zone, which can fall on the day before in the new one.
-    private func moveSelection(from previous: Calendar) {
+    func moveSelection(from previous: Calendar) {
         let current = calendar
         guard previous.timeZone != current.timeZone else { return }
         // Days run from midnight to midnight in every calendar, so Gregorian ones can carry the
