@@ -259,8 +259,8 @@ struct IssueTests {
         #expect(view.numberOfSections(in: view.collectionView) == 1)
         #expect(view.displayDate == view.calendar.dateInterval(of: .month, for: Date())?.start)
         let today = view.indexPathForDate(Date())!
-        #expect(cell(view, today)?.isToday == true)
-        #expect(cell(view, today)?.isOutOfRange == false)
+        #expect(cell(view, today)?.configuration.isToday == true)
+        #expect(cell(view, today)?.configuration.isOutOfRange == false)
         #expect(view.dateRange == view.calendar.startOfDay(for: Date())...view.calendar.startOfDay(for: Date()))
     }
 
@@ -287,6 +287,6 @@ struct IssueTests {
         view.frame = CGRect(x: 0, y: 0, width: 350, height: 200)
         view.layoutIfNeeded()
         #expect(view.flowLayout.itemSize == CGSize(width: 50, height: 20))
-        #expect(cell(view, IndexPath(item: 9, section: 0))?.day == 10)
+        #expect(cell(view, IndexPath(item: 9, section: 0))?.configuration.day == 10)
     }
 }

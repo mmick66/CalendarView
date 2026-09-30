@@ -188,14 +188,14 @@ struct EngineTests {
         #expect(view.calendar.isDateInWeekend(date(utc, 2024, 1, 5)) == true, "Friday")
         #expect(view.calendar.isDateInWeekend(date(utc, 2024, 1, 7)) == false, "Sunday")
         // January 2024 starts on a Monday: Friday the 5th is item 4, Sunday the 7th item 6.
-        #expect(cell(view, IndexPath(item: 4, section: 0))?.isWeekend == true)
-        #expect(cell(view, IndexPath(item: 6, section: 0))?.isWeekend == false)
+        #expect(cell(view, IndexPath(item: 4, section: 0))?.configuration.isWeekend == true)
+        #expect(cell(view, IndexPath(item: 6, section: 0))?.configuration.isWeekend == false)
         // A calendar that already has a locale keeps it.
         let explicit = makeCalendar(
             start: date(utc, 2024, 1, 1), end: date(utc, 2024, 1, 31), calendar: calendar("UTC", locale: "en_US"),
             locale: "ar_SA")
         #expect(explicit.calendar.locale?.identifier == "en_US")
-        #expect(cell(explicit, IndexPath(item: 4, section: 0))?.isWeekend == false)
+        #expect(cell(explicit, IndexPath(item: 4, section: 0))?.configuration.isWeekend == false)
     }
 
     @Test func hebrewLeapYearsHaveThirteenMonths() {
@@ -225,11 +225,11 @@ struct EngineTests {
         view.setDisplayDate(now)
         view.layoutIfNeeded()
         let today = view.indexPathForDate(now)!
-        #expect(cell(view, today)?.isToday == true)
+        #expect(cell(view, today)?.configuration.isToday == true)
         // Pretend the marker went stale, as it would across midnight, then announce the day change.
-        cell(view, today)?.isToday = false
+        cell(view, today)?.configuration.isToday = false
         NotificationCenter.default.post(name: .NSCalendarDayChanged, object: nil)
         view.layoutIfNeeded()
-        #expect(cell(view, today)?.isToday == true)
+        #expect(cell(view, today)?.configuration.isToday == true)
     }
 }

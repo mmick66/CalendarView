@@ -118,16 +118,17 @@ struct PlatformTests {
         #expect(reused.accessibilityLabel == "Friday, January 5, 2024")
         reused.prepareForReuse()
         #expect(reused.accessibilityLabel == nil)
-        reused.isAdjacent = true
+        reused.configuration.isAdjacent = true
         #expect(reused.isAccessibilityElement == false, "adjacent days cannot be selected")
-        reused.isAdjacent = false
+        reused.configuration.isAdjacent = false
         #expect(reused.isAccessibilityElement == true)
         // Scrolling recycles in-month cells as adjacent days of the next months.
         for month in [2, 3] {
             view.setDisplayDate(date(2024, month, 1))
             view.layoutIfNeeded()
         }
-        let adjacent = view.collectionView.visibleCells.compactMap { $0 as? CalendarDayCell }.filter(\.isAdjacent)
+        let adjacent = view.collectionView.visibleCells.compactMap { $0 as? CalendarDayCell }.filter(
+            \.configuration.isAdjacent)
         #expect(!adjacent.isEmpty)
         for dayCell in adjacent {
             #expect(dayCell.accessibilityLabel == nil)

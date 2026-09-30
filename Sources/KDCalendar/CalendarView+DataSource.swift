@@ -257,36 +257,34 @@ extension CalendarView: UICollectionViewDataSource {
             collectionView.dequeueReusableCell(withReuseIdentifier: cellReuseIdentifier, for: indexPath)
             as! CalendarDayCell
 
-        dayCell.style = style
         dayCell.transform =
             _isRtl
             ? CGAffineTransform(scaleX: -1.0, y: 1.0)
             : CGAffineTransform.identity
 
-        guard let months = currentMonths else { return dayCell }
-
-        switch months.content(at: indexPath) {
+        var configuration = DayCellConfiguration(style: style)
+        switch currentMonths?.content(at: indexPath) {
         case .day(let date, let dayOfMonth):
-            if let dayStyle = delegate?.calendar(self, styleForDate: date) {
-                dayCell.style = dayStyle
-            }
-            dayCell.day = dayOfMonth
-            dayCell.date = date
-            dayCell.isOutOfRange = months.isOutOfRange(indexPath)
-            dayCell.isToday = indexPath == todayIndexPath
-            if marksWeekends {
-                dayCell.isWeekend = calendar.isDateInWeekend(date)
-            }
-            dayCell.eventsCount = eventsByIndexPath[indexPath]?.count ?? 0
-            dayCell.accessibilityLabel = accessibilityLabel(
-                for: date, isToday: dayCell.isToday, eventsCount: dayCell.eventsCount)
+            let isToday = indexPath == todayIndexPath
+            let eventsCount = eventsByIndexPath[indexPath]?.count ?? 0
+            configuration.style = delegate?.calendar(self, styleForDate: date) ?? style
+            configuration.day = dayOfMonth
+            configuration.date = date
+            configuration.isOutOfRange = isOutOfRange(indexPath)
+            configuration.isToday = isToday
+            configuration.isWeekend = marksWeekends && calendar.isDateInWeekend(date)
+            configuration.eventsCount = eventsCount
+            configuration.accessibilityLabel = accessibilityLabel(for: date, isToday: isToday, eventsCount: eventsCount)
         case .leading(let dayOfMonth) where style.showAdjacentDays,
             .trailing(let dayOfMonth) where style.showAdjacentDays:
-            dayCell.day = dayOfMonth
-            dayCell.isAdjacent = true
+            configuration.day = dayOfMonth
+            configuration.isAdjacent = true
         case .leading, .trailing, .empty:
-            dayCell.isHidden = true
+            configuration.isHidden = true
+        case nil:
+            break
         }
+        dayCell.configuration = configuration
 
         return dayCell
     }

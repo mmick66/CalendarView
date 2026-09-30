@@ -117,7 +117,7 @@ struct ScrollingTests {
         #expect(delegate(of: view).scrolledTo == [date(2024, 1, 1), date(2024, 2, 1)])
         #expect(view.animationTargetMonth == nil)
         #expect(view.collectionView.contentOffset.x == view.collectionView.bounds.width)
-        #expect(cell(view, IndexPath(item: 3, section: 1))?.day == 1)
+        #expect(cell(view, IndexPath(item: 3, section: 1))?.configuration.day == 1)
     }
 
     @Test func rapidNextMonthTapsEndOnTheLastTargetWithoutSnappingBack() {
@@ -194,7 +194,7 @@ struct ScrollingTests {
         view.layoutIfNeeded()
         #expect(view.collectionView.contentOffset == CGPoint(x: 0, y: 2 * height))
         #expect(view.dateFromScrollViewPosition() == date(2024, 3, 1))
-        #expect(cell(view, IndexPath(item: 4, section: 2))?.day == 1)
+        #expect(cell(view, IndexPath(item: 4, section: 2))?.configuration.day == 1)
         let attributes = view.flowLayout.layoutAttributesForItem(at: IndexPath(item: 8, section: 1))
         #expect(attributes?.frame.origin.x == view.flowLayout.itemSize.width)
         #expect(attributes?.frame.origin.y == height + view.flowLayout.itemSize.height)
@@ -306,6 +306,6 @@ struct ScrollingTests {
         Self.window.addSubview(decoded)
         decoded.layoutIfNeeded()
         #expect(decoded.numberOfSections(in: decoded.collectionView) == 1)
-        #expect(cell(decoded, decoded.indexPathForDate(Date())!)?.isToday == true)
+        #expect(cell(decoded, decoded.indexPathForDate(Date())!)?.configuration.isToday == true)
     }
 }
