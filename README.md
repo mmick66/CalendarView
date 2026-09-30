@@ -37,7 +37,7 @@ Add the `KDCalendar` product to your target, and `KDCalendarEventKit` as well if
 
 ### CocoaPods
 
-2.0.0 is the final CocoaPods release. Prefer Swift Package Manager.
+2.0.1 is the final CocoaPods release; later fixes ship through Swift Package Manager only. Prefer Swift Package Manager.
 
 ```ruby
 pod 'KDCalendar', '~> 2.0'            # the calendar

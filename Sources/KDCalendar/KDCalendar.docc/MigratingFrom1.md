@@ -60,4 +60,4 @@ https://github.com/mmick66/CalendarView
 ```
 
 The products are `KDCalendar` and, for system events, `KDCalendarEventKit`.
-2.0.0 is also the final CocoaPods release. Carthage is no longer supported.
+2.0.1 is the final CocoaPods release; later fixes ship through Swift Package Manager only. Carthage is no longer supported.
