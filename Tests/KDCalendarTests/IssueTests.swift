@@ -192,8 +192,18 @@ struct IssueTests {
 
     @Test func issue32_selectRangeWithFarOffEndsOnlyWalksTheDaysInRange() {
         let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        var asked: [Date] = []
+        delegate(of: view).canSelect = {
+            asked.append($0)
+            return true
+        }
         view.selectRange(Date.distantPast...Date.distantFuture)
         #expect(view.selectedDates == days(date(2024, 1, 1), date(2024, 1, 31)))
+        #expect(asked == days(date(2024, 1, 1), date(2024, 1, 31)), "only the days in range are walked")
+        asked = []
+        view.selectRange(date(1900, 1, 1)...date(2023, 12, 31))
+        #expect(view.selectedDates == [])
+        #expect(asked == [], "a range outside the calendar walks nothing")
     }
 
     @Test func issue32_multipleSelectionEnableBridgesToTheMode() {
