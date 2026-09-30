@@ -112,6 +112,23 @@ struct EngineTests {
         #expect(view.selectedDates == [])
     }
 
+    @Test func aRangeAcrossASkippedMidnightKeepsItsLastDay() {
+        // Adding a day to 8 September 2024 in Santiago lands on 01:00, past the midnight of
+        // later days, so a walk that does not return to the start of each day stops short.
+        let santiago = calendar("America/Santiago")
+        let view = makeCalendar(start: date(santiago, 2024, 9, 1), end: date(santiago, 2024, 9, 30), calendar: santiago)
+        let days = (6...10).map { santiago.startOfDay(for: date(santiago, 2024, 9, $0, hour: 12)) }
+
+        view.selectRange(date(santiago, 2024, 9, 6)...date(santiago, 2024, 9, 10))
+        #expect(view.selectedDates == days)
+
+        view.clearAllSelectedDates()
+        view.selectionMode = .range
+        view.selectDate(date(santiago, 2024, 9, 6))
+        view.selectDate(date(santiago, 2024, 9, 10))
+        #expect(view.selectedDates == days)
+    }
+
     // MARK: Cell content
 
     @Test func cellContentCoversTheMonthAndItsNeighbours() throws {
