@@ -32,7 +32,7 @@ restyles the view, because ``CalendarView/Style`` is a value.
 
 ## Behaviour changes
 
-- The default calendar is `Calendar.current` instead of Gregorian in UTC. "Today",
+- The default calendar is `Calendar.autoupdatingCurrent` instead of Gregorian in UTC. "Today",
   `selectDate(_:)`, the selected dates and every date passed to the delegate use the
   same calendar, at the start of the day. To keep the 1.x behaviour set
   `style.calendar` to a Gregorian calendar with the UTC time zone.
@@ -60,4 +60,4 @@ https://github.com/mmick66/CalendarView
 ```
 
 The products are `KDCalendar` and, for system events, `KDCalendarEventKit`.
-2.0.0 is also the final CocoaPods release. Carthage is no longer supported.
+2.0.1 is the final CocoaPods release; later fixes ship through Swift Package Manager only. Carthage is no longer supported.

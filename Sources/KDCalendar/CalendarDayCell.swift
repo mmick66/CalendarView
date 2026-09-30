@@ -25,53 +25,92 @@
 
 import UIKit
 
-/// One day in the month grid. Its look is derived from its flags every time one changes, so a
-/// reused cell never carries the previous day's state.
+/// Everything a day cell shows. `cellForItemAt` builds one per cell and the cell applies it in a
+/// single pass, so a reused cell never carries the previous day's state.
+struct DayCellConfiguration: Equatable {
+    /// The number shown, or `nil` for a blank cell.
+    var day: Int?
+    /// The day this cell shows, at the start of the day, or `nil` for an adjacent or empty cell.
+    var date: Date?
+    var isToday = false
+    var isOutOfRange = false
+    /// A day of the previous or next month, shown only as context for the grid.
+    var isAdjacent = false
+    var isWeekend = false
+    var eventsCount = 0
+    var style: CalendarView.Style = .default
+    var accessibilityLabel: String?
+    /// Hides the cell, for the cells outside the month when adjacent days are not shown.
+    var isHidden = false
+
+    /// The colours and accessibility state derived from the flags.
+    struct Appearance: Equatable {
+        var textColor: UIColor
+        var backgroundColor: UIColor
+        var borderColor: UIColor
+        var borderWidth: CGFloat
+        var isAccessibilityElement: Bool
+        var accessibilityTraits: UIAccessibilityTraits
+    }
+
+    /// Precedence for the text: selected, out of range, today, adjacent, weekend, default. The
+    /// background marks selection, then today unless out of range, and adjacent days have none.
+    func appearance(isSelected: Bool) -> Appearance {
+        let textColor: UIColor
+        if isSelected {
+            textColor = style.cellSelectedTextColor
+        } else if isOutOfRange {
+            textColor = style.cellColorOutOfRange
+        } else if isToday {
+            textColor = style.cellTextColorToday
+        } else if isAdjacent {
+            textColor = style.cellColorAdjacent
+        } else if isWeekend {
+            textColor = style.cellTextColorWeekend
+        } else {
+            textColor = style.cellTextColorDefault
+        }
+
+        let backgroundColor: UIColor
+        if isSelected {
+            backgroundColor = style.cellSelectedColor
+        } else if isAdjacent {
+            backgroundColor = .clear
+        } else {
+            backgroundColor = (isToday && !isOutOfRange) ? style.cellColorToday : style.cellColorDefault
+        }
+
+        var traits: UIAccessibilityTraits = .button
+        if isSelected { traits.insert(.selected) }
+        if isOutOfRange || isAdjacent { traits.insert(.notEnabled) }
+
+        return Appearance(
+            textColor: textColor,
+            backgroundColor: backgroundColor,
+            borderColor: isSelected ? style.cellSelectedBorderColor : style.cellBorderColor,
+            borderWidth: isSelected ? style.cellSelectedBorderWidth : style.cellBorderWidth,
+            // Adjacent days are only context for the grid and cannot be selected, so VoiceOver skips them.
+            isAccessibilityElement: !isAdjacent,
+            accessibilityTraits: traits
+        )
+    }
+}
+
+/// One day in the month grid. Its look is derived from the day it is configured with and whether it is selected.
 open class CalendarDayCell: UICollectionViewCell {
 
-    var style: CalendarView.Style = .default {
+    var configuration = DayCellConfiguration() {
         didSet {
+            textLabel.text = configuration.day.map(String.init)
+            dotsView.isHidden = configuration.eventsCount == 0
+            accessibilityLabel = configuration.accessibilityLabel
+            isHidden = configuration.isHidden
             applyStyle()
             setNeedsLayout()
         }
     }
 
-    /// The day this cell shows, at the start of the day, or `nil` for an empty cell.
-    var date: Date?
-
-    var eventsCount = 0 {
-        didSet {
-            self.dotsView.isHidden = (eventsCount == 0)
-            self.setNeedsLayout()
-        }
-    }
-
-    var day: Int? {
-        set {
-            guard let value = newValue else { return self.textLabel.text = nil }
-            self.textLabel.text = String(value)
-        }
-        get {
-            guard let value = self.textLabel.text else { return nil }
-            return Int(value)
-        }
-    }
-
-    var isToday: Bool = false {
-        didSet { applyStyle() }
-    }
-
-    var isOutOfRange: Bool = false {
-        didSet { applyStyle() }
-    }
-
-    var isAdjacent: Bool = false {
-        didSet { applyStyle() }
-    }
-
-    var isWeekend: Bool = false {
-        didSet { applyStyle() }
-    }
+    var style: CalendarView.Style { configuration.style }
 
     open override var isSelected: Bool {
         didSet { applyStyle() }
@@ -79,17 +118,9 @@ open class CalendarDayCell: UICollectionViewCell {
 
     // MARK: - Public methods
 
-    /// Resets the day flags and the derived look. `prepareForReuse` calls this.
+    /// Resets the day and the derived look, keeping the style. `prepareForReuse` calls this.
     public func clearStyles() {
-        isToday = false
-        isOutOfRange = false
-        isAdjacent = false
-        isWeekend = false
-        eventsCount = 0
-        date = nil
-        day = nil
-        isHidden = false
-        applyStyle()
+        configuration = DayCellConfiguration(style: configuration.style)
     }
 
     open override func prepareForReuse() {
@@ -121,12 +152,13 @@ open class CalendarDayCell: UICollectionViewCell {
         self.addSubview(self.dotsView)
 
         self.textLabel.adjustsFontForContentSizeCategory = true
-        self.isAccessibilityElement = true
         self.dotsView.isHidden = true
         self.applyStyle()
 
-        // Border colours are CGColors, which do not follow appearance changes on their own.
-        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (cell: CalendarDayCell, _) in
+        // Border colours are CGColors, which do not follow appearance changes on their own:
+        // reapply them whenever a trait a dynamic colour may depend on changes (style, contrast, level...).
+        registerForTraitChanges(UITraitCollection.systemTraitsAffectingColorAppearance) {
+            (cell: CalendarDayCell, _) in
             cell.applyStyle()
         }
     }
@@ -163,44 +195,15 @@ open class CalendarDayCell: UICollectionViewCell {
         }
     }
 
-    /// Derives every colour from the flags. Precedence for the text: selected, out of range,
-    /// today, adjacent, weekend, default. The background marks today unless out of range, and
-    /// adjacent days have none.
     private func applyStyle() {
+        let appearance = configuration.appearance(isSelected: isSelected)
         self.dotsView.backgroundColor = style.cellEventColor
         self.textLabel.font = style.cellFont
-
-        if isSelected {
-            self.bgView.layer.borderColor = style.cellSelectedBorderColor.cgColor
-            self.bgView.layer.borderWidth = style.cellSelectedBorderWidth
-            self.bgView.backgroundColor = style.cellSelectedColor
-        } else {
-            self.bgView.layer.borderColor = style.cellBorderColor.cgColor
-            self.bgView.layer.borderWidth = style.cellBorderWidth
-            if isAdjacent {
-                self.bgView.backgroundColor = .clear
-            } else {
-                self.bgView.backgroundColor = (isToday && !isOutOfRange) ? style.cellColorToday : style.cellColorDefault
-            }
-        }
-
-        var traits: UIAccessibilityTraits = .button
-        if isSelected { traits.insert(.selected) }
-        if isOutOfRange || isAdjacent { traits.insert(.notEnabled) }
-        self.accessibilityTraits = traits
-
-        if isSelected {
-            self.textLabel.textColor = style.cellSelectedTextColor
-        } else if isOutOfRange {
-            self.textLabel.textColor = style.cellColorOutOfRange
-        } else if isToday {
-            self.textLabel.textColor = style.cellTextColorToday
-        } else if isAdjacent {
-            self.textLabel.textColor = style.cellColorAdjacent
-        } else if isWeekend {
-            self.textLabel.textColor = style.cellTextColorWeekend
-        } else {
-            self.textLabel.textColor = style.cellTextColorDefault
-        }
+        self.textLabel.textColor = appearance.textColor
+        self.bgView.backgroundColor = appearance.backgroundColor
+        self.bgView.layer.borderColor = appearance.borderColor.cgColor
+        self.bgView.layer.borderWidth = appearance.borderWidth
+        self.isAccessibilityElement = appearance.isAccessibilityElement
+        self.accessibilityTraits = appearance.accessibilityTraits
     }
 }

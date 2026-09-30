@@ -117,7 +117,7 @@ struct ScrollingTests {
         #expect(delegate(of: view).scrolledTo == [date(2024, 1, 1), date(2024, 2, 1)])
         #expect(view.animationTargetMonth == nil)
         #expect(view.collectionView.contentOffset.x == view.collectionView.bounds.width)
-        #expect(cell(view, IndexPath(item: 3, section: 1))?.day == 1)
+        #expect(cell(view, IndexPath(item: 3, section: 1))?.configuration.day == 1)
     }
 
     @Test func rapidNextMonthTapsEndOnTheLastTargetWithoutSnappingBack() {
@@ -163,6 +163,26 @@ struct ScrollingTests {
         #expect(delegate(of: view).scrolledTo.last == date(2024, 3, 1))
     }
 
+    @Test func aDragReleasedOnAPageBoundaryReportsThatMonth() {
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
+        view.scrollViewWillBeginDragging(view.collectionView)
+        view.collectionView.contentOffset = CGPoint(x: view.collectionView.bounds.width, y: 0)
+        // Released exactly on February's page: UIKit does not decelerate, so no other callback follows.
+        view.scrollViewDidEndDragging(view.collectionView, willDecelerate: false)
+        #expect(view.displayDate == date(2024, 2, 1))
+        #expect(view.headerView.monthLabel.text == "February 2024")
+        #expect(delegate(of: view).scrolledTo == [date(2024, 1, 1), date(2024, 2, 1)])
+
+        // A drag that will decelerate waits for the deceleration to end.
+        view.scrollViewWillBeginDragging(view.collectionView)
+        view.collectionView.contentOffset = CGPoint(x: 1.6 * view.collectionView.bounds.width, y: 0)
+        view.scrollViewDidEndDragging(view.collectionView, willDecelerate: true)
+        #expect(view.displayDate == date(2024, 2, 1))
+        view.collectionView.contentOffset = CGPoint(x: 2 * view.collectionView.bounds.width, y: 0)
+        view.scrollViewDidEndDecelerating(view.collectionView)
+        #expect(delegate(of: view).scrolledTo == [date(2024, 1, 1), date(2024, 2, 1), date(2024, 3, 1)])
+    }
+
     // MARK: Vertical paging
 
     @Test func verticalPagingStacksMonthsAndScrollsOnTheYAxis() {
@@ -174,7 +194,7 @@ struct ScrollingTests {
         view.layoutIfNeeded()
         #expect(view.collectionView.contentOffset == CGPoint(x: 0, y: 2 * height))
         #expect(view.dateFromScrollViewPosition() == date(2024, 3, 1))
-        #expect(cell(view, IndexPath(item: 4, section: 2))?.day == 1)
+        #expect(cell(view, IndexPath(item: 4, section: 2))?.configuration.day == 1)
         let attributes = view.flowLayout.layoutAttributesForItem(at: IndexPath(item: 8, section: 1))
         #expect(attributes?.frame.origin.x == view.flowLayout.itemSize.width)
         #expect(attributes?.frame.origin.y == height + view.flowLayout.itemSize.height)
@@ -268,6 +288,20 @@ struct ScrollingTests {
         #expect(selected.bgView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.white)
     }
 
+    @Test func cellBordersFollowAContrastChange() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        view.style.cellSelectedBorderColor = UIColor { $0.accessibilityContrast == .high ? .black : .gray }
+        view.selectDate(date(2024, 1, 10))
+        view.layoutIfNeeded()
+        let selected = cell(view, IndexPath(item: 9, section: 0))!
+        view.traitOverrides.accessibilityContrast = .normal
+        view.layoutIfNeeded()
+        #expect(selected.bgView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.gray)
+        view.traitOverrides.accessibilityContrast = .high
+        view.layoutIfNeeded()
+        #expect(selected.bgView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.black)
+    }
+
     // MARK: Archived views
 
     @Test func aViewDecodedFromAnArchiveWorks() throws {
@@ -276,15 +310,16 @@ struct ScrollingTests {
         let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
         unarchiver.requiresSecureCoding = false
         let decoded = try #require(unarchiver.decodeObject(forKey: NSKeyedArchiveRootObjectKey) as? CalendarView)
-        #expect(decoded.collectionView != nil)
-        #expect(decoded.headerView != nil)
         decoded.awakeFromNib()
         #expect(decoded.subviews.filter { $0 is UICollectionView }.count == 1, "setup runs once")
         #expect(decoded.subviews.filter { $0 is CalendarHeaderView }.count == 1)
+        #expect(decoded.collectionView.superview === decoded, "the archived grid is replaced by the view's own")
+        #expect(decoded.headerView.superview === decoded)
+        #expect(decoded.headerView.monthLabel.superview === decoded.headerView)
         #expect(decoded.headerView.dayLabels.count == 7)
         Self.window.addSubview(decoded)
         decoded.layoutIfNeeded()
         #expect(decoded.numberOfSections(in: decoded.collectionView) == 1)
-        #expect(cell(decoded, decoded.indexPathForDate(Date())!)?.isToday == true)
+        #expect(cell(decoded, decoded.indexPathForDate(Date())!)?.configuration.isToday == true)
     }
 }

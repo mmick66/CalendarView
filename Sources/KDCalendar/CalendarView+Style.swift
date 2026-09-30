@@ -1,10 +1,27 @@
-//
-//  CalendarView+Style.swift
-//  CalendarView
-//
-//  Created by Vitor Mesquita on 17/01/2018.
-//  Copyright © 2018 Karmadust. All rights reserved.
-//
+/*
+ * CalendarView+Style.swift
+ * Created by Vitor Mesquita on 17/01/2018.
+ * http://blog.karmadust.com/
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ */
 
 import UIKit
 
@@ -56,7 +73,8 @@ extension CalendarView {
             case sunday
             case monday
             case saturday
-            /// The first weekday of ``Style/calendar``, which follows its locale.
+            /// The first weekday of ``Style/resolvedCalendar``: the calendar's own, which follows
+            /// its locale, or ``Style/locale``'s when the calendar has no locale.
             case automatic
         }
 
@@ -163,15 +181,28 @@ extension CalendarView {
 
         // MARK: Locale and calendar
 
-        /// The locale for the month title and weekday labels.
-        public var locale = Locale.current
+        /// The locale for the month title and weekday labels. Defaults to the user's locale,
+        /// following it when it changes.
+        public var locale = Locale.autoupdatingCurrent
 
         /// The calendar, and with it the time zone, every date is interpreted in. Defaults to
-        /// the user's current calendar. Set a Gregorian calendar in UTC to get the 1.x behaviour.
-        public var calendar: Calendar = Calendar.current
+        /// the user's calendar, following it when it changes, so the grid and today's marker
+        /// move with the device's time zone. Set a Gregorian calendar in UTC to get the 1.x
+        /// behaviour.
+        public var calendar: Calendar = Calendar.autoupdatingCurrent
 
         /// How the weekday labels are cased.
         public var weekDayTransform = WeekDaysTransform.capitalized
+
+        /// ``calendar``, given ``locale`` when it has no locale of its own so that weekends, week
+        /// numbering and the automatic first weekday follow the locale.
+        public var resolvedCalendar: Calendar {
+            var calendar = calendar
+            if calendar.locale == nil || calendar.locale?.identifier.isEmpty == true {
+                calendar.locale = locale
+            }
+            return calendar
+        }
 
         /// The first weekday as a `Calendar` weekday number, 1 for Sunday through 7 for Saturday.
         public var effectiveFirstWeekday: Int {
@@ -179,7 +210,7 @@ extension CalendarView {
             case .sunday: return 1
             case .monday: return 2
             case .saturday: return 7
-            case .automatic: return calendar.firstWeekday
+            case .automatic: return resolvedCalendar.firstWeekday
             }
         }
     }

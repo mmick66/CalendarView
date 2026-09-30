@@ -190,6 +190,22 @@ struct IssueTests {
         #expect(view.selectedDates == [date(2024, 1, 10)], "a tap after a programmatic range starts a new one")
     }
 
+    @Test func issue32_selectRangeWithFarOffEndsOnlyWalksTheDaysInRange() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        var asked: [Date] = []
+        delegate(of: view).canSelect = {
+            asked.append($0)
+            return true
+        }
+        view.selectRange(Date.distantPast...Date.distantFuture)
+        #expect(view.selectedDates == days(date(2024, 1, 1), date(2024, 1, 31)))
+        #expect(asked == days(date(2024, 1, 1), date(2024, 1, 31)), "only the days in range are walked")
+        asked = []
+        view.selectRange(date(1900, 1, 1)...date(2023, 12, 31))
+        #expect(view.selectedDates == [])
+        #expect(asked == [], "a range outside the calendar walks nothing")
+    }
+
     @Test func issue32_multipleSelectionEnableBridgesToTheMode() {
         let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
         #expect(view.multipleSelectionEnable == true)
@@ -243,8 +259,8 @@ struct IssueTests {
         #expect(view.numberOfSections(in: view.collectionView) == 1)
         #expect(view.displayDate == view.calendar.dateInterval(of: .month, for: Date())?.start)
         let today = view.indexPathForDate(Date())!
-        #expect(cell(view, today)?.isToday == true)
-        #expect(cell(view, today)?.isOutOfRange == false)
+        #expect(cell(view, today)?.configuration.isToday == true)
+        #expect(cell(view, today)?.configuration.isOutOfRange == false)
         #expect(view.dateRange == view.calendar.startOfDay(for: Date())...view.calendar.startOfDay(for: Date()))
     }
 
@@ -271,6 +287,6 @@ struct IssueTests {
         view.frame = CGRect(x: 0, y: 0, width: 350, height: 200)
         view.layoutIfNeeded()
         #expect(view.flowLayout.itemSize == CGSize(width: 50, height: 20))
-        #expect(cell(view, IndexPath(item: 9, section: 0))?.day == 10)
+        #expect(cell(view, IndexPath(item: 9, section: 0))?.configuration.day == 10)
     }
 }

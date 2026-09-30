@@ -100,13 +100,38 @@ struct MonthGrid {
         return IndexPath(item: months[section].firstDay + dayOfMonth - 1, section: section)
     }
 
-    /// The day a cell shows, or `nil` for the empty cells before and after the month.
-    func date(at indexPath: IndexPath) -> Date? {
-        guard months.indices.contains(indexPath.section) else { return nil }
+    /// What a cell shows.
+    enum Content: Equatable {
+        /// A day of the month, at the start of the day, and its number in the month.
+        case day(Date, dayOfMonth: Int)
+        /// A day of the previous month, in the cells before the first day.
+        case leading(dayOfMonth: Int)
+        /// A day of the next month, in the cells after the last day.
+        case trailing(dayOfMonth: Int)
+        /// Nothing: a cell outside the grid, or a day the calendar cannot resolve.
+        case empty
+    }
+
+    /// What the cell at `indexPath` shows. The cells around a month hold the neighbouring
+    /// months' days, before the first month and after the last month too.
+    func content(at indexPath: IndexPath) -> Content {
+        guard months.indices.contains(indexPath.section) else { return .empty }
         let month = months[indexPath.section]
         let offset = indexPath.item - month.firstDay
-        guard offset >= 0, offset < month.daysTotal else { return nil }
-        return calendar.date(byAdding: .day, value: offset, to: month.firstDate)
+        guard let date = calendar.date(byAdding: .day, value: offset, to: month.firstDate) else { return .empty }
+        if offset < 0 {
+            return .leading(dayOfMonth: calendar.component(.day, from: date))
+        }
+        if offset >= month.daysTotal {
+            return .trailing(dayOfMonth: offset - month.daysTotal + 1)
+        }
+        return .day(date, dayOfMonth: offset + 1)
+    }
+
+    /// The day a cell shows, or `nil` for the empty cells before and after the month.
+    func date(at indexPath: IndexPath) -> Date? {
+        guard case .day(let date, _) = content(at: indexPath) else { return nil }
+        return date
     }
 
     func isOutOfRange(_ indexPath: IndexPath) -> Bool {
@@ -117,13 +142,19 @@ struct MonthGrid {
 extension CalendarView {
 
     /// Asks the data source for its range and rebuilds the month grid when the range moved to
-    /// other days or the calendar changed. The current month alone without a data source; zero
-    /// months when the range is invalid. Called once per reload, not once per cell.
+    /// other days or the calendar changed, and the formatters when the calendar changed. The
+    /// current month alone without a data source; zero months when the range is invalid. Called
+    /// once per reload, not once per cell.
     @discardableResult
     func refreshMonths() -> MonthGrid? {
         let start = dataSource?.startDate() ?? Date()
         let end = dataSource?.endDate() ?? start
-        let calendar = self.calendar
+        // The grid keeps a fixed copy: an autoupdating calendar always equals itself, so
+        // comparing it would miss the time zone changes the grid has to follow.
+        let calendar = self.calendar.fixed
+        if formatters.calendar != calendar {
+            rebuildFormatters()
+        }
         if let months = months,
             calendar.isDate(months.startDay, inSameDayAs: start),
             calendar.isDate(months.endDay, inSameDayAs: end),
@@ -132,7 +163,11 @@ extension CalendarView {
             todayIndexPath = months.indexPath(for: Date())
             return months
         }
+        let previousCalendar = months?.calendar
         months = MonthGrid(start: start, end: end, calendar: calendar, firstWeekday: style.effectiveFirstWeekday)
+        if let previousCalendar {
+            moveSelection(from: previousCalendar)
+        }
         if months == nil {
             CalendarView.logger.error(
                 "The data source's start date (\(start)) is after its end date (\(end)); showing no months.")
@@ -176,8 +211,9 @@ extension CalendarView {
                 if let indexPath = months.indexPath(for: day) {
                     eventsByIndexPath[indexPath, default: []].append(event)
                 }
+                // Where a DST change skips midnight, adding a day lands after it, so return to the start.
                 guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
-                day = next
+                day = calendar.startOfDay(for: next)
             } while day < last
         }
     }
@@ -221,51 +257,50 @@ extension CalendarView: UICollectionViewDataSource {
             collectionView.dequeueReusableCell(withReuseIdentifier: cellReuseIdentifier, for: indexPath)
             as! CalendarDayCell
 
-        dayCell.style = style
         dayCell.transform =
             _isRtl
             ? CGAffineTransform(scaleX: -1.0, y: 1.0)
             : CGAffineTransform.identity
 
-        guard let months = currentMonths, months.months.indices.contains(indexPath.section) else { return dayCell }
-        let month = months.months[indexPath.section]
-
-        let firstDayIndex = month.firstDay
-        let lastDayIndex = firstDayIndex + month.daysTotal
-        let isInRange = (firstDayIndex..<lastDayIndex).contains(indexPath.item)
-
-        if isInRange {
-            if let date = months.date(at: indexPath), let dayStyle = delegate?.calendar(self, styleForDate: date) {
-                dayCell.style = dayStyle
-            }
-            dayCell.day = indexPath.item - firstDayIndex + 1
-            dayCell.isOutOfRange = months.isOutOfRange(indexPath)
-            dayCell.isToday = indexPath == todayIndexPath
-            if marksWeekends, let date = months.date(at: indexPath) {
-                dayCell.isWeekend = calendar.isDateInWeekend(date)
-            }
-            dayCell.eventsCount = eventsByIndexPath[indexPath]?.count ?? 0
-            dayCell.date = months.date(at: indexPath)
-            if let date = dayCell.date {
-                dayCell.accessibilityLabel = accessibilityLabel(
-                    for: date, isToday: dayCell.isToday, eventsCount: dayCell.eventsCount)
-            }
-        } else if style.showAdjacentDays {
-            if indexPath.item < firstDayIndex {
-                if indexPath.section > 0 {
-                    dayCell.day = months.months[indexPath.section - 1].daysTotal - firstDayIndex + indexPath.item + 1
-                } else {
-                    dayCell.isHidden = true
-                }
-            } else {
-                dayCell.day = indexPath.item - lastDayIndex + 1
-            }
-            dayCell.isAdjacent = true
-            dayCell.eventsCount = 0
-        } else {
-            dayCell.isHidden = true
+        var configuration = DayCellConfiguration(style: style)
+        switch currentMonths?.content(at: indexPath) {
+        case .day(let date, let dayOfMonth):
+            let isToday = indexPath == todayIndexPath
+            let eventsCount = eventsByIndexPath[indexPath]?.count ?? 0
+            configuration.style = delegate?.calendar(self, styleForDate: date) ?? style
+            configuration.day = dayOfMonth
+            configuration.date = date
+            configuration.isOutOfRange = isOutOfRange(indexPath)
+            configuration.isToday = isToday
+            configuration.isWeekend = marksWeekends && calendar.isDateInWeekend(date)
+            configuration.eventsCount = eventsCount
+            configuration.accessibilityLabel = accessibilityLabel(for: date, isToday: isToday, eventsCount: eventsCount)
+        case .leading(let dayOfMonth) where style.showAdjacentDays,
+            .trailing(let dayOfMonth) where style.showAdjacentDays:
+            configuration.day = dayOfMonth
+            configuration.isAdjacent = true
+        case .leading, .trailing, .empty:
+            configuration.isHidden = true
+        case nil:
+            break
         }
+        dayCell.configuration = configuration
 
         return dayCell
+    }
+}
+
+extension Calendar {
+
+    /// This calendar with the settings it has now. An autoupdating calendar, such as
+    /// `Calendar.autoupdatingCurrent`, would follow later changes to the user's settings.
+    var fixed: Calendar {
+        guard self == .autoupdatingCurrent else { return self }
+        var calendar = Calendar(identifier: identifier)
+        calendar.locale = locale
+        calendar.timeZone = timeZone
+        calendar.firstWeekday = firstWeekday
+        calendar.minimumDaysInFirstWeek = minimumDaysInFirstWeek
+        return calendar
     }
 }

@@ -1,9 +1,27 @@
-//
-//  CalendarView+SwiftUI.swift
-//  KDCalendar
-//
-//  A SwiftUI wrapper around CalendarView.
-//
+/*
+ * CalendarView+SwiftUI.swift
+ * Created by Michael Michailidis on 08/09/2026.
+ * http://blog.karmadust.com/
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ */
 
 #if canImport(SwiftUI)
 import SwiftUI
@@ -164,7 +182,14 @@ public struct KDCalendarView: UIViewRepresentable {
 
         if view.style != self.style { view.style = self.style }
         if view.direction != self.direction { view.direction = self.direction }
-        if view.selectionMode != self.selectionMode { view.selectionMode = self.selectionMode }
+        // A new mode drops the days it cannot hold. Unless the binding brings a selection of its
+        // own, the binding drops them too rather than being reapplied in the new mode's shape.
+        var bindingFollowsView = false
+        if view.selectionMode != self.selectionMode {
+            let bindingIsShown = self.selection.map { view.calendar.startOfDay(for: $0) } == view.selectedDates
+            view.selectionMode = self.selectionMode
+            bindingFollowsView = bindingIsShown
+        }
         view.enableDeselection = self.allowsDeselection
         if view.marksWeekends != self.marksWeekends { view.marksWeekends = self.marksWeekends }
         view.isScrollEnabled = self.isScrollEnabled
@@ -172,7 +197,7 @@ public struct KDCalendarView: UIViewRepresentable {
             coordinator.range = self.range
             view.reloadData()
         }
-        if !coordinator.sameEvents(as: self.events) {
+        if coordinator.events != self.events {
             coordinator.events = self.events
             view.events = self.events
         }
@@ -185,7 +210,11 @@ public struct KDCalendarView: UIViewRepresentable {
         // pair them into ranges or keep only the last, so they are applied as a whole.
         let calendar = view.calendar
         let wanted = self.selection.map { calendar.startOfDay(for: $0) }
-        if wanted != view.selectedDates {
+        if bindingFollowsView {
+            if wanted != view.selectedDates {
+                coordinator.correctSelection(self.selection, to: view.selectedDates)
+            }
+        } else if wanted != view.selectedDates {
             view.setSelection(wanted)
             if view.selectedDates != wanted {
                 coordinator.correctSelection(self.selection, to: view.selectedDates)
@@ -207,13 +236,6 @@ public struct KDCalendarView: UIViewRepresentable {
             self.range = parent.range
         }
 
-        func sameEvents(as other: [CalendarEvent]) -> Bool {
-            events.count == other.count
-                && zip(events, other).allSatisfy {
-                    $0.title == $1.title && $0.startDate == $1.startDate && $0.endDate == $1.endDate
-                }
-        }
-
         /// Replaces a binding value the view could not hold as given with what the view shows.
         /// State must not change during a view update, so this waits for the update to end, and
         /// gives up if a tap or the app changed the binding in the meantime.
@@ -227,8 +249,14 @@ public struct KDCalendarView: UIViewRepresentable {
         public func startDate() -> Date { range.lowerBound }
         public func endDate() -> Date { range.upperBound }
 
+        // A display date applied by updateUIView announces its month during the view update,
+        // where the action must not change state, so the action waits for the update to end.
         public func calendar(_ calendar: CalendarView, didScrollToMonth date: Date) {
-            parent.onScrollToMonth?(date)
+            guard isUpdating else {
+                parent.onScrollToMonth?(date)
+                return
+            }
+            Task { @MainActor in self.parent.onScrollToMonth?(date) }
         }
 
         public func calendar(_ calendar: CalendarView, canSelectDate date: Date) -> Bool {

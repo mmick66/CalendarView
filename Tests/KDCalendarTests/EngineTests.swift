@@ -112,6 +112,59 @@ struct EngineTests {
         #expect(view.selectedDates == [])
     }
 
+    @Test func aRangeAcrossASkippedMidnightKeepsItsLastDay() {
+        // Adding a day to 8 September 2024 in Santiago lands on 01:00, past the midnight of
+        // later days, so a walk that does not return to the start of each day stops short.
+        let santiago = calendar("America/Santiago")
+        let view = makeCalendar(start: date(santiago, 2024, 9, 1), end: date(santiago, 2024, 9, 30), calendar: santiago)
+        let days = (6...10).map { santiago.startOfDay(for: date(santiago, 2024, 9, $0, hour: 12)) }
+
+        view.selectRange(date(santiago, 2024, 9, 6)...date(santiago, 2024, 9, 10))
+        #expect(view.selectedDates == days)
+
+        view.clearAllSelectedDates()
+        view.selectionMode = .range
+        view.selectDate(date(santiago, 2024, 9, 6))
+        view.selectDate(date(santiago, 2024, 9, 10))
+        #expect(view.selectedDates == days)
+    }
+
+    // MARK: Cell content
+
+    @Test func cellContentCoversTheMonthAndItsNeighbours() throws {
+        let utc = calendar("UTC")
+        // January 2024 starts on a Monday, February on a Thursday (Monday-first: items 0 and 3).
+        let grid = try #require(
+            MonthGrid(start: date(utc, 2024, 1, 1), end: date(utc, 2024, 2, 29), calendar: utc, firstWeekday: 2))
+        #expect(grid.content(at: IndexPath(item: 0, section: 0)) == .day(date(utc, 2024, 1, 1), dayOfMonth: 1))
+        #expect(grid.content(at: IndexPath(item: 30, section: 0)) == .day(date(utc, 2024, 1, 31), dayOfMonth: 31))
+        #expect(grid.content(at: IndexPath(item: 31, section: 0)) == .trailing(dayOfMonth: 1))
+        #expect(grid.content(at: IndexPath(item: 41, section: 0)) == .trailing(dayOfMonth: 11))
+        #expect(grid.content(at: IndexPath(item: 0, section: 1)) == .leading(dayOfMonth: 29))
+        #expect(grid.content(at: IndexPath(item: 2, section: 1)) == .leading(dayOfMonth: 31))
+        #expect(grid.content(at: IndexPath(item: 3, section: 1)) == .day(date(utc, 2024, 2, 1), dayOfMonth: 1))
+        #expect(grid.content(at: IndexPath(item: 31, section: 1)) == .day(date(utc, 2024, 2, 29), dayOfMonth: 29))
+        #expect(grid.content(at: IndexPath(item: 32, section: 1)) == .trailing(dayOfMonth: 1))
+        #expect(grid.content(at: IndexPath(item: 0, section: 2)) == .empty, "outside the grid")
+        #expect(grid.date(at: IndexPath(item: 31, section: 0)) == nil)
+    }
+
+    @Test func theFirstMonthBorrowsItsLeadingDaysFromTheCalendar() throws {
+        let utc = calendar("UTC")
+        // February 2024 starts on a Thursday: the three cells before it are 29, 30, 31 January.
+        let grid = try #require(
+            MonthGrid(start: date(utc, 2024, 2, 1), end: date(utc, 2024, 2, 29), calendar: utc, firstWeekday: 2))
+        #expect(grid.content(at: IndexPath(item: 0, section: 0)) == .leading(dayOfMonth: 29))
+        #expect(grid.content(at: IndexPath(item: 2, section: 0)) == .leading(dayOfMonth: 31))
+        #expect(grid.content(at: IndexPath(item: 3, section: 0)) == .day(date(utc, 2024, 2, 1), dayOfMonth: 1))
+        #expect(grid.date(at: IndexPath(item: 0, section: 0)) == nil)
+        // March 2024 starts on a Friday, after a 29-day February.
+        let march = try #require(
+            MonthGrid(start: date(utc, 2024, 3, 1), end: date(utc, 2024, 3, 31), calendar: utc, firstWeekday: 2))
+        #expect(march.content(at: IndexPath(item: 0, section: 0)) == .leading(dayOfMonth: 26))
+        #expect(march.content(at: IndexPath(item: 3, section: 0)) == .leading(dayOfMonth: 29))
+    }
+
     // MARK: Events
 
     @Test func anEventWithAFarEndDateIsClampedToTheGrid() {
@@ -129,6 +182,34 @@ struct EngineTests {
         #expect(view.eventsByIndexPath[IndexPath(item: 0, section: 0)]?.map(\.title) == ["ancient"])
         #expect(view.eventsByIndexPath[IndexPath(item: 1, section: 0)] == nil)
         #expect(view.eventsByIndexPath.values.flatMap { $0 }.filter { $0.title == "elsewhere" }.isEmpty)
+    }
+
+    @Test func anEventEndingJustAfterASkippedMidnightKeepsItsLastDay() throws {
+        // Adding a day to 8 September 2024 in Santiago lands on 01:00, so a walk that does not
+        // return to the start of each day reaches the 10th after this event has ended at 00:30.
+        let santiago = calendar("America/Santiago")
+        let view = makeCalendar(start: date(santiago, 2024, 9, 1), end: date(santiago, 2024, 9, 30), calendar: santiago)
+        view.events = [
+            CalendarEvent(
+                title: "a", startDate: date(santiago, 2024, 9, 6, hour: 10),
+                endDate: date(santiago, 2024, 9, 10).addingTimeInterval(30 * 60))
+        ]
+        for day in 6...10 {
+            let indexPath = try #require(view.indexPathForDate(date(santiago, 2024, 9, day, hour: 12)))
+            #expect(view.eventsByIndexPath[indexPath]?.map(\.title) == ["a"], "day \(day)")
+        }
+        let after = try #require(view.indexPathForDate(date(santiago, 2024, 9, 11, hour: 12)))
+        #expect(view.eventsByIndexPath[after] == nil)
+    }
+
+    @Test func eventsCompareByTitleAndDates() {
+        let utc = calendar("UTC")
+        let event = CalendarEvent(title: "a", startDate: date(utc, 2024, 1, 1), endDate: date(utc, 2024, 1, 2))
+        let same = CalendarEvent(title: "a", startDate: date(utc, 2024, 1, 1), endDate: date(utc, 2024, 1, 2))
+        #expect(event == same)
+        #expect(event != CalendarEvent(title: "b", startDate: event.startDate, endDate: event.endDate))
+        #expect(event != CalendarEvent(title: "a", startDate: event.startDate, endDate: date(utc, 2024, 1, 3)))
+        #expect(Set([event, same]).count == 1)
     }
 
     // MARK: Data source traffic
@@ -158,14 +239,14 @@ struct EngineTests {
         #expect(view.calendar.isDateInWeekend(date(utc, 2024, 1, 5)) == true, "Friday")
         #expect(view.calendar.isDateInWeekend(date(utc, 2024, 1, 7)) == false, "Sunday")
         // January 2024 starts on a Monday: Friday the 5th is item 4, Sunday the 7th item 6.
-        #expect(cell(view, IndexPath(item: 4, section: 0))?.isWeekend == true)
-        #expect(cell(view, IndexPath(item: 6, section: 0))?.isWeekend == false)
+        #expect(cell(view, IndexPath(item: 4, section: 0))?.configuration.isWeekend == true)
+        #expect(cell(view, IndexPath(item: 6, section: 0))?.configuration.isWeekend == false)
         // A calendar that already has a locale keeps it.
         let explicit = makeCalendar(
             start: date(utc, 2024, 1, 1), end: date(utc, 2024, 1, 31), calendar: calendar("UTC", locale: "en_US"),
             locale: "ar_SA")
         #expect(explicit.calendar.locale?.identifier == "en_US")
-        #expect(cell(explicit, IndexPath(item: 4, section: 0))?.isWeekend == false)
+        #expect(cell(explicit, IndexPath(item: 4, section: 0))?.configuration.isWeekend == false)
     }
 
     @Test func hebrewLeapYearsHaveThirteenMonths() {
@@ -195,11 +276,11 @@ struct EngineTests {
         view.setDisplayDate(now)
         view.layoutIfNeeded()
         let today = view.indexPathForDate(now)!
-        #expect(cell(view, today)?.isToday == true)
+        #expect(cell(view, today)?.configuration.isToday == true)
         // Pretend the marker went stale, as it would across midnight, then announce the day change.
-        cell(view, today)?.isToday = false
+        cell(view, today)?.configuration.isToday = false
         NotificationCenter.default.post(name: .NSCalendarDayChanged, object: nil)
         view.layoutIfNeeded()
-        #expect(cell(view, today)?.isToday == true)
+        #expect(cell(view, today)?.configuration.isToday == true)
     }
 }

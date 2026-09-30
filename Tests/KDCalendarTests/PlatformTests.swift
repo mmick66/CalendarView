@@ -109,6 +109,33 @@ struct PlatformTests {
         #expect(view.headerView.monthLabel.accessibilityTraits.contains(.header) == true)
     }
 
+    @Test func reusedCellsDoNotKeepTheirVoiceOverLabelAsAdjacentDays() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 3, 31))
+        view.style.showAdjacentDays = true
+        view.layoutIfNeeded()
+        // January 2024 starts on a Monday, so the 5th is item 4.
+        let reused = cell(view, IndexPath(item: 4, section: 0))!
+        #expect(reused.accessibilityLabel == "Friday, January 5, 2024")
+        reused.prepareForReuse()
+        #expect(reused.accessibilityLabel == nil)
+        reused.configuration.isAdjacent = true
+        #expect(reused.isAccessibilityElement == false, "adjacent days cannot be selected")
+        reused.configuration.isAdjacent = false
+        #expect(reused.isAccessibilityElement == true)
+        // Scrolling recycles in-month cells as adjacent days of the next months.
+        for month in [2, 3] {
+            view.setDisplayDate(date(2024, month, 1))
+            view.layoutIfNeeded()
+        }
+        let adjacent = view.collectionView.visibleCells.compactMap { $0 as? CalendarDayCell }.filter(
+            \.configuration.isAdjacent)
+        #expect(!adjacent.isEmpty)
+        for dayCell in adjacent {
+            #expect(dayCell.accessibilityLabel == nil)
+            #expect(dayCell.isAccessibilityElement == false)
+        }
+    }
+
     @Test func todayIsSpokenAsSuch() {
         let now = Date()
         let local = Calendar.current
@@ -228,7 +255,49 @@ struct PlatformTests {
         #expect(box.dates == [date(2024, 3, 15)])
     }
 
-    @Test func swiftUIModifiersReachTheCalendar() {
+    @Test func swiftUIRangeChangeDropsTheLeftDaysFromTheBinding() async {
+        let box = SelectionBox()
+        var style = CalendarView.Style()
+        style.calendar = utc
+        style.locale = Locale(identifier: "en_US")
+        var range = date(2024, 3, 1)...date(2024, 4, 30)
+        var mode = CalendarView.SelectionMode.multiple
+        func view() -> KDCalendarView {
+            KDCalendarView(range: range, selection: box.binding).calendarStyle(style).selectionMode(mode)
+        }
+        guard let hosted = hostCalendar(view()) else { return }
+        let (host, calendar) = hosted
+
+        // A range that now ends in March leaves 20 April out of both the view and the binding.
+        calendar.selectDate(date(2024, 3, 15))
+        calendar.selectDate(date(2024, 4, 20))
+        #expect(box.dates == [date(2024, 3, 15), date(2024, 4, 20)])
+        range = date(2024, 3, 1)...date(2024, 3, 31)
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        await settle()
+        #expect(calendar.selectedDates == [date(2024, 3, 15)])
+        #expect(box.dates == [date(2024, 3, 15)])
+
+        // A picked range is cut at the new end.
+        range = date(2024, 3, 1)...date(2024, 4, 30)
+        mode = .range
+        box.dates = []
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        calendar.selectDate(date(2024, 3, 28))
+        calendar.selectDate(date(2024, 4, 2))
+        #expect(box.dates.count == 6)
+        range = date(2024, 3, 1)...date(2024, 3, 30)
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        await settle()
+        let kept = (28...30).map { date(2024, 3, $0) }
+        #expect(calendar.selectedDates == kept)
+        #expect(box.dates == kept)
+    }
+
+    @Test func swiftUIModifiersReachTheCalendar() async {
         let box = SelectionBox()
         var style = CalendarView.Style()
         style.calendar = utc
@@ -269,6 +338,7 @@ struct PlatformTests {
         #expect(calendar.isScrollEnabled == false)
         #expect(calendar.events.count == 1)
         #expect(calendar.displayDate == date(2024, 2, 1))
+        await settle()
         #expect(scrolled.dates == [date(2024, 2, 1)], "the display date applies before the first month is announced")
         #expect(calendar.shouldSelect(calendar.indexPathForDate(date(2024, 2, 13))!) == false)
         #expect(calendar.shouldSelect(calendar.indexPathForDate(date(2024, 2, 12))!) == true)
@@ -292,6 +362,39 @@ struct PlatformTests {
         #expect(calendar.numberOfSections(in: calendar.collectionView) == 6)
         #expect(calendar.events.count == 2)
         #expect(calendar.direction == .horizontal, "modifiers not repeated fall back to their defaults")
+    }
+
+    @Test func swiftUIDisplayDateChangeReportsTheMonthAfterTheViewUpdate() async {
+        let box = SelectionBox()
+        let scrolled = SelectionBox()
+        var style = CalendarView.Style()
+        style.calendar = utc
+        style.locale = Locale(identifier: "en_US")
+        var displayDate = date(2024, 1, 10)
+        func view() -> KDCalendarView {
+            KDCalendarView(range: date(2024, 1, 1)...date(2024, 6, 30), selection: box.binding)
+                .calendarStyle(style)
+                .displayDate(displayDate)
+                .onScrollToMonth { scrolled.dates.append($0) }
+        }
+        guard let hosted = hostCalendar(view()) else { return }
+        let (host, calendar) = hosted
+        await settle()
+        scrolled.dates = []
+
+        // The month is applied during the update, but announced only once the update has ended,
+        // so the action may change state.
+        displayDate = date(2024, 4, 20)
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        #expect(calendar.displayDate == date(2024, 4, 1))
+        #expect(scrolled.dates == [])
+        await settle()
+        #expect(scrolled.dates == [date(2024, 4, 1)])
+
+        // A scroll outside a view update is still announced right away.
+        calendar.setDisplayDate(date(2024, 5, 3))
+        #expect(scrolled.dates == [date(2024, 4, 1), date(2024, 5, 1)])
     }
 
     /// Hosts `view` in the window and returns the host with the calendar inside it.
@@ -399,5 +502,57 @@ struct PlatformTests {
         await settle()
         #expect(calendar.selectedDates == [date(2024, 1, 5)])
         #expect(box.dates == [date(2024, 1, 5)])
+    }
+
+    @Test func swiftUIModeChangeLeavesTheBindingWithTheDaysKept() async {
+        let box = SelectionBox()
+        var style = CalendarView.Style()
+        style.calendar = utc
+        style.locale = Locale(identifier: "en_US")
+        let range = date(2024, 1, 1)...date(2024, 3, 31)
+        var mode = CalendarView.SelectionMode.multiple
+        func view() -> KDCalendarView {
+            KDCalendarView(range: range, selection: box.binding).calendarStyle(style).selectionMode(mode)
+        }
+        guard let hosted = hostCalendar(view()) else { return }
+        let (host, calendar) = hosted
+
+        // As in the demo: three days in multiple mode, then the picker switches to single.
+        for day in [8, 10, 12] { calendar.selectDate(date(2024, 1, day)) }
+        #expect(box.dates == [date(2024, 1, 8), date(2024, 1, 10), date(2024, 1, 12)])
+        mode = .single
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        await settle()
+        #expect(calendar.selectedDates == [date(2024, 1, 12)])
+        #expect(box.dates == [date(2024, 1, 12)])
+
+        // Range mode starts clean rather than filling the days in between.
+        mode = .multiple
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        for day in [8, 10] { calendar.selectDate(date(2024, 1, day)) }
+        #expect(box.dates == [date(2024, 1, 12), date(2024, 1, 8), date(2024, 1, 10)])
+        mode = .range
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        await settle()
+        #expect(calendar.selectedDates == [])
+        #expect(box.dates == [])
+
+        // A selection that comes with the new mode is applied in its shape.
+        mode = .multiple
+        box.dates = [date(2024, 2, 9), date(2024, 2, 5)]
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        await settle()
+        #expect(calendar.selectedDates == [date(2024, 2, 9), date(2024, 2, 5)])
+        mode = .range
+        box.dates = [date(2024, 2, 20), date(2024, 2, 22)]
+        host.rootView = view()
+        host.view.layoutIfNeeded()
+        await settle()
+        #expect(calendar.selectedDates == (20...22).map { date(2024, 2, $0) })
+        #expect(box.dates == (20...22).map { date(2024, 2, $0) })
     }
 }

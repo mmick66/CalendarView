@@ -27,15 +27,13 @@ import UIKit
 
 open class CalendarHeaderView: UIView {
 
-    var style: CalendarView.Style = .default {
-        didSet {
-            updateStyle()
-        }
-    }
+    private(set) var style: CalendarView.Style = .default
+    /// The weekday names come from here; the calendar view builds them once per style.
+    private(set) var formatters = CalendarView.Formatters(style: .default)
 
-    var monthLabel: UILabel!
+    let monthLabel = UILabel()
 
-    var dayLabels = [UILabel]()
+    let dayLabels = (0..<7).map { _ in UILabel() }
 
     public override init(frame: CGRect) {
         super.init(frame: frame)
@@ -50,25 +48,23 @@ open class CalendarHeaderView: UIView {
     }
 
     private func buildLabels() {
-        self.translatesAutoresizingMaskIntoConstraints = false
-
-        monthLabel = UILabel()
-        monthLabel.translatesAutoresizingMaskIntoConstraints = false
         monthLabel.backgroundColor = UIColor.clear
         monthLabel.adjustsFontForContentSizeCategory = true
         monthLabel.accessibilityTraits = .header
         self.addSubview(monthLabel)
 
-        dayLabels.removeAll()
-        for _ in 0..<7 {
-            let label = UILabel()
-            label.translatesAutoresizingMaskIntoConstraints = false
+        for label in dayLabels {
             label.backgroundColor = UIColor.clear
             label.adjustsFontForContentSizeCategory = true
-
-            dayLabels.append(label)
             self.addSubview(label)
         }
+        updateStyle()
+    }
+
+    /// Restyles the header with `style` and the formatters built for it.
+    func setStyle(_ style: CalendarView.Style, formatters: CalendarView.Formatters) {
+        self.style = style
+        self.formatters = formatters
         updateStyle()
     }
 
@@ -78,13 +74,8 @@ open class CalendarHeaderView: UIView {
         self.monthLabel.textColor = style.headerTextColor
         self.monthLabel.backgroundColor = style.headerBackgroundColor
 
-        let formatter = DateFormatter()
-        formatter.calendar = style.calendar
-        formatter.locale = style.locale
-        formatter.timeZone = style.calendar.timeZone
-
         // Weekday symbols are indexed from Sunday; rotate so the first label is the first weekday.
-        let symbols = formatter.shortWeekdaySymbols ?? []
+        let symbols = formatters.weekdaySymbols
         let start = style.effectiveFirstWeekday - 1
 
         for (i, label) in dayLabels.enumerated() {
@@ -106,7 +97,7 @@ open class CalendarHeaderView: UIView {
 
         let isRtl = self.effectiveUserInterfaceLayoutDirection == .rightToLeft
 
-        self.monthLabel?.frame = CGRect(
+        self.monthLabel.frame = CGRect(
             x: 0.0,
             y: style.headerTopMargin,
             width: self.bounds.size.width,

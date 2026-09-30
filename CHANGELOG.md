@@ -8,13 +8,55 @@ All notable changes to KDCalendar are documented here. The format follows
 
 ### Added
 
-- `CalendarEventStore`, the part of `EKEventStore` the EventKit bridge uses, and
-  `EventsManager.store` to inject a test double. The bridge has tests now.
+- `CalendarEventStore`, the part of `EKEventStore` the EventKit bridge uses.
+  Every EventKit call takes a `store` argument, defaulting to the shared
+  `EventsManager.store`, so a test double can stand in. The bridge has tests
+  now.
+- `EventsManager.save(_:store:)` and `CalendarView.saveEvent(_:store:)`, which
+  throw `EventsManagerError.authorization` without access, or the store's own
+  error when it refuses the event. `add(event:)` and `addEvent(_:date:duration:)`
+  still return `false` for either.
+- `Style.resolvedCalendar`: `Style.calendar`, given `Style.locale` when it has
+  no locale of its own. `CalendarView.calendar` returns it.
+- `CalendarEvent` is `Equatable` and `Hashable`, comparing title, start and end
+  date, so apps can diff or deduplicate their events.
 
 ### Fixed
 
+- Cell borders kept their old colour when Increase Contrast (or another trait
+  a dynamic colour can depend on, besides light and dark mode) changed. They
+  are reapplied on any trait change that affects colour appearance now.
+- With `showAdjacentDays` on, the cells before the first month stayed empty
+  while the cells after the last month showed the next month's days. The first
+  month now shows the end of the previous month too.
+- `loadEvents()` and `EventsManager.load(from:to:)` reported an error thrown
+  while asking for calendar access as `EventsManagerError.authorization`. They
+  throw that error now.
+- `loadEvents()` queried EventKit on the main thread, which could hitch
+  scrolling for a long range or a busy calendar. `EKEventStore` now runs the
+  query off the main actor, and `CalendarEventStore.events(from:to:)` is
+  `async`.
+- The default `Style.calendar` and `Style.locale` were snapshots of the user's
+  settings taken at launch, so after the device changed time zone "today" and
+  the grid stayed in the old zone. They are `Calendar.autoupdatingCurrent` and
+  `Locale.autoupdatingCurrent` now, and the view rebuilds its grid, keeping the
+  selected days, when the time zone changes.
+- Assigning `dataSource` kept a grid built before it, such as the current month
+  alone built when `style` was set first. Until the next reload or layout,
+  `setDisplayDate`, `selectDate` and `indexPathForDate` ignored the data
+  source's days. Assigning a data source now reloads the calendar from it.
+- A drag released without deceleration, such as one let go exactly on a page,
+  left the header and `didScrollToMonth` on the old month. The view now reports
+  the month when such a drag ends.
+- `firstWeekday = .automatic` ignored `Style.locale` when `Style.calendar` had
+  no locale, as a calendar made with `Calendar(identifier:)` has none: weeks
+  started on Sunday whatever the locale. It follows the locale now, as weekends
+  already did.
 - `loadEvents()` stopped at the start of the last day of the range, so events
   later on that day were missed.
+- `loadEvents()` missed every event after the first four years of a longer
+  range, because EventKit shortens a query to four years. The `EKEventStore`
+  bridge now queries such a range in chunks.
 - The header did not mirror when a calendar was right-to-left on its own
   rather than through the app's layout direction.
 - A `CalendarView` decoded from an archive crashed in the header's
@@ -31,6 +73,23 @@ All notable changes to KDCalendar are documented here. The format follows
   the last while the binding kept them all. The binding is now applied as a
   whole in the shape of the selection mode, and set to the days the calendar
   shows when they differ.
+- A reused cell kept the VoiceOver label of the day it showed before, so with
+  `showAdjacentDays` a neighbouring month's day was read out as another date.
+  Reuse clears the label, and VoiceOver skips adjacent days, which cannot be
+  selected.
+- Changing `selectionMode` dropped selected days without telling the delegate:
+  switching to `.single` keeps only the last day and switching to `.range`
+  clears the selection. The delegate now receives `didDeselectDate` for each
+  day dropped. `KDCalendarView` drops them from the binding too, where it used
+  to reapply them in the new mode's shape, so switching to `.range` filled the
+  days between them; a selection set together with the new mode still wins.
+- `selectRange` walked every day between its bounds, so a range with far-off
+  ends such as `Date.distantPast...Date.distantFuture` blocked the main thread.
+  It walks only the days in range now.
+- A tap that replaced the selection, in `.single` mode or when starting a new
+  range, reported the dropped days with `didDeselectDate` while the view showed
+  no selection at all. The delegate now hears once the view shows the new
+  day, as it does when the selection mode changes.
 
 ## [2.0.1] - 2026-09-08
 

@@ -37,7 +37,7 @@ Add the `KDCalendar` product to your target, and `KDCalendarEventKit` as well if
 
 ### CocoaPods
 
-2.0.0 is the final CocoaPods release. Prefer Swift Package Manager.
+2.0.1 is the final CocoaPods release; later fixes ship through Swift Package Manager only. Prefer Swift Package Manager.
 
 ```ruby
 pod 'KDCalendar', '~> 2.0'            # the calendar
@@ -85,12 +85,12 @@ The view holds both weakly, so keep them alive yourself. A view controller that 
 
 ### Dates
 
-Every date the view computes or hands out is the start of a day in `calendarView.calendar`, which is `style.calendar` and defaults to `Calendar.current`. `didScrollToMonth` receives the first day of the month. To work in another time zone or calendar, set one on the style:
+Every date the view computes or hands out is the start of a day in `calendarView.calendar`, which is `style.calendar` (given `style.locale` when it has no locale of its own) and defaults to `Calendar.autoupdatingCurrent`, so it follows the device when its time zone changes. `didScrollToMonth` receives the first day of the month. To work in another time zone or calendar, set one on the style:
 
 ```swift
 var style = CalendarView.Style()
 style.calendar = Calendar(identifier: .persian)
-style.firstWeekday = .automatic       // the calendar's own first weekday
+style.firstWeekday = .automatic       // the calendar's, or style.locale's if it has no locale
 calendarView.style = style
 ```
 
@@ -183,6 +183,7 @@ import KDCalendarEventKit
 
 try await calendarView.loadEvents()                     // or the completion form
 calendarView.addEvent("Dinner", date: date, duration: 2) // hours; false if access is missing
+try calendarView.saveEvent(event)                        // throws the reason instead
 ```
 
 ### SwiftUI
