@@ -9,7 +9,7 @@ Pod::Spec.new do |s|
                    DESC
 
   s.homepage     = "https://github.com/mmick66/CalendarView"
-  s.screenshots  = "https://raw.githubusercontent.com/mmick66/CalendarView/master/Assets/screenshots.png"
+  s.screenshots  = "https://raw.githubusercontent.com/mmick66/CalendarView/main/Assets/screenshots.png"
 
   s.license      = { :type => "MIT", :file => "LICENSE" }
 
