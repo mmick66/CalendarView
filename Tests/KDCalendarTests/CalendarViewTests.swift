@@ -315,7 +315,6 @@ struct CalendarViewTests {
         #expect(
             cell(view, IndexPath(item: 32, section: 1))?.dotsView.isHidden == true, "adjacent days never show events")
         #expect(cell(view, IndexPath(item: 32, section: 1))?.bgView.backgroundColor == .clear)
-        // The first month has no previous month to borrow from.
         view.setDisplayDate(date(2024, 1, 1))
         view.layoutIfNeeded()
         #expect(cell(view, IndexPath(item: 31, section: 0))?.configuration.day == 1)
@@ -323,7 +322,11 @@ struct CalendarViewTests {
         let februaryOnly = makeCalendar(start: date(2024, 2, 1), end: date(2024, 2, 29))
         februaryOnly.style.showAdjacentDays = true
         februaryOnly.layoutIfNeeded()
-        #expect(cell(februaryOnly, IndexPath(item: 0, section: 0))?.isHidden == true, "nothing before the first month")
+        #expect(
+            cell(februaryOnly, IndexPath(item: 0, section: 0))?.configuration.day == 29,
+            "January ends before the first month")
+        #expect(cell(februaryOnly, IndexPath(item: 0, section: 0))?.configuration.isAdjacent == true)
+        #expect(cell(februaryOnly, IndexPath(item: 0, section: 0))?.isHidden == false)
         #expect(
             cell(februaryOnly, IndexPath(item: 32, section: 0))?.configuration.day == 1,
             "March continues after the 29th")

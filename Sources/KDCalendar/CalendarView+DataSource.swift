@@ -108,24 +108,23 @@ struct MonthGrid {
         case leading(dayOfMonth: Int)
         /// A day of the next month, in the cells after the last day.
         case trailing(dayOfMonth: Int)
-        /// Nothing: a cell before the first displayed month or outside the grid.
+        /// Nothing: a cell outside the grid, or a day the calendar cannot resolve.
         case empty
     }
 
     /// What the cell at `indexPath` shows. The cells around a month hold the neighbouring
-    /// months' days, except before the first month, which has no previous month to borrow from.
+    /// months' days, before the first month and after the last month too.
     func content(at indexPath: IndexPath) -> Content {
         guard months.indices.contains(indexPath.section) else { return .empty }
         let month = months[indexPath.section]
         let offset = indexPath.item - month.firstDay
+        guard let date = calendar.date(byAdding: .day, value: offset, to: month.firstDate) else { return .empty }
         if offset < 0 {
-            guard indexPath.section > 0 else { return .empty }
-            return .leading(dayOfMonth: months[indexPath.section - 1].daysTotal + offset + 1)
+            return .leading(dayOfMonth: calendar.component(.day, from: date))
         }
         if offset >= month.daysTotal {
             return .trailing(dayOfMonth: offset - month.daysTotal + 1)
         }
-        guard let date = calendar.date(byAdding: .day, value: offset, to: month.firstDate) else { return .empty }
         return .day(date, dayOfMonth: offset + 1)
     }
 

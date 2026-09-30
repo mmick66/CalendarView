@@ -21,6 +21,9 @@ All notable changes to KDCalendar are documented here. The format follows
 
 ### Fixed
 
+- With `showAdjacentDays` on, the cells before the first month stayed empty
+  while the cells after the last month showed the next month's days. The first
+  month now shows the end of the previous month too.
 - `loadEvents()` and `EventsManager.load(from:to:)` reported an error thrown
   while asking for calendar access as `EventsManagerError.authorization`. They
   throw that error now.

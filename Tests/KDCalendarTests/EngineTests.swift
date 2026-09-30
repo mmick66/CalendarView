@@ -149,14 +149,20 @@ struct EngineTests {
         #expect(grid.date(at: IndexPath(item: 31, section: 0)) == nil)
     }
 
-    @Test func theFirstMonthHasNoLeadingDays() throws {
+    @Test func theFirstMonthBorrowsItsLeadingDaysFromTheCalendar() throws {
         let utc = calendar("UTC")
+        // February 2024 starts on a Thursday: the three cells before it are 29, 30, 31 January.
         let grid = try #require(
             MonthGrid(start: date(utc, 2024, 2, 1), end: date(utc, 2024, 2, 29), calendar: utc, firstWeekday: 2))
-        for item in 0..<3 {
-            #expect(grid.content(at: IndexPath(item: item, section: 0)) == .empty, "item \(item)")
-        }
+        #expect(grid.content(at: IndexPath(item: 0, section: 0)) == .leading(dayOfMonth: 29))
+        #expect(grid.content(at: IndexPath(item: 2, section: 0)) == .leading(dayOfMonth: 31))
         #expect(grid.content(at: IndexPath(item: 3, section: 0)) == .day(date(utc, 2024, 2, 1), dayOfMonth: 1))
+        #expect(grid.date(at: IndexPath(item: 0, section: 0)) == nil)
+        // March 2024 starts on a Friday, after a 29-day February.
+        let march = try #require(
+            MonthGrid(start: date(utc, 2024, 3, 1), end: date(utc, 2024, 3, 31), calendar: utc, firstWeekday: 2))
+        #expect(march.content(at: IndexPath(item: 0, section: 0)) == .leading(dayOfMonth: 26))
+        #expect(march.content(at: IndexPath(item: 3, section: 0)) == .leading(dayOfMonth: 29))
     }
 
     // MARK: Events
