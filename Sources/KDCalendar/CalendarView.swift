@@ -219,8 +219,13 @@ public class CalendarView: UIView {
 
     /// Receives scrolling and selection events.
     public weak var delegate: CalendarViewDelegate?
-    /// Provides the range of days to show.
-    public weak var dataSource: CalendarViewDataSource?
+    /// Provides the range of days to show. Assigning one reloads the calendar from it.
+    public weak var dataSource: CalendarViewDataSource? {
+        didSet {
+            invalidateMonths()
+            reloadData()
+        }
+    }
 
     /// Whether the user can scroll between months. Programmatic scrolling always works.
     public var isScrollEnabled: Bool {

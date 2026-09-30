@@ -36,6 +36,10 @@ All notable changes to KDCalendar are documented here. The format follows
   the grid stayed in the old zone. They are `Calendar.autoupdatingCurrent` and
   `Locale.autoupdatingCurrent` now, and the view rebuilds its grid, keeping the
   selected days, when the time zone changes.
+- Assigning `dataSource` kept a grid built before it, such as the current month
+  alone built when `style` was set first. Until the next reload or layout,
+  `setDisplayDate`, `selectDate` and `indexPathForDate` ignored the data
+  source's days. Assigning a data source now reloads the calendar from it.
 - A drag released without deceleration, such as one let go exactly on a page,
   left the header and `didScrollToMonth` on the old month. The view now reports
   the month when such a drag ends.

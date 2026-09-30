@@ -191,6 +191,27 @@ struct CalendarViewTests {
         #expect(view.months?.startDay == grid?.startDay)
     }
 
+    @Test func assigningADataSourceReplacesAGridBuiltWithoutIt() {
+        var style = CalendarView.Style()
+        style.calendar = utc
+        let view = CalendarView(frame: CGRect(x: 0, y: 0, width: 350, height: 420))
+        view.style = style
+        #expect(view.months != nil, "setting the style builds the current month alone")
+        let source = FixedDataSource(start: date(2024, 1, 15), end: date(2024, 3, 10))
+        retained.objects.append(source)
+        view.dataSource = source
+        #expect(view.indexPathForDate(date(2024, 2, 10)) == IndexPath(item: 12, section: 1))
+        view.setDisplayDate(date(2024, 2, 10))
+        #expect(view.displayDate == date(2024, 2, 1))
+        #expect(view.numberOfSections(in: view.collectionView) == 3)
+        // Another data source over other days replaces the grid too.
+        let other = FixedDataSource(start: date(2025, 6, 1), end: date(2025, 6, 30))
+        retained.objects.append(other)
+        view.dataSource = other
+        #expect(view.indexPathForDate(date(2024, 2, 10)) == nil)
+        #expect(view.indexPathForDate(date(2025, 6, 10)) != nil)
+    }
+
     @Test func dateRangeSpansTheDataSourceAtTheStartOfEachDay() {
         let view = makeCalendar(start: date(2024, 1, 15, hour: 9), end: date(2024, 3, 10, hour: 18))
         #expect(view.dateRange == date(2024, 1, 15)...date(2024, 3, 10))
