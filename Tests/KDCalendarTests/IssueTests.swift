@@ -190,6 +190,12 @@ struct IssueTests {
         #expect(view.selectedDates == [date(2024, 1, 10)], "a tap after a programmatic range starts a new one")
     }
 
+    @Test func issue32_selectRangeWithFarOffEndsOnlyWalksTheDaysInRange() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        view.selectRange(Date.distantPast...Date.distantFuture)
+        #expect(view.selectedDates == days(date(2024, 1, 1), date(2024, 1, 31)))
+    }
+
     @Test func issue32_multipleSelectionEnableBridgesToTheMode() {
         let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
         #expect(view.multipleSelectionEnable == true)

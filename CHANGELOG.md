@@ -53,6 +53,13 @@ All notable changes to KDCalendar are documented here. The format follows
   day dropped. `KDCalendarView` drops them from the binding too, where it used
   to reapply them in the new mode's shape, so switching to `.range` filled the
   days between them; a selection set together with the new mode still wins.
+- `selectRange` walked every day between its bounds, so a range with far-off
+  ends such as `Date.distantPast...Date.distantFuture` blocked the main thread.
+  It walks only the days in range now.
+- A tap that replaced the selection, in `.single` mode or when starting a new
+  range, reported the dropped days with `didDeselectDate` while the view showed
+  no selection at all. The delegate now hears once the view shows the new
+  day, as it does when the selection mode changes.
 
 ## [2.0.1] - 2026-09-08
 

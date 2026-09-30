@@ -132,11 +132,16 @@ public class CalendarView: UIView {
         return start <= end ? start...end : start...start
     }
 
+    /// The selected days and the range being picked. Cells are derived from it on demand.
+    var selection = SelectionState()
+
     /// The selected days, in selection order.
     ///
     /// The selection is kept as days, not cells: when the range or the style rebuilds the grid,
     /// the days stay selected wherever their cells land.
-    public internal(set) var selectedDates = [Date]()
+    public var selectedDates: [Date] {
+        selection.days
+    }
     /// The cells of the selected days in the current grid, in selection order.
     public var selectedIndexPaths: [IndexPath] {
         selectedDates.compactMap { indexPathForDate($0) }
@@ -186,26 +191,12 @@ public class CalendarView: UIView {
     ///
     /// Switching to `.single` keeps only the most recently selected day, and switching to
     /// `.range` clears the selection. The delegate receives `didDeselectDate` for each day dropped.
-    public var selectionMode: SelectionMode = .multiple {
-        didSet {
-            guard selectionMode != oldValue else { return }
-            rangeAnchor = nil
-            let dropped: [Date]
-            switch selectionMode {
-            case .single:
-                guard selectedDates.count > 1 else { return }
-                dropped = Array(selectedDates.dropLast())
-                for indexPath in dropped.compactMap({ indexPathForDate($0) }) {
-                    collectionView?.deselectItem(at: indexPath, animated: false)
-                }
-                selectedDates = [selectedDates.last!]
-            case .range:
-                dropped = selectedDates
-                clearAllSelectedDates()
-            case .multiple:
-                return
-            }
-            for date in dropped {
+    public var selectionMode: SelectionMode {
+        get { selection.mode }
+        set {
+            let change = selection.setMode(newValue)
+            show(change)
+            for date in change.deselected {
                 delegate?.calendar(self, didDeselectDate: date)
             }
         }
@@ -217,11 +208,6 @@ public class CalendarView: UIView {
         get { selectionMode != .single }
         set { selectionMode = newValue ? .multiple : .single }
     }
-
-    /// The first end of the range being picked in ``SelectionMode/range`` mode.
-    var rangeAnchor: Date?
-    /// Whether the range starting at ``rangeAnchor`` has both ends.
-    var rangeIsComplete = false
 
     /// Whether tapping a selected day deselects it. Programmatic deselection always works.
     public var enableDeselection = true
@@ -480,13 +466,11 @@ public class CalendarView: UIView {
         from.timeZone = previous.timeZone
         var to = Calendar(identifier: .gregorian)
         to.timeZone = current.timeZone
-        func move(_ date: Date) -> Date {
+        selection.move { date in
             let day = from.dateComponents([.era, .year, .month, .day], from: date)
             guard let moved = to.date(from: day) else { return date }
             return current.startOfDay(for: moved)
         }
-        selectedDates = selectedDates.map(move)
-        rangeAnchor = rangeAnchor.map(move)
     }
 
     func scrollViewOffset(for date: Date) -> CGPoint {
@@ -515,25 +499,14 @@ extension CalendarView {
     public func reloadData() {
         guard let collectionView = self.collectionView else { return }
         refreshMonths()
-        var kept: [Date] = []
-        var left: [Date] = []
-        for date in selectedDates {
-            if let indexPath = indexPathForDate(date), !isOutOfRange(indexPath) {
-                kept.append(date)
-            } else {
-                left.append(date)
-            }
-        }
-        selectedDates = kept
-        if kept.isEmpty {
-            rangeAnchor = nil
-            rangeIsComplete = false
+        let change = selection.retain { date in
+            indexPathForDate(date).map { !isOutOfRange($0) } ?? false
         }
         collectionView.reloadData()
         for indexPath in selectedIndexPaths {
             collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
         }
-        for date in left {
+        for date in change.deselected {
             delegate?.calendar(self, didDeselectDate: date)
         }
     }
@@ -565,17 +538,13 @@ extension CalendarView {
     /// previous selection is cleared first. The delegate receives `didSelectDate`.
     public func selectDate(_ date: Date) {
         guard let indexPath = self.indexPathForDate(date), self.shouldSelect(indexPath) else { return }
-        self.collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
         self.didSelect(indexPath)
     }
 
     /// Deselects the day containing `date` if it is selected. The delegate receives
     /// `didDeselectDate`. Does nothing for a day that is not selected.
     public func deselectDate(_ date: Date) {
-        guard let indexPath = self.indexPathForDate(date), let day = self.dateFromIndexPath(indexPath),
-            selectedDates.contains(day)
-        else { return }
-        self.collectionView.deselectItem(at: indexPath, animated: false)
+        guard let indexPath = self.indexPathForDate(date) else { return }
         self.didDeselect(indexPath)
     }
 
@@ -593,71 +562,53 @@ extension CalendarView {
     /// delegate with `didSelectRange`. Works in every ``SelectionMode``; in `.range` mode the next
     /// tap starts a new range.
     public func selectRange(_ range: ClosedRange<Date>) {
-        clearAllSelectedDates()
-        let lower = calendar.startOfDay(for: range.lowerBound)
-        let upper = calendar.startOfDay(for: range.upperBound)
-        var day = lower
-        while day <= upper {
-            if let indexPath = indexPathForDate(day), let date = dateFromIndexPath(indexPath), shouldSelect(indexPath) {
-                collectionView?.selectItem(at: indexPath, animated: false, scrollPosition: [])
-                selectedDates.append(date)
-            }
-            guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
-            day = next
-        }
-        rangeAnchor = selectedDates.first
-        rangeIsComplete = true
+        show(selection.replace(with: selectableDays(in: range)))
         guard let first = selectedDates.first, let last = selectedDates.last else { return }
         delegate?.calendar(self, didSelectRange: first...last)
     }
 
     /// Deselects every day without notifying the delegate.
     public func clearAllSelectedDates() {
-        for indexPath in selectedIndexPaths {
-            self.collectionView?.deselectItem(at: indexPath, animated: false)
-        }
-        selectedDates.removeAll()
-        rangeAnchor = nil
-        rangeIsComplete = false
+        show(selection.replace(with: []))
     }
 
     /// Replaces the selection with `dates` as the selection mode holds them, without replaying
-    /// taps and without notifying the delegate. `.multiple` keeps every selectable day in order,
-    /// `.single` keeps the last one, and `.range` selects every selectable day from the earliest
-    /// date to the latest; a lone day in `.range` mode is the first end of a new range.
+    /// taps and without notifying the delegate. See ``SelectionState/assign(_:selectable:)``.
     func setSelection(_ dates: [Date]) {
-        var days = [Date]()
-        for day in dates.map({ calendar.startOfDay(for: $0) }) where !days.contains(day) {
-            days.append(day)
-        }
-        let isRange = selectionMode == .range && days.count > 1
-        if isRange, let lower = days.min(), let upper = days.max() {
-            // Only days in range can be selected, so far-off ends cost nothing.
-            let bounds = dateRange
-            days.removeAll()
-            var day = max(lower, bounds.lowerBound)
-            while day <= min(upper, bounds.upperBound) {
-                days.append(day)
-                guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
-                day = next
-            }
-        }
-        var selection = days.compactMap { day -> (IndexPath, Date)? in
-            guard let indexPath = indexPathForDate(day), shouldSelect(indexPath) else { return nil }
-            return (indexPath, day)
-        }
-        if selectionMode == .single {
-            selection = Array(selection.suffix(1))
-        }
+        // The delegate may read the selection while it is asked which days are selectable, so
+        // the change is worked out on a copy.
+        var next = selection
+        let change = next.assign(dates.map { calendar.startOfDay(for: $0) }, selectable: selectableDays(in:))
+        selection = next
+        show(change)
+    }
 
-        clearAllSelectedDates()
-        for (indexPath, day) in selection {
-            collectionView?.selectItem(at: indexPath, animated: false, scrollPosition: [])
-            selectedDates.append(day)
+    /// The days from the first day of `range` to its last that can be selected, in order: those
+    /// in the data source's range that the delegate allows.
+    func selectableDays(in range: ClosedRange<Date>) -> [Date] {
+        // Only days in range can be selected, so far-off ends cost nothing.
+        let bounds = dateRange
+        let last = min(calendar.startOfDay(for: range.upperBound), bounds.upperBound)
+        var day = max(calendar.startOfDay(for: range.lowerBound), bounds.lowerBound)
+        var days = [Date]()
+        while day <= last {
+            if let indexPath = indexPathForDate(day), let date = dateFromIndexPath(indexPath), shouldSelect(indexPath) {
+                days.append(date)
+            }
+            guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
+            day = calendar.startOfDay(for: next)
         }
-        if selectionMode == .range {
-            rangeAnchor = selectedDates.first
-            rangeIsComplete = isRange && rangeAnchor != nil
+        return days
+    }
+
+    /// Selects and deselects the cells of the days `change` added and removed.
+    func show(_ change: SelectionState.Change) {
+        guard let collectionView else { return }
+        for indexPath in change.deselected.compactMap({ indexPathForDate($0) }) {
+            collectionView.deselectItem(at: indexPath, animated: false)
+        }
+        for indexPath in change.selected.compactMap({ indexPathForDate($0) }) {
+            collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
         }
     }
 
