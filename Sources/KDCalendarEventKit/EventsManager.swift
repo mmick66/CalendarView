@@ -34,7 +34,7 @@ public enum EventsManagerError: Error, Sendable {
 }
 
 /// The part of an event store the bridge needs. `EKEventStore` conforms; a test double can
-/// be passed as the `store` argument of any call that takes one.
+/// stand in for it through ``EventsManager/init(store:)``.
 @MainActor
 public protocol CalendarEventStore: AnyObject {
     /// Whether the app holds full access to the user's calendars.
@@ -121,33 +121,39 @@ extension EKEventStore: CalendarEventStore {
     }
 }
 
-/// The bridge between the system event store and `CalendarEvent` values.
+/// The bridge between an event store and `CalendarEvent` values.
 ///
 /// Every call is made on the main actor, though `EKEventStore` runs its queries off it. Full
 /// calendar access is requested the first time it is needed; the app must declare
-/// `NSCalendarsFullAccessUsageDescription`. Calls use the shared ``store`` unless given
-/// another.
+/// `NSCalendarsFullAccessUsageDescription`. Use ``shared`` for the system event store, or
+/// make a manager around a ``CalendarEventStore`` of your own to test without calendar
+/// access.
 @MainActor
-public enum EventsManager {
+public struct EventsManager {
 
-    /// The system event store calls use by default. One store is shared because an
-    /// `EKEventStore` is expensive to create; pass a ``CalendarEventStore`` of your own as
-    /// the `store` argument to test without calendar access.
-    public static let store = EKEventStore()
+    /// The manager of the system event store. One store is shared because an `EKEventStore`
+    /// is expensive to create.
+    public static let shared = EventsManager(store: systemStore)
+
+    private static let systemStore = EKEventStore()
+
+    /// The store the manager reads and writes.
+    public let store: any CalendarEventStore
+
+    /// Creates a manager that reads and writes `store`.
+    public init(store: any CalendarEventStore) {
+        self.store = store
+    }
 
     /// Whether the app currently holds full access to the user's calendars.
-    public static var hasFullAccess: Bool {
+    public var hasFullAccess: Bool {
         store.hasFullAccess
     }
 
     /// Requests full access if needed and returns the events between the two dates.
     /// - Throws: ``EventsManagerError/authorization`` when access is denied, or the error
     ///   the store threw while asking for it.
-    public static func load(
-        from fromDate: Date,
-        to toDate: Date,
-        store: any CalendarEventStore = EventsManager.store
-    ) async throws -> [CalendarEvent] {
+    public func load(from fromDate: Date, to toDate: Date) async throws -> [CalendarEvent] {
         if !store.hasFullAccess {
             guard try await store.requestFullAccess() else { throw EventsManagerError.authorization }
         }
@@ -157,50 +163,113 @@ public enum EventsManager {
     /// Saves an event to the user's default calendar. Does not ask for access.
     /// - Throws: ``EventsManagerError/authorization`` when access has not been granted, or
     ///   the error the store threw when it refused the event.
-    public static func save(
-        _ calendarEvent: CalendarEvent,
-        store: any CalendarEventStore = EventsManager.store
-    ) throws {
+    public func save(_ calendarEvent: CalendarEvent) throws {
         guard store.hasFullAccess else { throw EventsManagerError.authorization }
         try store.save(calendarEvent)
     }
+}
+
+// MARK: - Deprecated static forms
+
+extension EventsManager {
+
+    /// The system event store.
+    @available(*, deprecated, message: "Use EventsManager.shared.store")
+    public static var store: EKEventStore {
+        systemStore
+    }
+
+    /// Whether the app currently holds full access to the user's calendars.
+    @available(*, deprecated, message: "Use EventsManager.shared.hasFullAccess")
+    public static var hasFullAccess: Bool {
+        shared.hasFullAccess
+    }
+
+    /// Requests full access if needed and returns the events between the two dates.
+    @available(*, deprecated, message: "Use EventsManager.shared.load(from:to:), or EventsManager(store:)")
+    public static func load(
+        from fromDate: Date,
+        to toDate: Date,
+        store: any CalendarEventStore = EventsManager.shared.store
+    ) async throws -> [CalendarEvent] {
+        try await EventsManager(store: store).load(from: fromDate, to: toDate)
+    }
+
+    /// Saves an event to the user's default calendar. Does not ask for access.
+    @available(*, deprecated, message: "Use EventsManager.shared.save(_:), or EventsManager(store:)")
+    public static func save(
+        _ calendarEvent: CalendarEvent,
+        store: any CalendarEventStore = EventsManager.shared.store
+    ) throws {
+        try EventsManager(store: store).save(calendarEvent)
+    }
 
     /// Saves an event to the user's default calendar. Returns `false` when access has not
-    /// been granted or the store refuses the event; ``save(_:store:)`` says which.
+    /// been granted or the store refuses the event.
+    @available(*, deprecated, message: "Use EventsManager.shared.save(_:), which throws the reason")
     public static func add(
         event calendarEvent: CalendarEvent,
-        store: any CalendarEventStore = EventsManager.store
+        store: any CalendarEventStore = EventsManager.shared.store
     ) -> Bool {
-        (try? save(calendarEvent, store: store)) != nil
+        (try? EventsManager(store: store).save(calendarEvent)) != nil
     }
 }
 
 // MARK: - CalendarView integration
 
+@MainActor private var eventsManagerKey: UInt8 = 0
+
 extension CalendarView {
+
+    /// The manager that ``loadEvents()``, ``saveEvent(_:)`` and
+    /// ``addEvent(_:date:duration:)`` use; ``EventsManager/shared`` by default. Assign a
+    /// manager around another ``CalendarEventStore`` to test without calendar access.
+    public var eventsManager: EventsManager {
+        get { objc_getAssociatedObject(self, &eventsManagerKey) as? EventsManager ?? .shared }
+        set { objc_setAssociatedObject(self, &eventsManagerKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+    }
 
     /// Loads the events from the system calendar that fall inside the data source's range and
     /// assigns them to `events`. Asks for full calendar access if it
     /// has not been granted yet; the app must declare `NSCalendarsFullAccessUsageDescription`.
-    /// - Parameter store: The store to read; ``EventsManager/store`` by default.
     /// - Throws: ``EventsManagerError/authorization`` when access is denied, or the error
     ///   the store threw while asking for it.
-    public func loadEvents(store: any CalendarEventStore = EventsManager.store) async throws {
-        let range = self.dateRange
-        guard let end = calendar.date(byAdding: .day, value: 1, to: range.upperBound) else { return }
-        self.events = try await EventsManager.load(from: range.lowerBound, to: end, store: store)
+    public func loadEvents() async throws {
+        try await loadEvents(using: eventsManager)
     }
 
-    /// Completion-handler form of ``loadEvents(store:)``. The handler runs on the main actor
-    /// with `nil` on success or the error ``loadEvents(store:)`` threw.
-    public func loadEvents(
-        store: any CalendarEventStore = EventsManager.store,
-        onComplete: (@MainActor (Error?) -> Void)? = nil
-    ) {
+    /// Completion-handler form of ``loadEvents()``. The handler runs on the main actor with
+    /// `nil` on success or the error ``loadEvents()`` threw.
+    public func loadEvents(onComplete: (@MainActor (Error?) -> Void)? = nil) {
+        loadEvents(using: eventsManager, onComplete: onComplete)
+    }
+
+    /// Saves an event to the user's default calendar and shows it in the view. Does not ask
+    /// for access.
+    /// - Throws: ``EventsManagerError/authorization`` when access has not been granted, or
+    ///   the error the store threw when it refused the event.
+    public func saveEvent(_ event: CalendarEvent) throws {
+        try saveEvent(event, using: eventsManager)
+    }
+
+    /// Saves a new event of `hours` hours to the user's default calendar and shows it in
+    /// the view. Returns `false` when access has not been granted or the store refuses the
+    /// event; ``saveEvent(_:)`` says which.
+    @discardableResult public func addEvent(_ title: String, date startDate: Date, duration hours: Int = 1) -> Bool {
+        addEvent(title, date: startDate, duration: hours, using: eventsManager)
+    }
+
+    private func loadEvents(using manager: EventsManager) async throws {
+        let range = self.dateRange
+        guard let end = calendar.date(byAdding: .day, value: 1, to: range.upperBound) else { return }
+        self.events = try await manager.load(from: range.lowerBound, to: end)
+    }
+
+    private func loadEvents(using manager: EventsManager, onComplete: (@MainActor (Error?) -> Void)?) {
         Task { [weak self] in
             guard let self else { return }
             do {
-                try await self.loadEvents(store: store)
+                try await self.loadEvents(using: manager)
                 onComplete?(nil)
             } catch {
                 onComplete?(error)
@@ -208,31 +277,55 @@ extension CalendarView {
         }
     }
 
-    /// Saves an event to the user's default calendar and shows it in the view. Does not ask
-    /// for access.
-    /// - Parameters:
-    ///   - event: The event to save.
-    ///   - store: The store to save to; ``EventsManager/store`` by default.
-    /// - Throws: ``EventsManagerError/authorization`` when access has not been granted, or
-    ///   the error the store threw when it refused the event.
-    public func saveEvent(_ event: CalendarEvent, store: any CalendarEventStore = EventsManager.store) throws {
-        try EventsManager.save(event, store: store)
+    private func saveEvent(_ event: CalendarEvent, using manager: EventsManager) throws {
+        try manager.save(event)
         self.events.append(event)
     }
 
-    /// Saves a new event of `hours` hours to the user's default calendar and shows it in
-    /// the view. Returns `false` when access has not been granted or the store refuses the
-    /// event; ``saveEvent(_:store:)`` says which.
-    @discardableResult public func addEvent(
+    private func addEvent(
         _ title: String,
         date startDate: Date,
-        duration hours: Int = 1,
-        store: any CalendarEventStore = EventsManager.store
+        duration hours: Int,
+        using manager: EventsManager
     ) -> Bool {
         guard let endDate = self.calendar.date(byAdding: .hour, value: hours, to: startDate) else {
             return false
         }
         let event = CalendarEvent(title: title, startDate: startDate, endDate: endDate)
-        return (try? saveEvent(event, store: store)) != nil
+        return (try? saveEvent(event, using: manager)) != nil
+    }
+}
+
+// MARK: - Deprecated store parameters
+
+extension CalendarView {
+
+    /// Loads the events from `store` that fall inside the data source's range.
+    @available(*, deprecated, message: "Set eventsManager to EventsManager(store:) and call loadEvents()")
+    public func loadEvents(store: any CalendarEventStore) async throws {
+        try await loadEvents(using: EventsManager(store: store))
+    }
+
+    /// Completion-handler form of ``loadEvents(store:)``.
+    @available(*, deprecated, message: "Set eventsManager to EventsManager(store:) and call loadEvents(onComplete:)")
+    public func loadEvents(store: any CalendarEventStore, onComplete: (@MainActor (Error?) -> Void)? = nil) {
+        loadEvents(using: EventsManager(store: store), onComplete: onComplete)
+    }
+
+    /// Saves an event to `store` and shows it in the view.
+    @available(*, deprecated, message: "Set eventsManager to EventsManager(store:) and call saveEvent(_:)")
+    public func saveEvent(_ event: CalendarEvent, store: any CalendarEventStore) throws {
+        try saveEvent(event, using: EventsManager(store: store))
+    }
+
+    /// Saves a new event of `hours` hours to `store` and shows it in the view.
+    @available(*, deprecated, message: "Set eventsManager to EventsManager(store:) and call addEvent(_:date:duration:)")
+    @discardableResult public func addEvent(
+        _ title: String,
+        date startDate: Date,
+        duration hours: Int = 1,
+        store: any CalendarEventStore
+    ) -> Bool {
+        addEvent(title, date: startDate, duration: hours, using: EventsManager(store: store))
     }
 }

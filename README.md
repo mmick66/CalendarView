@@ -186,6 +186,8 @@ calendarView.addEvent("Dinner", date: date, duration: 2) // hours; false if acce
 try calendarView.saveEvent(event)                        // throws the reason instead
 ```
 
+These go through `calendarView.eventsManager`, which is `EventsManager.shared`, around the system event store, by default. To test without calendar access, give the view a manager around your own `CalendarEventStore`: `calendarView.eventsManager = EventsManager(store: fakeStore)`.
+
 ### SwiftUI
 
 ```swift

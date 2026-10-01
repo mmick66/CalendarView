@@ -93,7 +93,7 @@ mirrors them as the `Core` and `EventKit` subspecs of `KDCalendar.podspec`.
 - **`KDCalendar`** (`Sources/KDCalendar`): the calendar view, UIKit first.
   - `CalendarView.swift`: `CalendarView` (a `UIView` around a paging `UICollectionView`): its
     state, setup, layout and right-to-left handling, and the grid it reads from (`reloadData()`,
-    `refreshMonths()`, the event index).
+    `refreshMonths()`, `rebuildEventIndex()`).
   - `CalendarView+Selection.swift`: the public selection API and the collection view's selection
     callbacks. `CalendarView+Scrolling.swift`: `setDisplayDate`, the next and previous month, the
     scroll callbacks and the month notification. `CalendarView+DataSource.swift`: the cells.
@@ -102,6 +102,8 @@ mirrors them as the `Core` and `EventKit` subspecs of `KDCalendar.podspec`.
   - `MonthGrid.swift`: `MonthGrid`, the pure date engine. It turns the data source's range, the
     calendar and the first weekday into months of 7 × 6 cells with no UIKit involved;
     `refreshMonths()` rebuilds it once per reload. `Calendar+Fixed.swift` pins an autoupdating calendar.
+  - `EventIndex.swift`: `EventIndex`, the events on each cell of a `MonthGrid`, also pure; it is
+    rebuilt with the grid and whenever `events` changes.
   - `SelectionState.swift`: the selected days and the rules of the selection modes, kept as
     start-of-day dates so they survive any rebuild of the grid.
   - `CalendarView+Style.swift`: `CalendarView.Style`, a value type; assigning it restyles the view.
@@ -111,8 +113,9 @@ mirrors them as the `Core` and `EventKit` subspecs of `KDCalendar.podspec`.
   - `Resources/Localizable.xcstrings`, `PrivacyInfo.xcprivacy`, and the DocC catalog
     `KDCalendar.docc` (overview and the 1.x migration guide).
 - **`KDCalendarEventKit`** (`Sources/KDCalendarEventKit/EventsManager.swift`): the optional
-  EventKit bridge. `EventsManager` talks to a `CalendarEventStore` (the shared `EKEventStore` by
-  default, a fake in tests) and extends `CalendarView` with `loadEvents()`, `addEvent` and `saveEvent`.
+  EventKit bridge. An `EventsManager` wraps one `CalendarEventStore` (`EventsManager.shared` the
+  system `EKEventStore`, a fake in tests); `CalendarView.eventsManager` picks the one its
+  `loadEvents()`, `addEvent` and `saveEvent` use.
 - **`Tests/KDCalendarTests`**: Swift Testing suites. `EngineTests` (dates, DST, calendars),
   `SelectionStateTests` (no view), `CalendarViewTests`, `ScrollingTests`, `PlatformTests`,
   `EventKitTests` (fake store) and `IssueTests` (named after the GitHub issues they close).
@@ -127,8 +130,8 @@ mirrors them as the `Core` and `EventKit` subspecs of `KDCalendar.podspec`.
   `Sendable`.
 - Every date the view computes or hands out is the start of a day in `CalendarView.calendar`
   (`Style.resolvedCalendar`). Never assume Gregorian, UTC or a Sunday first weekday.
-- Keep date logic in `MonthGrid` and selection logic in `SelectionState`, both testable without a
-  view; `CalendarView` wires them to UIKit and the delegate.
+- Keep date logic in `MonthGrid` and `EventIndex` and selection logic in `SelectionState`, all
+  testable without a view; `CalendarView` wires them to UIKit and the delegate.
 - Errors are explicit: APIs throw (`EventsManagerError` or the store's own error) rather than
   return `Bool` or swallow with `try?`; the `Bool` forms remain only for 1.x compatibility.
 - Formatting is `swift-format` with the repo's `.swift-format` (4 spaces, 120 columns, ordered

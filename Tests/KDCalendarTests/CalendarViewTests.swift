@@ -392,14 +392,14 @@ struct CalendarViewTests: CalendarFixture {
             CalendarEvent(title: "midnight", startDate: date(2024, 1, 20), endDate: date(2024, 1, 21)),
             CalendarEvent(title: "c", startDate: date(2024, 2, 1), endDate: date(2024, 2, 2)),
         ]
-        #expect(view.eventsByIndexPath[IndexPath(item: 9, section: 0)]?.count == 2)
-        #expect(view.eventsByIndexPath[IndexPath(item: 10, section: 0)]?.map(\.title) == ["b"])
-        #expect(view.eventsByIndexPath[IndexPath(item: 11, section: 0)]?.map(\.title) == ["b"])
-        #expect(view.eventsByIndexPath[IndexPath(item: 12, section: 0)] == nil)
+        #expect(view.eventIndex.count(at: IndexPath(item: 9, section: 0)) == 2)
+        #expect(view.eventIndex[IndexPath(item: 10, section: 0)].map(\.title) == ["b"])
+        #expect(view.eventIndex[IndexPath(item: 11, section: 0)].map(\.title) == ["b"])
+        #expect(view.eventIndex[IndexPath(item: 12, section: 0)].isEmpty)
         #expect(
-            view.eventsByIndexPath[IndexPath(item: 19, section: 0)]?.count == 1,
+            view.eventIndex.count(at: IndexPath(item: 19, section: 0)) == 1,
             "an event ending at midnight stays on its day")
-        #expect(view.eventsByIndexPath[IndexPath(item: 20, section: 0)] == nil)
+        #expect(view.eventIndex[IndexPath(item: 20, section: 0)].isEmpty)
         view.layoutIfNeeded()
         #expect(cell(view, IndexPath(item: 9, section: 0))?.configuration.eventsCount == 2)
         #expect(cell(view, IndexPath(item: 9, section: 0))?.dotsView.isHidden == false)
@@ -409,7 +409,7 @@ struct CalendarViewTests: CalendarFixture {
         let view = CalendarView(frame: .zero)
         view.events = [CalendarEvent(title: "a", startDate: Date(), endDate: Date())]
         #expect(view.numberOfSections(in: view.collectionView) == 1, "the current month stands in for a data source")
-        #expect(view.eventsByIndexPath[view.indexPathForDate(Date())!]?.count == 1)
+        #expect(view.eventIndex.count(at: view.indexPathForDate(Date())!) == 1)
     }
 
     @Test func theCellShapeSetsTheBackgroundsFrameAndCorners() {

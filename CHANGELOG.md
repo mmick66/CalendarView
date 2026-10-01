@@ -6,6 +6,22 @@ All notable changes to KDCalendar are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- `EventsManager` is a struct around one `CalendarEventStore` instead of an enum
+  of static methods that each took a `store` argument. `EventsManager.shared`
+  uses the system event store, and `EventsManager(store:)` another one, such as
+  a test double. `CalendarView.eventsManager`, `EventsManager.shared` by
+  default, is the manager `loadEvents()`, `saveEvent(_:)` and
+  `addEvent(_:date:duration:)` use.
+
+### Deprecated
+
+- The static `EventsManager.store`, `hasFullAccess`, `load(from:to:store:)`,
+  `save(_:store:)` and `add(event:store:)`, and the `store` argument of
+  `CalendarView.loadEvents`, `saveEvent` and `addEvent`. Use
+  `EventsManager.shared` or set `CalendarView.eventsManager` instead.
+
 ## [2.1.0] - 2026-09-30
 
 ### Added
