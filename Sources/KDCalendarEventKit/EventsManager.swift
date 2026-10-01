@@ -102,8 +102,17 @@ extension EKEventStore: CalendarEventStore {
     /// interval to its first four years.
     ///
     /// An event that overlaps two chunks is returned once, and an interval that ends before it
-    /// starts finds nothing. The query is synchronous and can be slow, so it runs off the main
-    /// actor.
+    /// starts finds nothing.
+    ///
+    /// The query is synchronous and can be slow, so the method is `@concurrent`: it runs off
+    /// the caller's actor, which for ``EventsManager`` is the main actor. Without the
+    /// attribute it would stay off the main actor today but run on it once
+    /// `NonisolatedNonsendingByDefault` (SE-0461) is on, blocking scrolling for the length of
+    /// the query. Compilers before Swift 6.2 lack the attribute and run a `nonisolated async`
+    /// method off the caller's actor anyway.
+    #if compiler(>=6.2)
+    @concurrent
+    #endif
     public nonisolated func events(from start: Date, to end: Date) async -> [CalendarEvent] {
         guard start <= end else { return [] }
         var seen = Set<Occurrence>()
