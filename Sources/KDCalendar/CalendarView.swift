@@ -310,15 +310,14 @@ extension CalendarView {
     /// `didDeselectDate` for each.
     public func reloadData() {
         refreshSnapshot()
-        let change = selection.retain { date in
-            indexPathForDate(date).map { !isOutOfRange($0) } ?? false
-        }
         collectionView.reloadData()
-        for indexPath in selectedIndexPaths {
-            collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
-        }
-        for date in change.deselected {
-            delegate?.calendar(self, didDeselectDate: date)
+        updateSelection(notify: true) { selection in
+            var change = selection.retain { date in
+                indexPathForDate(date).map { !isOutOfRange($0) } ?? false
+            }
+            // The reload cleared the cells' selection, so every kept day is shown again.
+            change.selected = selection.days
+            return change
         }
     }
 

@@ -40,6 +40,14 @@ All notable changes to KDCalendar are documented here. The format follows
 - `CalendarViewDataSource.headerString(_:)`. Implement `title(forMonth:)`
   instead; `headerString(_:)` will be removed in 3.0.
 
+### Fixed
+
+- `selectRange(_:)` dropped the selected days outside the new range without
+  telling the delegate, and a range with no selectable day emptied the
+  selection silently. The delegate now receives `didDeselectDate` for each day
+  dropped, before `didSelectRange`, as it does when a tap or the selection mode
+  drops days.
+
 ## [2.1.0] - 2026-09-30
 
 ### Added

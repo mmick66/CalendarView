@@ -19,13 +19,7 @@ extension CalendarView {
     /// `.range` clears the selection. The delegate receives `didDeselectDate` for each day dropped.
     public var selectionMode: SelectionMode {
         get { selection.mode }
-        set {
-            let change = selection.setMode(newValue)
-            show(change)
-            for date in change.deselected {
-                delegate?.calendar(self, didDeselectDate: date)
-            }
-        }
+        set { updateSelection(notify: true) { $0.setMode(newValue) } }
     }
 
     /// Whether more than one day can be selected at a time. `false` is ``SelectionMode/single``,
@@ -71,16 +65,21 @@ extension CalendarView {
     /// Selects every selectable day in `range`, replacing the current selection, and tells the
     /// delegate with `didSelectRange`.
     ///
-    /// Works in every ``SelectionMode``; in `.range` mode the next tap starts a new range.
+    /// Works in every ``SelectionMode``; in `.range` mode the next tap starts a new range. The
+    /// delegate first receives `didDeselectDate` for each selected day outside the new range.
     public func selectRange(_ range: ClosedRange<Date>) {
-        show(selection.replace(with: selectableDays(in: range)))
-        guard let first = selectedDates.first, let last = selectedDates.last else { return }
-        delegate?.calendar(self, didSelectRange: first...last)
+        updateSelection(notify: true) { selection in
+            var change = selection.replace(with: selectableDays(in: range))
+            if let first = selection.days.first, let last = selection.days.last {
+                change.completedRange = first...last
+            }
+            return change
+        }
     }
 
     /// Deselects every day without notifying the delegate.
     public func clearAllSelectedDates() {
-        show(selection.replace(with: []))
+        updateSelection(notify: false) { $0.replace(with: []) }
     }
 
     /// Replaces the selection with `dates` as the selection mode holds them, without replaying taps
@@ -88,12 +87,43 @@ extension CalendarView {
     ///
     /// See ``SelectionState/assign(_:selectable:)``.
     func setSelection(_ dates: [Date]) {
-        // The delegate may read the selection while it is asked which days are selectable, so
-        // the change is worked out on a copy.
+        updateSelection(notify: false) { selection in
+            selection.assign(dates.map { calendar.startOfDay(for: $0) }, selectable: selectableDays(in:))
+        }
+    }
+
+    /// Applies one selection change: works it out, commits it, shows it in the grid and, when
+    /// `notify` is `true`, tells the delegate.
+    ///
+    /// The delegate hears first of each day the change dropped, then of the day `tapped` selected,
+    /// then of the range the change completed. By then the view shows the whole change.
+    ///
+    /// - Parameters:
+    ///   - notify: Whether the delegate hears of the change.
+    ///   - tapped: The cell whose tap made the change, reported with `didSelectDate` and its events.
+    ///   - body: Changes the selection it is given and returns the change, or `nil` when nothing
+    ///     changed. The delegate may read the selection while it is asked which days are
+    ///     selectable, so `body` works on a copy that is committed when it returns.
+    func updateSelection(
+        notify: Bool,
+        tapped: IndexPath? = nil,
+        _ body: (inout SelectionState) -> SelectionState.Change?
+    ) {
         var next = selection
-        let change = next.assign(dates.map { calendar.startOfDay(for: $0) }, selectable: selectableDays(in:))
+        guard let change = body(&next) else { return }
         selection = next
         show(change)
+
+        guard notify else { return }
+        for dropped in change.deselected {
+            delegate?.calendar(self, didDeselectDate: dropped)
+        }
+        if let tapped, let date = dateFromIndexPath(tapped) {
+            delegate?.calendar(self, didSelectDate: date, withEvents: snapshot.eventIndex[tapped])
+        }
+        if let range = change.completedRange {
+            delegate?.calendar(self, didSelectRange: range)
+        }
     }
 
     /// The days from the first day of `range` to its last that can be selected, in order: those
@@ -158,20 +188,7 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
     /// first of the days the tap dropped, then of the tapped day, then of a range it completed.
     func didSelect(_ indexPath: IndexPath) {
         guard let date = self.dateFromIndexPath(indexPath) else { return }
-        // The delegate may read the selection while it is asked which days are selectable, so
-        // the change is worked out on a copy.
-        var next = selection
-        guard let change = next.tap(date, selectable: selectableDays(in:)) else { return }
-        selection = next
-        show(change)
-
-        for dropped in change.deselected {
-            delegate?.calendar(self, didDeselectDate: dropped)
-        }
-        delegate?.calendar(self, didSelectDate: date, withEvents: snapshot.eventIndex[indexPath])
-        if let range = change.completedRange {
-            delegate?.calendar(self, didSelectRange: range)
-        }
+        updateSelection(notify: true, tapped: indexPath) { $0.tap(date, selectable: selectableDays(in:)) }
     }
 
     /// Deselects the day at `indexPath`, shows the change and notifies the delegate.
@@ -179,11 +196,7 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
     /// In range mode a deselection clears the whole range.
     func didDeselect(_ indexPath: IndexPath) {
         guard let date = self.dateFromIndexPath(indexPath) else { return }
-        let change = selection.deselect(date)
-        show(change)
-        for dropped in change.deselected {
-            delegate?.calendar(self, didDeselectDate: dropped)
-        }
+        updateSelection(notify: true) { $0.deselect(date) }
     }
 
     /// Allows a tap on a day in range that the delegate's `canSelectDate` accepts.

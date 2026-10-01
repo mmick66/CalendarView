@@ -781,6 +781,26 @@ struct CalendarViewTests: CalendarFixture {
         #expect(view.collectionView.indexPathsForSelectedItems == [])
     }
 
+    @Test func selectRangeReportsTheDaysItDrops() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        view.selectDate(date(2024, 1, 2))
+        view.selectDate(date(2024, 1, 20))
+        view.selectRange(date(2024, 1, 1)...date(2024, 1, 3))
+
+        let range = [date(2024, 1, 1), date(2024, 1, 2), date(2024, 1, 3)]
+        #expect(view.selectedDates == range)
+        #expect(Set(view.collectionView.indexPathsForSelectedItems ?? []) == Set(view.selectedIndexPaths))
+        #expect(delegate(of: view).deselected == [date(2024, 1, 20)])
+        #expect(delegate(of: view).selectionWhenDeselected == [range], "the delegate hears once the range is selected")
+        #expect(delegate(of: view).ranges == [date(2024, 1, 1)...date(2024, 1, 3)])
+
+        // A range with no selectable day empties the selection, and the delegate hears of it.
+        view.selectRange(date(2023, 1, 1)...date(2023, 1, 31))
+        #expect(view.selectedDates == [])
+        #expect(delegate(of: view).deselected == [date(2024, 1, 20)] + range)
+        #expect(delegate(of: view).ranges.count == 1)
+    }
+
     @Test func changingTheSelectionModeReportsTheDaysItDrops() {
         let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
         view.selectDate(date(2024, 1, 8))
