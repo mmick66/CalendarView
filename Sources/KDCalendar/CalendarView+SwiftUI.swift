@@ -73,18 +73,10 @@ public struct KDCalendarView: UIViewRepresentable {
     // MARK: Modifiers
 
     /// The look of the calendar.
-    public func calendarStyle(_ style: CalendarView.Style) -> Self {
-        var copy = self
-        copy.style = style
-        return copy
-    }
+    public func calendarStyle(_ style: CalendarView.Style) -> Self { with(\.style, style) }
 
     /// The scrolling axis.
-    public func direction(_ direction: UICollectionView.ScrollDirection) -> Self {
-        var copy = self
-        copy.direction = direction
-        return copy
-    }
+    public func direction(_ direction: UICollectionView.ScrollDirection) -> Self { with(\.direction, direction) }
 
     /// Whether more than one day can be selected. Shorthand for `.single` or `.multiple`.
     public func allowsMultipleSelection(_ allows: Bool) -> Self {
@@ -92,72 +84,39 @@ public struct KDCalendarView: UIViewRepresentable {
     }
 
     /// How taps combine into a selection: one day, any number of days, or a range.
-    public func selectionMode(_ mode: CalendarView.SelectionMode) -> Self {
-        var copy = self
-        copy.selectionMode = mode
-        return copy
-    }
+    public func selectionMode(_ mode: CalendarView.SelectionMode) -> Self { with(\.selectionMode, mode) }
 
     /// Whether tapping a selected day deselects it.
-    public func allowsDeselection(_ allows: Bool) -> Self {
-        var copy = self
-        copy.allowsDeselection = allows
-        return copy
-    }
+    public func allowsDeselection(_ allows: Bool) -> Self { with(\.allowsDeselection, allows) }
 
     /// Whether weekend days use the weekend text colour.
-    public func marksWeekends(_ marks: Bool) -> Self {
-        var copy = self
-        copy.marksWeekends = marks
-        return copy
-    }
+    public func marksWeekends(_ marks: Bool) -> Self { with(\.marksWeekends, marks) }
 
     /// Whether the user can scroll between months.
-    public func scrollEnabled(_ enabled: Bool) -> Self {
-        var copy = self
-        copy.isScrollEnabled = enabled
-        return copy
-    }
+    public func scrollEnabled(_ enabled: Bool) -> Self { with(\.isScrollEnabled, enabled) }
 
     /// Events to show as dots.
-    public func events(_ events: [CalendarEvent]) -> Self {
-        var copy = self
-        copy.events = events
-        return copy
-    }
+    public func events(_ events: [CalendarEvent]) -> Self { with(\.events, events) }
 
     /// Scrolls to the month containing `date` whenever the value changes.
-    public func displayDate(_ date: Date?) -> Self {
-        var copy = self
-        copy.displayDate = date
-        return copy
-    }
+    public func displayDate(_ date: Date?) -> Self { with(\.displayDate, date) }
 
     /// Decides whether a day in range may be selected.
-    public func canSelect(_ predicate: @escaping (Date) -> Bool) -> Self {
-        var copy = self
-        copy.canSelect = predicate
-        return copy
-    }
+    public func canSelect(_ predicate: @escaping (Date) -> Bool) -> Self { with(\.canSelect, predicate) }
 
     /// A style for one day, or `nil` for the calendar's style.
-    public func styleForDate(_ style: @escaping (Date) -> CalendarView.Style?) -> Self {
-        var copy = self
-        copy.styleForDate = style
-        return copy
-    }
+    public func styleForDate(_ style: @escaping (Date) -> CalendarView.Style?) -> Self { with(\.styleForDate, style) }
 
     /// Called with the first day of each month the calendar settles on.
-    public func onScrollToMonth(_ action: @escaping (Date) -> Void) -> Self {
-        var copy = self
-        copy.onScrollToMonth = action
-        return copy
-    }
+    public func onScrollToMonth(_ action: @escaping (Date) -> Void) -> Self { with(\.onScrollToMonth, action) }
 
     /// Called when a day is long-pressed, with the events on that day.
-    public func onLongPress(_ action: @escaping (Date, [CalendarEvent]) -> Void) -> Self {
+    public func onLongPress(_ action: @escaping (Date, [CalendarEvent]) -> Void) -> Self { with(\.onLongPress, action) }
+
+    /// A copy with one property set to `value`, the body of every modifier.
+    private func with<Value>(_ keyPath: WritableKeyPath<Self, Value>, _ value: Value) -> Self {
         var copy = self
-        copy.onLongPress = action
+        copy[keyPath: keyPath] = value
         return copy
     }
 
