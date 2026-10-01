@@ -22,6 +22,11 @@ All notable changes to KDCalendar are documented here. The format follows
 
 ### Deprecated
 
+- `Style.CellShapeOptions`, `Style.FirstWeekdayOptions`, `Style.WeekDaysTransform`
+  and `Style.weekDayTransform`, renamed `Style.CellShape`, `Style.FirstWeekday`,
+  `Style.WeekdayCasing` and `Style.weekdayCasing`. The old names still compile,
+  with a fix-it.
+
 - The static `EventsManager.store`, `hasFullAccess`, `load(from:to:store:)`,
   `save(_:store:)` and `add(event:store:)`, and the `store` argument of
   `CalendarView.loadEvents`, `saveEvent` and `addEvent`. Use

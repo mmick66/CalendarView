@@ -415,12 +415,12 @@ struct CalendarViewTests: CalendarFixture {
     @Test func theCellShapeSetsTheBackgroundsFrameAndCorners() {
         let rect = CGRect(x: 3, y: 3, width: 40, height: 30)
         let circle = CGRect(x: 8, y: 3, width: 30, height: 30)
-        #expect(CalendarView.Style.CellShapeOptions.round.backgroundFrame(in: rect) == circle)
-        #expect(CalendarView.Style.CellShapeOptions.round.cornerRadius(for: circle) == 15)
-        #expect(CalendarView.Style.CellShapeOptions.square.backgroundFrame(in: rect) == rect)
-        #expect(CalendarView.Style.CellShapeOptions.square.cornerRadius(for: rect) == 0)
-        #expect(CalendarView.Style.CellShapeOptions.bevel(6).backgroundFrame(in: rect) == rect)
-        #expect(CalendarView.Style.CellShapeOptions.bevel(6).cornerRadius(for: rect) == 6)
+        #expect(CalendarView.Style.CellShape.round.backgroundFrame(in: rect) == circle)
+        #expect(CalendarView.Style.CellShape.round.cornerRadius(for: circle) == 15)
+        #expect(CalendarView.Style.CellShape.square.backgroundFrame(in: rect) == rect)
+        #expect(CalendarView.Style.CellShape.square.cornerRadius(for: rect) == 0)
+        #expect(CalendarView.Style.CellShape.bevel(6).backgroundFrame(in: rect) == rect)
+        #expect(CalendarView.Style.CellShape.bevel(6).cornerRadius(for: rect) == 6)
 
         // The cell insets its content, then asks the shape for the background.
         var style = CalendarView.Style.default
@@ -477,7 +477,7 @@ struct CalendarViewTests: CalendarFixture {
         #expect(view.formatters.monthTitle === formatters.monthTitle, "settling on a month reuses them")
         #expect(view.formatters.accessibility === formatters.accessibility, "so does every cell")
 
-        view.style.weekDayTransform = .uppercase
+        view.style.weekdayCasing = .uppercase
         #expect(view.formatters.monthTitle !== formatters.monthTitle, "a new style builds new ones")
         #expect(view.headerView.formatters.monthTitle === view.formatters.monthTitle, "the header shares them")
         #expect(view.headerView.dayLabels.first?.text == "MO.")
@@ -936,5 +936,34 @@ struct CalendarViewTests: CalendarFixture {
         delegate = nil
         #expect(view.dataSource == nil)
         #expect(view.delegate == nil)
+    }
+
+    @Test func renamedStyleTypesStillWork() {
+        (self as any DeprecatedStyleNames).exerciseDeprecatedStyleNames()
+    }
+}
+
+/// Uses the 2.1 names of the style types and of the weekday casing.
+///
+/// Reached through a protocol so that the tests compile without deprecation warnings.
+@MainActor
+private protocol DeprecatedStyleNames {
+    func exerciseDeprecatedStyleNames()
+}
+
+extension CalendarViewTests: DeprecatedStyleNames {
+    @available(*, deprecated)
+    func exerciseDeprecatedStyleNames() {
+        var style = CalendarView.Style()
+        let shape: CalendarView.Style.CellShapeOptions = .round
+        let firstWeekday: CalendarView.Style.FirstWeekdayOptions = .sunday
+        let casing: CalendarView.Style.WeekDaysTransform = .uppercase
+        style.cellShape = shape
+        style.firstWeekday = firstWeekday
+        style.weekDayTransform = casing
+        #expect(style.cellShape == .round)
+        #expect(style.effectiveFirstWeekday == 1)
+        #expect(style.weekdayCasing == .uppercase)
+        #expect(style.weekDayTransform == .uppercase)
     }
 }

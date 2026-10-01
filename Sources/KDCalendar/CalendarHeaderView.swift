@@ -119,7 +119,7 @@ open class CalendarHeaderView: UIView {
             let symbol = symbols.isEmpty ? "" : symbols[(start + i) % symbols.count]
             label.font = style.weekdaysFont
             label.text =
-                style.weekDayTransform == .capitalized
+                style.weekdayCasing == .capitalized
                 ? symbol.capitalized(with: style.locale)
                 : symbol.uppercased(with: style.locale)
             label.textColor = style.weekdaysTextColor

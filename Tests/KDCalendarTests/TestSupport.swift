@@ -108,7 +108,7 @@ extension CalendarFixture {
 
     /// A style in `calendar` and `locale`, starting the week on `firstWeekday`.
     func makeStyle(
-        firstWeekday: CalendarView.Style.FirstWeekdayOptions = .monday, calendar: Calendar = utcCalendar,
+        firstWeekday: CalendarView.Style.FirstWeekday = .monday, calendar: Calendar = utcCalendar,
         locale: Locale = Locale(identifier: "en_US")
     ) -> CalendarView.Style {
         var style = CalendarView.Style()
@@ -121,7 +121,7 @@ extension CalendarFixture {
     /// A laid-out calendar from `start` to `end` inside the window, so the collection view has
     /// real cells to inspect, with a ``FixedDataSource`` and a ``RecordingDelegate``.
     func makeCalendar(
-        start: Date, end: Date, firstWeekday: CalendarView.Style.FirstWeekdayOptions = .monday,
+        start: Date, end: Date, firstWeekday: CalendarView.Style.FirstWeekday = .monday,
         calendar: Calendar = utcCalendar, locale: Locale = Locale(identifier: "en_US"),
         direction: UICollectionView.ScrollDirection = .horizontal,
         frame: CGRect = CGRect(x: 0, y: 0, width: 350, height: 420)

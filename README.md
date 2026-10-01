@@ -134,6 +134,7 @@ style.cellColorToday = .systemOrange.withAlphaComponent(0.3)
 style.cellSelectedBorderColor = .systemOrange
 style.cellEventColor = .systemOrange
 style.firstWeekday = .sunday           // .sunday, .monday, .saturday or .automatic
+style.weekdayCasing = .uppercase       // the weekday labels: .capitalized or .uppercase
 style.showAdjacentDays = true          // the neighbouring months' days in the empty cells
 style.locale = Locale(identifier: "en_US")
 calendarView.style = style

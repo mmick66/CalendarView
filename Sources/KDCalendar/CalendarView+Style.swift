@@ -52,7 +52,7 @@ extension CalendarView {
         public static var Default: Style { .default }
 
         /// The shape of a day's background.
-        public enum CellShapeOptions: Sendable, Equatable {
+        public enum CellShape: Sendable, Equatable {
             /// A circle inscribed in the cell.
             case round
             /// The full cell rectangle with square corners.
@@ -83,7 +83,7 @@ extension CalendarView {
         }
 
         /// The day the week starts on in the grid and the header.
-        public enum FirstWeekdayOptions: Sendable {
+        public enum FirstWeekday: Sendable {
             case sunday
             case monday
             case saturday
@@ -103,10 +103,25 @@ extension CalendarView {
             case grayed
         }
 
-        /// How the weekday labels in the header are cased.
-        public enum WeekDaysTransform: Sendable {
-            case capitalized, uppercase
+        /// The letter case of the weekday labels in the header.
+        public enum WeekdayCasing: Sendable {
+            /// Each word of a label starts with a capital, as in "Mon".
+            case capitalized
+            /// Each label in capitals.
+            case uppercase
         }
+
+        /// The shape of a day's background; renamed ``CellShape``.
+        @available(*, deprecated, renamed: "CellShape")
+        public typealias CellShapeOptions = CellShape
+
+        /// The day the week starts on; renamed ``FirstWeekday``.
+        @available(*, deprecated, renamed: "FirstWeekday")
+        public typealias FirstWeekdayOptions = FirstWeekday
+
+        /// The letter case of the weekday labels; renamed ``WeekdayCasing``.
+        @available(*, deprecated, renamed: "WeekdayCasing")
+        public typealias WeekDaysTransform = WeekdayCasing
 
         /// Creates the default style, the same as ``default``.
         public init() {
@@ -150,12 +165,12 @@ extension CalendarView {
         // MARK: Grid
 
         /// The shape of every day's background.
-        public var cellShape = CellShapeOptions.bevel(4.0)
+        public var cellShape = CellShape.bevel(4.0)
 
         /// The day the week starts on.
         ///
         /// Monday by default; use `.automatic` to follow the calendar's locale.
-        public var firstWeekday = FirstWeekdayOptions.monday
+        public var firstWeekday = FirstWeekday.monday
         /// Whether the empty cells before and after a month show the neighbouring months' days.
         public var showAdjacentDays = false
 
@@ -217,8 +232,15 @@ extension CalendarView {
         /// behaviour.
         public var calendar: Calendar = Calendar.autoupdatingCurrent
 
-        /// How the weekday labels are cased.
-        public var weekDayTransform = WeekDaysTransform.capitalized
+        /// The letter case of the weekday labels.
+        public var weekdayCasing = WeekdayCasing.capitalized
+
+        /// The letter case of the weekday labels; renamed ``weekdayCasing``.
+        @available(*, deprecated, renamed: "weekdayCasing")
+        public var weekDayTransform: WeekdayCasing {
+            get { weekdayCasing }
+            set { weekdayCasing = newValue }
+        }
 
         /// ``calendar``, given ``locale`` when it has no locale of its own so that weekends, week
         /// numbering and the automatic first weekday follow the locale.
