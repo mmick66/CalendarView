@@ -243,6 +243,7 @@ extension EventsManager {
 
 @MainActor private var eventsManagerKey: UInt8 = 0
 @MainActor private var eventsLoadKey: UInt8 = 0
+@MainActor private var eventsSavedDuringLoadKey: UInt8 = 0
 
 extension CalendarView {
 
@@ -262,7 +263,9 @@ extension CalendarView {
     /// `NSCalendarsFullAccessUsageDescription`.
     ///
     /// A load supersedes any load still running, so the last call wins however long each query
-    /// takes: a superseded load leaves `events` alone and throws `CancellationError`.
+    /// takes: a superseded load leaves `events` alone and throws `CancellationError`. Events
+    /// saved with ``saveEvent(_:)`` while the load runs stay in `events`, whether or not its query
+    /// found them.
     ///
     /// - Throws: ``EventsManagerError/authorization`` when access is denied, the error the
     ///   store threw while asking for it, or `CancellationError` when a later load started
@@ -304,15 +307,34 @@ extension CalendarView {
         set { objc_setAssociatedObject(self, &eventsLoadKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
 
+    /// The events saved since the latest load started, or `nil` when no load is running.
+    ///
+    /// The load's query may have run before they were saved, so it keeps the ones its result lacks.
+    private var eventsSavedDuringLoad: [CalendarEvent]? {
+        get { objc_getAssociatedObject(self, &eventsSavedDuringLoadKey) as? [CalendarEvent] }
+        set {
+            objc_setAssociatedObject(self, &eventsSavedDuringLoadKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+    }
+
     private func loadEvents(using manager: EventsManager) async throws {
         eventsLoad += 1
         let load = eventsLoad
+        // A save before this point is in the store when the query runs; a later one may not be.
+        eventsSavedDuringLoad = []
+        defer {
+            if load == eventsLoad { eventsSavedDuringLoad = nil }
+        }
         let range = self.dateRange
         guard let end = calendar.date(byAdding: .day, value: 1, to: range.upperBound) else { return }
         let events = try await manager.load(from: range.lowerBound, to: end)
         // Queries can finish out of order; only the latest load may assign its events.
         guard load == eventsLoad else { throw CancellationError() }
-        self.events = events
+        var missing = eventsSavedDuringLoad ?? []
+        for event in events {
+            if let index = missing.firstIndex(of: event) { missing.remove(at: index) }
+        }
+        self.events = events + missing
     }
 
     private func loadEvents(using manager: EventsManager, onComplete: (@MainActor (_ error: Error?) -> Void)?) {
@@ -330,6 +352,7 @@ extension CalendarView {
     private func saveEvent(_ event: CalendarEvent, using manager: EventsManager) throws {
         try manager.save(event)
         self.events.append(event)
+        eventsSavedDuringLoad?.append(event)
     }
 
     private func addEvent(

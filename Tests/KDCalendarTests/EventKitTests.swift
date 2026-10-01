@@ -21,6 +21,9 @@ struct EventKitTests: CalendarFixture {
         var queried: [(Date, Date)] = []
         /// Whether queries wait for ``release(_:)`` before returning.
         var holdsQueries = false
+        /// Whether a held query reads the store once released rather than before it waits, and so
+        /// finds an event saved while it was held.
+        var readsStoreAfterHold = false
         var heldQueries: [CheckedContinuation<Void, Never>] = []
 
         func requestFullAccess() async throws -> Bool {
@@ -35,6 +38,9 @@ struct EventKitTests: CalendarFixture {
             let found = stored.filter { $0.startDate < end && $0.endDate >= start }
             if holdsQueries {
                 await withCheckedContinuation { heldQueries.append($0) }
+            }
+            if readsStoreAfterHold {
+                return stored.filter { $0.startDate < end && $0.endDate >= start }
             }
             return found
         }
@@ -256,6 +262,57 @@ struct EventKitTests: CalendarFixture {
         #expect(await first.value is CancellationError)
         #expect(await second.value == nil)
         #expect(view.events.map(\.title) == ["a"])
+    }
+
+    @Test func anEventSavedDuringALoadSurvivesAQueryThatMissedIt() async throws {
+        store.hasFullAccess = true
+        store.holdsQueries = true
+        store.stored = [event("a", date(2024, 1, 10))]
+        let view = makeCalendarWithStore(start: date(2024, 1, 1), end: date(2024, 1, 31))
+
+        let load = Task { try await view.loadEvents() }
+        await store.waitForHeldQueries(1)
+        try view.saveEvent(event("saved", date(2024, 1, 12)))
+        store.release(0)
+        try await load.value
+        #expect(view.events.map(\.title) == ["a", "saved"])
+        #expect(view.snapshot.eventIndex.count(at: view.indexPathForDate(date(2024, 1, 12))!) == 1)
+
+        store.holdsQueries = false
+        try view.saveEvent(event("after", date(2024, 1, 14)))
+        try await view.loadEvents()
+        #expect(view.events.map(\.title) == ["a", "saved", "after"], "a save between loads is not kept twice")
+    }
+
+    @Test func anEventSavedDuringALoadIsNotDoubledWhenTheQueryFindsIt() async throws {
+        store.hasFullAccess = true
+        store.holdsQueries = true
+        store.readsStoreAfterHold = true
+        let view = makeCalendarWithStore(start: date(2024, 1, 1), end: date(2024, 1, 31))
+
+        let load = Task { try await view.loadEvents() }
+        await store.waitForHeldQueries(1)
+        try view.saveEvent(event("saved", date(2024, 1, 12)))
+        store.release(0)
+        try await load.value
+        #expect(view.events.map(\.title) == ["saved"])
+    }
+
+    @Test func anEventSavedBeforeASupersedingLoadIsKeptByIt() async throws {
+        store.hasFullAccess = true
+        store.holdsQueries = true
+        let view = makeCalendarWithStore(start: date(2024, 1, 1), end: date(2024, 1, 31))
+
+        let first = Task { try await view.loadEvents() }
+        await store.waitForHeldQueries(1)
+        try view.saveEvent(event("saved", date(2024, 1, 12)))
+        let second = Task { try await view.loadEvents() }
+        await store.waitForHeldQueries(2)
+        store.release(0)
+        await #expect(throws: CancellationError.self) { try await first.value }
+        store.release(1)
+        try await second.value
+        #expect(view.events.map(\.title) == ["saved"], "the second query ran after the save")
     }
 
     @Test func addEventSavesForTheGivenDurationAndShowsADot() {

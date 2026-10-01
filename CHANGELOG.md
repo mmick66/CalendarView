@@ -52,6 +52,9 @@ All notable changes to KDCalendar are documented here. The format follows
   data source changed it, could overwrite a later one. The latest call wins
   now: a load that a later one supersedes leaves `events` alone and throws
   `CancellationError`, which the completion form passes to its handler.
+- An event saved with `saveEvent(_:)` or `addEvent(_:date:duration:)` while a
+  `loadEvents()` query was running lost its dot when the load assigned a result
+  that did not contain it. The load now keeps the events saved while it ran.
 
 ## [2.1.0] - 2026-09-30
 
