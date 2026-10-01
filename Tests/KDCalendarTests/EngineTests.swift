@@ -123,39 +123,80 @@ struct EngineTests: CalendarFixture {
 
     // MARK: Events
 
-    @Test func anEventWithAFarEndDateIsClampedToTheGrid() {
+    @Test func anEventWithAFarEndDateIsClampedToTheGrid() throws {
         let utc = calendar("UTC")
-        let view = makeCalendar(start: date(utc, 2024, 1, 1), end: date(utc, 2024, 1, 31), calendar: utc)
+        let grid = try #require(
+            MonthGrid(start: date(utc, 2024, 1, 1), end: date(utc, 2024, 1, 31), calendar: utc, firstWeekday: 2))
         let started = Date()
-        view.events = [
-            CalendarEvent(title: "forever", startDate: date(utc, 2024, 1, 30), endDate: date(utc, 4000, 1, 1)),
-            CalendarEvent(title: "ancient", startDate: date(utc, 1, 1, 1), endDate: date(utc, 2024, 1, 2)),
-            CalendarEvent(title: "elsewhere", startDate: date(utc, 2030, 1, 1), endDate: date(utc, 2031, 1, 1)),
-        ]
+        let index = EventIndex(
+            events: [
+                CalendarEvent(title: "forever", startDate: date(utc, 2024, 1, 30), endDate: date(utc, 4000, 1, 1)),
+                CalendarEvent(title: "ancient", startDate: date(utc, 1, 1, 1), endDate: date(utc, 2024, 1, 2)),
+            ], grid: grid)
         #expect(Date().timeIntervalSince(started) < 1.0, "no per-day loop over the centuries")
-        #expect(view.eventsByIndexPath[IndexPath(item: 29, section: 0)]?.map(\.title) == ["forever"])
-        #expect(view.eventsByIndexPath[IndexPath(item: 30, section: 0)]?.map(\.title) == ["forever"])
-        #expect(view.eventsByIndexPath[IndexPath(item: 0, section: 0)]?.map(\.title) == ["ancient"])
-        #expect(view.eventsByIndexPath[IndexPath(item: 1, section: 0)] == nil)
-        #expect(view.eventsByIndexPath.values.flatMap { $0 }.filter { $0.title == "elsewhere" }.isEmpty)
+        #expect(index[IndexPath(item: 29, section: 0)].map(\.title) == ["forever"])
+        #expect(index[IndexPath(item: 30, section: 0)].map(\.title) == ["forever"])
+        #expect(index[IndexPath(item: 0, section: 0)].map(\.title) == ["ancient"])
+        #expect(index[IndexPath(item: 1, section: 0)].isEmpty)
+    }
+
+    @Test func eventsOutsideTheGridAreLeftOut() throws {
+        let utc = calendar("UTC")
+        let grid = try #require(
+            MonthGrid(start: date(utc, 2024, 1, 1), end: date(utc, 2024, 1, 31), calendar: utc, firstWeekday: 2))
+        let index = EventIndex(
+            events: [
+                CalendarEvent(title: "after", startDate: date(utc, 2030, 1, 1), endDate: date(utc, 2031, 1, 1)),
+                CalendarEvent(title: "before", startDate: date(utc, 2023, 12, 1), endDate: date(utc, 2023, 12, 31)),
+            ], grid: grid)
+        #expect(index.isEmpty)
+        #expect(EventIndex().isEmpty)
+        #expect(EventIndex()[IndexPath(item: 0, section: 0)].isEmpty)
+    }
+
+    @Test func anEventIndexCountsEveryEventOnADayInOrder() throws {
+        let utc = calendar("UTC")
+        let grid = try #require(
+            MonthGrid(start: date(utc, 2024, 1, 1), end: date(utc, 2024, 2, 29), calendar: utc, firstWeekday: 2))
+        let index = EventIndex(
+            events: [
+                CalendarEvent(
+                    title: "a", startDate: date(utc, 2024, 1, 31, hour: 9), endDate: date(utc, 2024, 2, 1, hour: 10)),
+                CalendarEvent(
+                    title: "b", startDate: date(utc, 2024, 1, 31, hour: 14), endDate: date(utc, 2024, 2, 2, hour: 10)),
+                CalendarEvent(
+                    title: "reversed", startDate: date(utc, 2024, 2, 1, hour: 9), endDate: date(utc, 2024, 1, 1)),
+            ], grid: grid)
+        let lastOfJanuary = try #require(grid.indexPath(for: date(utc, 2024, 1, 31)))
+        let firstOfFebruary = try #require(grid.indexPath(for: date(utc, 2024, 2, 1)))
+        #expect(index[lastOfJanuary].map(\.title) == ["a", "b"])
+        #expect(index.count(at: lastOfJanuary) == 2)
+        #expect(firstOfFebruary.section == 1, "an event crosses into the next month's section")
+        #expect(index[firstOfFebruary].map(\.title) == ["a", "b", "reversed"], "an end before the start marks one day")
+        #expect(index.count(at: try #require(grid.indexPath(for: date(utc, 2024, 2, 2)))) == 1)
+        #expect(index.count(at: try #require(grid.indexPath(for: date(utc, 2024, 2, 3)))) == 0)
     }
 
     @Test func anEventEndingJustAfterASkippedMidnightKeepsItsLastDay() throws {
         // Adding a day to 8 September 2024 in Santiago lands on 01:00, so a walk that does not
         // return to the start of each day reaches the 10th after this event has ended at 00:30.
         let santiago = calendar("America/Santiago")
-        let view = makeCalendar(start: date(santiago, 2024, 9, 1), end: date(santiago, 2024, 9, 30), calendar: santiago)
-        view.events = [
-            CalendarEvent(
-                title: "a", startDate: date(santiago, 2024, 9, 6, hour: 10),
-                endDate: date(santiago, 2024, 9, 10).addingTimeInterval(30 * 60))
-        ]
+        let grid = try #require(
+            MonthGrid(
+                start: date(santiago, 2024, 9, 1), end: date(santiago, 2024, 9, 30), calendar: santiago,
+                firstWeekday: 2))
+        let index = EventIndex(
+            events: [
+                CalendarEvent(
+                    title: "a", startDate: date(santiago, 2024, 9, 6, hour: 10),
+                    endDate: date(santiago, 2024, 9, 10).addingTimeInterval(30 * 60))
+            ], grid: grid)
         for day in 6...10 {
-            let indexPath = try #require(view.indexPathForDate(date(santiago, 2024, 9, day, hour: 12)))
-            #expect(view.eventsByIndexPath[indexPath]?.map(\.title) == ["a"], "day \(day)")
+            let indexPath = try #require(grid.indexPath(for: date(santiago, 2024, 9, day, hour: 12)))
+            #expect(index[indexPath].map(\.title) == ["a"], "day \(day)")
         }
-        let after = try #require(view.indexPathForDate(date(santiago, 2024, 9, 11, hour: 12)))
-        #expect(view.eventsByIndexPath[after] == nil)
+        let after = try #require(grid.indexPath(for: date(santiago, 2024, 9, 11, hour: 12)))
+        #expect(index[after].isEmpty)
     }
 
     @Test func eventsCompareByTitleAndDates() {

@@ -74,7 +74,8 @@ public class CalendarView: UIView {
     /// The cell showing today, refreshed with the grid and when the day changes.
     var todayIndexPath: IndexPath?
     nonisolated(unsafe) private var observers: [NSObjectProtocol] = []
-    var eventsByIndexPath = [IndexPath: [CalendarEvent]]()
+    /// The events on each cell, refreshed with the grid and the events.
+    var eventIndex = EventIndex()
 
     /// Events to show as dots. An event marks every day it covers.
     public var events: [CalendarEvent] = [] {
@@ -223,7 +224,7 @@ public class CalendarView: UIView {
             return
         }
 
-        let events = self.eventsByIndexPath[indexPath] ?? []
+        let events = self.eventIndex[indexPath]
         self.delegate?.calendar(self, didLongPressDate: date, withEvents: events.isEmpty ? nil : events)
     }
 
@@ -376,28 +377,8 @@ extension CalendarView {
         currentMonths?.endDay ?? calendar.startOfDay(for: Date())
     }
 
-    /// Buckets every event into the days it covers, clamped to the displayed months so an
-    /// open-ended event costs one loop over the grid, not over the centuries.
     func rebuildEventIndex() {
-        eventsByIndexPath.removeAll()
-        guard let months = months, let first = months.months.first, let lastMonth = months.months.last,
-            let gridEnd = calendar.date(byAdding: .day, value: lastMonth.daysTotal, to: lastMonth.firstDate)
-        else { return }
-        let gridStart = first.firstDate
-        for event in events {
-            let eventEnd = max(event.startDate, event.endDate)
-            guard event.startDate < gridEnd, eventEnd >= gridStart else { continue }
-            var day = calendar.startOfDay(for: max(event.startDate, gridStart))
-            let last = min(eventEnd, gridEnd)
-            repeat {
-                if let indexPath = months.indexPath(for: day) {
-                    eventsByIndexPath[indexPath, default: []].append(event)
-                }
-                // Where a DST change skips midnight, adding a day lands after it, so return to the start.
-                guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
-                day = calendar.startOfDay(for: next)
-            } while day < last
-        }
+        eventIndex = months.map { EventIndex(events: events, grid: $0) } ?? EventIndex()
     }
 
     /// The cell showing the day that contains `date`, or `nil` outside the displayed months.
