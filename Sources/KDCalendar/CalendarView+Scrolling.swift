@@ -66,19 +66,8 @@ extension CalendarView {
     }
 
     func scrollViewOffset(for date: Date) -> CGPoint {
-        var point = CGPoint.zero
-
-        guard let section = self.indexPathForDate(date)?.section else { return point }
-        let page = flowLayout.mirroredPage(section)
-
-        switch self.direction {
-        case .horizontal: point.x = CGFloat(page) * self.collectionView.bounds.width
-        case .vertical: point.y = CGFloat(page) * self.collectionView.bounds.height
-        @unknown default:
-            point.x = CGFloat(page) * self.collectionView.bounds.width
-        }
-
-        return point
+        guard let section = self.indexPathForDate(date)?.section else { return .zero }
+        return flowLayout.contentOffset(forSection: section)
     }
 
     func displayDateOnHeader(_ date: Date) {
@@ -135,24 +124,11 @@ extension CalendarView {
 
     /// The first day of the month on the current page.
     func dateFromScrollViewPosition() -> Date? {
-        guard let grid = snapshot.grid else { return nil }
-
-        let offset: CGFloat
-        let length: CGFloat
-        switch self.direction {
-        case .horizontal:
-            offset = self.collectionView.contentOffset.x
-            length = self.collectionView.bounds.size.width
-        case .vertical:
-            offset = self.collectionView.contentOffset.y
-            length = self.collectionView.bounds.size.height
-        @unknown default:
-            offset = self.collectionView.contentOffset.x
-            length = self.collectionView.bounds.size.width
+        guard let grid = snapshot.grid,
+            let section = flowLayout.section(atContentOffset: collectionView.contentOffset)
+        else {
+            return nil
         }
-
-        guard length > 0 else { return grid.firstDayOfMonth(inSection: 0) }
-        let page = min(max(Int((offset / length).rounded()), 0), grid.numberOfSections - 1)
-        return grid.firstDayOfMonth(inSection: flowLayout.mirroredPage(page))
+        return grid.firstDayOfMonth(inSection: section)
     }
 }

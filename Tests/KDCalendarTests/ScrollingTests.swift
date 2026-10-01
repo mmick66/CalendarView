@@ -174,6 +174,24 @@ struct ScrollingTests: CalendarFixture {
         #expect(view.dateFromScrollViewPosition() == date(2024, 2, 1))
     }
 
+    @Test(arguments: [UICollectionView.ScrollDirection.horizontal, .vertical])
+    func theLayoutMapsSectionsToOffsetsAndBack(direction: UICollectionView.ScrollDirection) {
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10), direction: direction)
+        let layout = view.flowLayout
+        let page = view.collectionView.bounds.size
+        #expect(layout.itemSize == CGSize(width: page.width / 7, height: page.height / 6))
+
+        let step = direction == .vertical ? CGPoint(x: 0, y: page.height) : CGPoint(x: page.width, y: 0)
+        for section in 0..<3 {
+            let offset = layout.contentOffset(forSection: section)
+            #expect(offset == CGPoint(x: CGFloat(section) * step.x, y: CGFloat(section) * step.y))
+            #expect(layout.section(atContentOffset: offset) == section)
+        }
+        #expect(layout.section(atContentOffset: CGPoint(x: 0.6 * step.x, y: 0.6 * step.y)) == 1, "the nearest page")
+        #expect(layout.section(atContentOffset: CGPoint(x: -step.x, y: -step.y)) == 0)
+        #expect(layout.section(atContentOffset: CGPoint(x: 9 * step.x, y: 9 * step.y)) == 2)
+    }
+
     @Test func switchingDirectionKeepsTheDisplayedMonth() {
         let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
         view.setDisplayDate(date(2024, 2, 10))

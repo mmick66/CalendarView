@@ -250,11 +250,6 @@ public class CalendarView: UIView {
             height: max(0, self.bounds.size.height - style.headerHeight)
         )
 
-        let size = self.cellSize(in: self.bounds)
-        if size.width > 0 && size.height > 0 && flowLayout.itemSize != size {
-            flowLayout.itemSize = size
-        }
-
         // Keep the displayed month in place when the size changes; do not fight a scroll.
         if lastLayoutSize != self.bounds.size {
             lastLayoutSize = self.bounds.size
@@ -266,13 +261,6 @@ public class CalendarView: UIView {
             self.collectionView.layoutIfNeeded()
             self.updateAndNotifyScrolling()
         }
-    }
-
-    private func cellSize(in bounds: CGRect) -> CGSize {
-        return CGSize(
-            width: collectionView.bounds.width / 7.0,  // number of days in week
-            height: collectionView.bounds.height / 6.0  // maximum number of rows
-        )
     }
 
     internal func updateLayoutDirections() {
