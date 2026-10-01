@@ -10,27 +10,13 @@ import UIKit
 /// offset and deliver the scroll view callbacks themselves, as UIKit would.
 @Suite(.serialized)
 @MainActor
-struct ScrollingTests {
+struct ScrollingTests: CalendarFixture {
 
-    final class FixedDataSource: CalendarViewDataSource {
-        let start: Date
-        let end: Date
-        init(start: Date, end: Date) {
-            self.start = start
-            self.end = end
-        }
-        func startDate() -> Date { start }
-        func endDate() -> Date { end }
-    }
+    static let window = makeWindow()
+    let retained = Retained()
 
-    final class RecordingDelegate: CalendarViewDelegate {
-        var scrolledTo: [Date] = []
-        var longPressed: [(Date, [CalendarEvent]?)] = []
-        func calendar(_ calendar: CalendarView, didScrollToMonth date: Date) { scrolledTo.append(date) }
-        func calendar(_ calendar: CalendarView, didSelectDate date: Date, withEvents events: [CalendarEvent]) {}
-        func calendar(_ calendar: CalendarView, didLongPressDate date: Date, withEvents events: [CalendarEvent]?) {
-            longPressed.append((date, events))
-        }
+    init() {
+        Self.resetWindow()
     }
 
     /// A long press whose state and location the test controls.
@@ -42,59 +28,6 @@ struct ScrollingTests {
             set { fakeState = newValue }
         }
         override func location(in view: UIView?) -> CGPoint { point }
-    }
-
-    let utc: Calendar = {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "UTC")!
-        return calendar
-    }()
-
-    static let window: UIWindow = {
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 350, height: 500))
-        window.isHidden = false
-        return window
-    }()
-
-    final class Retained {
-        var objects: [AnyObject] = []
-    }
-    let retained = Retained()
-
-    init() {
-        Self.window.subviews.forEach { $0.removeFromSuperview() }
-    }
-
-    private func date(_ year: Int, _ month: Int, _ day: Int) -> Date {
-        utc.date(from: DateComponents(year: year, month: month, day: day))!
-    }
-
-    private func makeCalendar(
-        start: Date, end: Date, direction: UICollectionView.ScrollDirection = .horizontal
-    ) -> CalendarView {
-        var style = CalendarView.Style()
-        style.locale = Locale(identifier: "en_US")
-        style.calendar = utc
-        let view = CalendarView(frame: CGRect(x: 0, y: 0, width: 350, height: 420))
-        view.style = style
-        view.direction = direction
-        let dataSource = FixedDataSource(start: start, end: end)
-        let delegate = RecordingDelegate()
-        retained.objects.append(dataSource)
-        retained.objects.append(delegate)
-        view.dataSource = dataSource
-        view.delegate = delegate
-        Self.window.addSubview(view)
-        view.layoutIfNeeded()
-        return view
-    }
-
-    private func delegate(of view: CalendarView) -> RecordingDelegate {
-        view.delegate as! RecordingDelegate
-    }
-
-    private func cell(_ view: CalendarView, _ indexPath: IndexPath) -> CalendarDayCell? {
-        view.collectionView.cellForItem(at: indexPath) as? CalendarDayCell
     }
 
     /// Finishes an animated scroll the way UIKit does: the offset lands and the callback fires.

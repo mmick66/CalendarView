@@ -5,17 +5,7 @@ import Testing
 
 /// The selection rules on their own, with no view: taps, deselection, mode changes, assignment
 /// and the days each change adds and removes.
-struct SelectionStateTests {
-
-    let utc: Calendar = {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "UTC")!
-        return calendar
-    }()
-
-    private func date(_ year: Int, _ month: Int, _ day: Int) -> Date {
-        utc.date(from: DateComponents(year: year, month: month, day: day))!
-    }
+struct SelectionStateTests: UTCDates {
 
     /// Every day of `range` in January 2024, except `refused`.
     private func january(except refused: Set<Int> = []) -> SelectionState.SelectableDays {

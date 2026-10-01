@@ -6,59 +6,13 @@ import UIKit
 /// Tests named after the GitHub issues they close.
 @Suite(.serialized)
 @MainActor
-struct IssueTests {
+struct IssueTests: CalendarFixture {
 
-    final class FixedDataSource: CalendarViewDataSource {
-        var start: Date
-        var end: Date
-        init(start: Date, end: Date) {
-            self.start = start
-            self.end = end
-        }
-        func startDate() -> Date { start }
-        func endDate() -> Date { end }
-    }
-
-    final class RecordingDelegate: CalendarViewDelegate {
-        var selected: [Date] = []
-        var deselected: [Date] = []
-        var ranges: [ClosedRange<Date>] = []
-        var canSelect: (Date) -> Bool = { _ in true }
-        var styleForDate: (Date) -> CalendarView.Style? = { _ in nil }
-
-        func calendar(_ calendar: CalendarView, didScrollToMonth date: Date) {}
-        func calendar(_ calendar: CalendarView, didSelectDate date: Date, withEvents events: [CalendarEvent]) {
-            selected.append(date)
-        }
-        func calendar(_ calendar: CalendarView, canSelectDate date: Date) -> Bool { canSelect(date) }
-        func calendar(_ calendar: CalendarView, didDeselectDate date: Date) { deselected.append(date) }
-        func calendar(_ calendar: CalendarView, didSelectRange range: ClosedRange<Date>) { ranges.append(range) }
-        func calendar(_ calendar: CalendarView, styleForDate date: Date) -> CalendarView.Style? { styleForDate(date) }
-    }
-
-    let utc: Calendar = {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "UTC")!
-        return calendar
-    }()
-
-    static let window: UIWindow = {
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 350, height: 500))
-        window.isHidden = false
-        return window
-    }()
-
-    final class Retained {
-        var objects: [AnyObject] = []
-    }
+    static let window = makeWindow()
     let retained = Retained()
 
     init() {
-        Self.window.subviews.forEach { $0.removeFromSuperview() }
-    }
-
-    private func date(_ year: Int, _ month: Int, _ day: Int) -> Date {
-        utc.date(from: DateComponents(year: year, month: month, day: day))!
+        Self.resetWindow()
     }
 
     private func days(_ from: Date, _ to: Date) -> [Date] {
@@ -69,33 +23,6 @@ struct IssueTests {
             day = utc.date(byAdding: .day, value: 1, to: day)!
         }
         return result
-    }
-
-    private func makeCalendar(start: Date, end: Date, frame: CGRect = CGRect(x: 0, y: 0, width: 350, height: 420))
-        -> CalendarView
-    {
-        var style = CalendarView.Style()
-        style.locale = Locale(identifier: "en_US")
-        style.calendar = utc
-        let view = CalendarView(frame: frame)
-        view.style = style
-        let dataSource = FixedDataSource(start: start, end: end)
-        let delegate = RecordingDelegate()
-        retained.objects.append(dataSource)
-        retained.objects.append(delegate)
-        view.dataSource = dataSource
-        view.delegate = delegate
-        Self.window.addSubview(view)
-        view.layoutIfNeeded()
-        return view
-    }
-
-    private func delegate(of view: CalendarView) -> RecordingDelegate {
-        view.delegate as! RecordingDelegate
-    }
-
-    private func cell(_ view: CalendarView, _ indexPath: IndexPath) -> CalendarDayCell? {
-        view.collectionView.cellForItem(at: indexPath) as? CalendarDayCell
     }
 
     /// Simulates a tap: the collection view's own selection followed by the delegate callbacks.

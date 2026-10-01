@@ -6,39 +6,13 @@ import UIKit
 /// Edge cases of the date engine: DST, calendars, locales, long events and data source traffic.
 @Suite(.serialized)
 @MainActor
-struct EngineTests {
+struct EngineTests: CalendarFixture {
 
-    final class CountingDataSource: CalendarViewDataSource {
-        var start: Date
-        var end: Date
-        var calls = 0
-        init(start: Date, end: Date) {
-            self.start = start
-            self.end = end
-        }
-        func startDate() -> Date {
-            calls += 1
-            return start
-        }
-        func endDate() -> Date {
-            calls += 1
-            return end
-        }
-    }
-
-    static let window: UIWindow = {
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 350, height: 500))
-        window.isHidden = false
-        return window
-    }()
-
-    final class Retained {
-        var objects: [AnyObject] = []
-    }
+    static let window = makeWindow()
     let retained = Retained()
 
     init() {
-        Self.window.subviews.forEach { $0.removeFromSuperview() }
+        Self.resetWindow()
     }
 
     private func calendar(_ zone: String, identifier: Calendar.Identifier = .gregorian, locale: String? = nil)
@@ -52,24 +26,6 @@ struct EngineTests {
 
     private func date(_ calendar: Calendar, _ year: Int, _ month: Int, _ day: Int, hour: Int = 0) -> Date {
         calendar.date(from: DateComponents(year: year, month: month, day: day, hour: hour))!
-    }
-
-    private func makeCalendar(start: Date, end: Date, calendar: Calendar, locale: String = "en_US") -> CalendarView {
-        var style = CalendarView.Style()
-        style.locale = Locale(identifier: locale)
-        style.calendar = calendar
-        let view = CalendarView(frame: CGRect(x: 0, y: 0, width: 350, height: 420))
-        view.style = style
-        let dataSource = CountingDataSource(start: start, end: end)
-        retained.objects.append(dataSource)
-        view.dataSource = dataSource
-        Self.window.addSubview(view)
-        view.layoutIfNeeded()
-        return view
-    }
-
-    private func cell(_ view: CalendarView, _ indexPath: IndexPath) -> CalendarDayCell? {
-        view.collectionView.cellForItem(at: indexPath) as? CalendarDayCell
     }
 
     // MARK: Daylight saving time
@@ -217,7 +173,7 @@ struct EngineTests {
     @Test func theDataSourceIsAskedOncePerReloadNotOncePerCell() {
         let utc = calendar("UTC")
         let view = makeCalendar(start: date(utc, 2024, 1, 1), end: date(utc, 2024, 3, 31), calendar: utc)
-        let source = view.dataSource as! CountingDataSource
+        let source = dataSource(of: view)
         source.calls = 0
         view.reloadData()
         view.layoutIfNeeded()
@@ -234,7 +190,8 @@ struct EngineTests {
         // Saudi Arabia's weekend is Friday and Saturday.
         let utc = calendar("UTC")
         let view = makeCalendar(
-            start: date(utc, 2024, 1, 1), end: date(utc, 2024, 1, 31), calendar: utc, locale: "ar_SA")
+            start: date(utc, 2024, 1, 1), end: date(utc, 2024, 1, 31), calendar: utc,
+            locale: Locale(identifier: "ar_SA"))
         #expect(view.calendar.locale?.identifier == "ar_SA")
         #expect(view.calendar.isDateInWeekend(date(utc, 2024, 1, 5)) == true, "Friday")
         #expect(view.calendar.isDateInWeekend(date(utc, 2024, 1, 7)) == false, "Sunday")
@@ -244,7 +201,7 @@ struct EngineTests {
         // A calendar that already has a locale keeps it.
         let explicit = makeCalendar(
             start: date(utc, 2024, 1, 1), end: date(utc, 2024, 1, 31), calendar: calendar("UTC", locale: "en_US"),
-            locale: "ar_SA")
+            locale: Locale(identifier: "ar_SA"))
         #expect(explicit.calendar.locale?.identifier == "en_US")
         #expect(cell(explicit, IndexPath(item: 4, section: 0))?.configuration.isWeekend == false)
     }

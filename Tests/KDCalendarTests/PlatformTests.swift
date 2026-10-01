@@ -7,61 +7,13 @@ import UIKit
 /// Dark mode, Dynamic Type, accessibility, scrolling control and the SwiftUI wrapper.
 @Suite(.serialized)
 @MainActor
-struct PlatformTests {
+struct PlatformTests: CalendarFixture {
 
-    final class FixedDataSource: CalendarViewDataSource {
-        let start: Date
-        let end: Date
-        init(start: Date, end: Date) {
-            self.start = start
-            self.end = end
-        }
-        func startDate() -> Date { start }
-        func endDate() -> Date { end }
-    }
-
-    let utc: Calendar = {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "UTC")!
-        return calendar
-    }()
-
-    static let window: UIWindow = {
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 350, height: 600))
-        window.isHidden = false
-        return window
-    }()
-
-    final class Retained {
-        var objects: [AnyObject] = []
-    }
+    static let window = makeWindow(height: 600)
     let retained = Retained()
 
     init() {
-        Self.window.rootViewController = nil
-        Self.window.subviews.forEach { $0.removeFromSuperview() }
-    }
-
-    private func date(_ year: Int, _ month: Int, _ day: Int) -> Date {
-        utc.date(from: DateComponents(year: year, month: month, day: day))!
-    }
-
-    private func makeCalendar(start: Date, end: Date) -> CalendarView {
-        var style = CalendarView.Style()
-        style.locale = Locale(identifier: "en_US")
-        style.calendar = utc
-        let view = CalendarView(frame: CGRect(x: 0, y: 0, width: 350, height: 420))
-        view.style = style
-        let dataSource = FixedDataSource(start: start, end: end)
-        retained.objects.append(dataSource)
-        view.dataSource = dataSource
-        Self.window.addSubview(view)
-        view.layoutIfNeeded()
-        return view
-    }
-
-    private func cell(_ view: CalendarView, _ indexPath: IndexPath) -> CalendarDayCell? {
-        view.collectionView.cellForItem(at: indexPath) as? CalendarDayCell
+        Self.resetWindow()
     }
 
     @Test func defaultColoursAdaptToDarkMode() {
@@ -139,17 +91,9 @@ struct PlatformTests {
     @Test func todayIsSpokenAsSuch() {
         let now = Date()
         let local = Calendar.current
-        var style = CalendarView.Style()
-        style.calendar = local
-        style.locale = Locale(identifier: "en_US")
-        let view = CalendarView(frame: CGRect(x: 0, y: 0, width: 350, height: 420))
-        view.style = style
-        let dataSource = FixedDataSource(
-            start: local.date(byAdding: .day, value: -3, to: now)!, end: local.date(byAdding: .day, value: 3, to: now)!)
-        retained.objects.append(dataSource)
-        view.dataSource = dataSource
-        Self.window.addSubview(view)
-        view.layoutIfNeeded()
+        let view = makeCalendar(
+            start: local.date(byAdding: .day, value: -3, to: now)!, end: local.date(byAdding: .day, value: 3, to: now)!,
+            calendar: local)
         view.setDisplayDate(now)
         view.layoutIfNeeded()
         let today = cell(view, view.indexPathForDate(now)!)
@@ -191,9 +135,7 @@ struct PlatformTests {
 
     @Test func swiftUIWrapperHostsACalendarAndReportsSelection() {
         let box = SelectionBox()
-        var style = CalendarView.Style()
-        style.calendar = utc
-        style.locale = Locale(identifier: "en_US")
+        let style = makeStyle()
         let range = date(2024, 1, 1)...date(2024, 3, 31)
         let host = UIHostingController(
             rootView: KDCalendarView(range: range, selection: box.binding)
@@ -229,9 +171,7 @@ struct PlatformTests {
 
     @Test func swiftUIRangeChangeKeepsTheSelectedDayHighlighted() {
         let box = SelectionBox()
-        var style = CalendarView.Style()
-        style.calendar = utc
-        style.locale = Locale(identifier: "en_US")
+        let style = makeStyle()
         let host = UIHostingController(
             rootView: KDCalendarView(range: date(2024, 3, 1)...date(2024, 4, 30), selection: box.binding)
                 .calendarStyle(style))
@@ -257,9 +197,7 @@ struct PlatformTests {
 
     @Test func swiftUIRangeChangeDropsTheLeftDaysFromTheBinding() async {
         let box = SelectionBox()
-        var style = CalendarView.Style()
-        style.calendar = utc
-        style.locale = Locale(identifier: "en_US")
+        let style = makeStyle()
         var range = date(2024, 3, 1)...date(2024, 4, 30)
         var mode = CalendarView.SelectionMode.multiple
         func view() -> KDCalendarView {
@@ -299,9 +237,7 @@ struct PlatformTests {
 
     @Test func swiftUIModifiersReachTheCalendar() async {
         let box = SelectionBox()
-        var style = CalendarView.Style()
-        style.calendar = utc
-        style.locale = Locale(identifier: "en_US")
+        let style = makeStyle()
         var holiday = style
         holiday.cellColorDefault = .systemPink
         let scrolled = SelectionBox()
@@ -367,9 +303,7 @@ struct PlatformTests {
     @Test func swiftUIDisplayDateChangeReportsTheMonthAfterTheViewUpdate() async {
         let box = SelectionBox()
         let scrolled = SelectionBox()
-        var style = CalendarView.Style()
-        style.calendar = utc
-        style.locale = Locale(identifier: "en_US")
+        let style = makeStyle()
         var displayDate = date(2024, 1, 10)
         func view() -> KDCalendarView {
             KDCalendarView(range: date(2024, 1, 1)...date(2024, 6, 30), selection: box.binding)
@@ -417,9 +351,7 @@ struct PlatformTests {
 
     @Test func swiftUIRangeSetFromTheBindingSelectsEveryDayInIt() async {
         let box = SelectionBox()
-        var style = CalendarView.Style()
-        style.calendar = utc
-        style.locale = Locale(identifier: "en_US")
+        let style = makeStyle()
         let range = date(2024, 1, 1)...date(2024, 3, 31)
         func view() -> KDCalendarView {
             KDCalendarView(range: range, selection: box.binding).calendarStyle(style).selectionMode(.range)
@@ -456,9 +388,7 @@ struct PlatformTests {
 
     @Test func swiftUIBindingIsCorrectedToWhatTheViewShows() async {
         let box = SelectionBox()
-        var style = CalendarView.Style()
-        style.calendar = utc
-        style.locale = Locale(identifier: "en_US")
+        let style = makeStyle()
         let range = date(2024, 1, 1)...date(2024, 3, 31)
         var mode = CalendarView.SelectionMode.single
         func view() -> KDCalendarView {
@@ -506,9 +436,7 @@ struct PlatformTests {
 
     @Test func swiftUIModeChangeLeavesTheBindingWithTheDaysKept() async {
         let box = SelectionBox()
-        var style = CalendarView.Style()
-        style.calendar = utc
-        style.locale = Locale(identifier: "en_US")
+        let style = makeStyle()
         let range = date(2024, 1, 1)...date(2024, 3, 31)
         var mode = CalendarView.SelectionMode.multiple
         func view() -> KDCalendarView {

@@ -8,100 +8,13 @@ import UIKit
 /// Serialized because every test lays its calendar out in a shared window.
 @Suite(.serialized)
 @MainActor
-struct CalendarViewTests {
+struct CalendarViewTests: CalendarFixture {
 
-    /// Fixed-range data source; every test controls its own start and end.
-    final class FixedDataSource: CalendarViewDataSource {
-        var start: Date
-        var end: Date
-        var header: String?
-        init(start: Date, end: Date) {
-            self.start = start
-            self.end = end
-        }
-        func startDate() -> Date { start }
-        func endDate() -> Date { end }
-        func headerString(_ date: Date) -> String? { header }
-    }
-
-    final class RecordingDelegate: CalendarViewDelegate {
-        var scrolledTo: [Date] = []
-        var selected: [Date] = []
-        var deselected: [Date] = []
-        /// The view's selection at each `didDeselectDate`.
-        var selectionWhenDeselected: [[Date]] = []
-        var canSelect: (Date) -> Bool = { _ in true }
-
-        func calendar(_ calendar: CalendarView, didScrollToMonth date: Date) { scrolledTo.append(date) }
-        func calendar(_ calendar: CalendarView, didSelectDate date: Date, withEvents events: [CalendarEvent]) {
-            selected.append(date)
-        }
-        func calendar(_ calendar: CalendarView, canSelectDate date: Date) -> Bool { canSelect(date) }
-        func calendar(_ calendar: CalendarView, didDeselectDate date: Date) {
-            deselected.append(date)
-            selectionWhenDeselected.append(calendar.selectedDates)
-        }
-        func calendar(_ calendar: CalendarView, didLongPressDate date: Date, withEvents events: [CalendarEvent]?) {}
-    }
-
-    /// A Gregorian calendar in UTC. Tests build every date through it so they do not depend
-    /// on the machine's time zone.
-    let utc: Calendar = {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "UTC")!
-        return calendar
-    }()
-
-    /// One window for the whole suite; each test clears it before adding its calendar.
-    static let window: UIWindow = {
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 350, height: 500))
-        window.isHidden = false
-        return window
-    }()
-
-    /// The view holds its data source and delegate weakly, so each test keeps them here.
-    final class Retained {
-        var objects: [AnyObject] = []
-    }
+    static let window = makeWindow()
     let retained = Retained()
 
     init() {
-        Self.window.subviews.forEach { $0.removeFromSuperview() }
-    }
-
-    private func date(_ year: Int, _ month: Int, _ day: Int, hour: Int = 0) -> Date {
-        utc.date(from: DateComponents(year: year, month: month, day: day, hour: hour))!
-    }
-
-    /// A laid-out calendar inside the window, so the collection view has real
-    /// cells to inspect.
-    private func makeCalendar(
-        start: Date, end: Date, firstWeekday: CalendarView.Style.FirstWeekdayOptions = .monday,
-        calendar: Calendar? = nil, locale: Locale = Locale(identifier: "en_US")
-    ) -> CalendarView {
-        var style = CalendarView.Style()
-        style.firstWeekday = firstWeekday
-        style.locale = locale
-        style.calendar = calendar ?? utc
-        let view = CalendarView(frame: CGRect(x: 0, y: 0, width: 350, height: 420))
-        view.style = style
-        let dataSource = FixedDataSource(start: start, end: end)
-        let delegate = RecordingDelegate()
-        retained.objects.append(dataSource)
-        retained.objects.append(delegate)
-        view.dataSource = dataSource
-        view.delegate = delegate
-        Self.window.addSubview(view)
-        view.layoutIfNeeded()
-        return view
-    }
-
-    private func delegate(of view: CalendarView) -> RecordingDelegate {
-        view.delegate as! RecordingDelegate
-    }
-
-    private func cell(_ view: CalendarView, _ indexPath: IndexPath) -> CalendarDayCell? {
-        view.collectionView.cellForItem(at: indexPath) as? CalendarDayCell
+        Self.resetWindow()
     }
 
     // MARK: Section arithmetic
@@ -180,7 +93,7 @@ struct CalendarViewTests {
 
     @Test func rangeFollowsTheDataSourceWhenItsDatesChange() {
         let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
-        let source = view.dataSource as! FixedDataSource
+        let source = dataSource(of: view)
         source.end = date(2024, 5, 1)
         view.reloadData()
         #expect(view.numberOfSections(in: view.collectionView) == 5)
@@ -514,7 +427,7 @@ struct CalendarViewTests {
 
     @Test func headerStringFromTheDataSourceWins() {
         let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
-        (view.dataSource as! FixedDataSource).header = "Custom"
+        dataSource(of: view).header = "Custom"
         view.setDisplayDate(date(2024, 2, 10))
         #expect(view.headerView.monthLabel.text == "Custom")
     }
@@ -685,10 +598,6 @@ struct CalendarViewTests {
     }
 
     // MARK: Selection across grid rebuilds
-
-    private func dataSource(of view: CalendarView) -> FixedDataSource {
-        view.dataSource as! FixedDataSource
-    }
 
     @Test func selectionFollowsItsDayWhenTheRangeGainsAMonth() {
         let view = makeCalendar(start: date(2024, 3, 1), end: date(2024, 4, 30))

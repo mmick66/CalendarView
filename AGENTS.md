@@ -185,6 +185,9 @@ mirrors them as the `Core` and `EventKit` subspecs of `KDCalendar.podspec`.
 - **`Tests/KDCalendarTests`**: Swift Testing suites. `EngineTests` (dates, DST, calendars),
   `SelectionStateTests` (no view), `CalendarViewTests`, `ScrollingTests`, `PlatformTests`,
   `EventKitTests` (fake store) and `IssueTests` (named after the GitHub issues they close).
+  `TestSupport.swift` holds what they share: `UTCDates` (`utc`, `date(_:_:_:)`) and
+  `CalendarFixture` (a window per suite, `makeCalendar` with defaulted style parameters, `cell`,
+  `FixedDataSource` and `RecordingDelegate`). Add set-up there rather than to one suite.
 - **`Example/KDCalendarDemo.xcodeproj`**: the demo app, consuming the package by local path.
 
 ## Conventions & Patterns

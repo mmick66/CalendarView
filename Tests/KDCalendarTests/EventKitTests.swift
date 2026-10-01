@@ -7,7 +7,7 @@ import UIKit
 
 /// The EventKit bridge, driven by a fake store so no calendar access is needed.
 @MainActor
-struct EventKitTests {
+struct EventKitTests: CalendarFixture {
 
     struct StoreError: Error, Equatable {}
 
@@ -38,48 +38,13 @@ struct EventKitTests {
         }
     }
 
-    final class FixedDataSource: CalendarViewDataSource {
-        let start: Date
-        let end: Date
-        init(start: Date, end: Date) {
-            self.start = start
-            self.end = end
-        }
-        func startDate() -> Date { start }
-        func endDate() -> Date { end }
-    }
-
-    let utc: Calendar = {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "UTC")!
-        return calendar
-    }()
-
-    let store = FakeStore()
-
-    final class Retained {
-        var objects: [AnyObject] = []
-    }
+    /// Not reset between tests, which run side by side and only need their calendars to have a window.
+    static let window = makeWindow()
     let retained = Retained()
-
-    private func date(_ year: Int, _ month: Int, _ day: Int, hour: Int = 0) -> Date {
-        utc.date(from: DateComponents(year: year, month: month, day: day, hour: hour))!
-    }
+    let store = FakeStore()
 
     private func event(_ title: String, _ day: Date, hours: Int = 1) -> CalendarEvent {
         CalendarEvent(title: title, startDate: day, endDate: day.addingTimeInterval(TimeInterval(hours * 3600)))
-    }
-
-    private func makeCalendar(start: Date, end: Date) -> CalendarView {
-        var style = CalendarView.Style()
-        style.calendar = utc
-        let view = CalendarView(frame: CGRect(x: 0, y: 0, width: 350, height: 420))
-        view.style = style
-        let dataSource = FixedDataSource(start: start, end: end)
-        retained.objects.append(dataSource)
-        view.dataSource = dataSource
-        view.layoutIfNeeded()
-        return view
     }
 
     // MARK: EventsManager
