@@ -58,12 +58,25 @@ extension CalendarView {
             case square
             /// A rectangle with the given corner radius.
             case bevel(CGFloat)
-            var isRound: Bool {
+
+            /// The frame of the background inside `rect`: the largest centred square for
+            /// ``round``, `rect` itself otherwise.
+            func backgroundFrame(in rect: CGRect) -> CGRect {
+                guard case .round = self else { return rect }
+                let side = min(rect.width, rect.height)
+                return rect.insetBy(dx: (rect.width - side) / 2, dy: (rect.height - side) / 2)
+            }
+
+            /// The corner radius of a background with the given frame, from
+            /// ``backgroundFrame(in:)``.
+            func cornerRadius(for frame: CGRect) -> CGFloat {
                 switch self {
+                case .square:
+                    return 0
                 case .round:
-                    return true
-                default:
-                    return false
+                    return frame.width / 2
+                case .bevel(let radius):
+                    return radius
                 }
             }
         }

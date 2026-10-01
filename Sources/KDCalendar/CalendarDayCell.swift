@@ -163,36 +163,32 @@ open class CalendarDayCell: UICollectionViewCell {
         }
     }
 
-    override open func layoutSubviews() {
+    /// The cell's proportions, which do not depend on the style.
+    private enum Metrics {
+        /// The gap between the cell's edges and its background and label.
+        static let contentInset: CGFloat = 3
+        /// The event dot's diameter, as a fraction of the cell's height.
+        static let dotDiameterRatio: CGFloat = 0.08
+        /// The distance from the cell's bottom edge to the dot's centre, in dot diameters.
+        static let dotBottomOffset: CGFloat = 2.5
+    }
 
+    override open func layoutSubviews() {
         super.layoutSubviews()
 
-        var elementsFrame = self.bounds.insetBy(dx: 3.0, dy: 3.0)
+        let contentFrame = bounds.insetBy(dx: Metrics.contentInset, dy: Metrics.contentInset)
+        let backgroundFrame = style.cellShape.backgroundFrame(in: contentFrame)
+        bgView.frame = backgroundFrame
+        bgView.layer.cornerRadius = style.cellShape.cornerRadius(for: backgroundFrame)
+        textLabel.frame = backgroundFrame
 
-        if style.cellShape.isRound {  // square of
-            let smallestSide = min(elementsFrame.width, elementsFrame.height)
-            elementsFrame = elementsFrame.insetBy(
-                dx: (elementsFrame.width - smallestSide) / 2.0,
-                dy: (elementsFrame.height - smallestSide) / 2.0
-            )
-        }
-
-        self.bgView.frame = elementsFrame
-        self.textLabel.frame = elementsFrame
-
-        let size = self.bounds.height * 0.08  // always a percentage of the whole cell
-        self.dotsView.frame = CGRect(x: 0, y: 0, width: size, height: size)
-        self.dotsView.center = CGPoint(x: self.textLabel.center.x, y: self.bounds.height - (2.5 * size))
-        self.dotsView.layer.cornerRadius = size * 0.5  // round it
-
-        switch style.cellShape {
-        case .square:
-            self.bgView.layer.cornerRadius = 0.0
-        case .round:
-            self.bgView.layer.cornerRadius = elementsFrame.width * 0.5
-        case .bevel(let radius):
-            self.bgView.layer.cornerRadius = radius
-        }
+        let dotDiameter = bounds.height * Metrics.dotDiameterRatio
+        dotsView.frame = CGRect(x: 0, y: 0, width: dotDiameter, height: dotDiameter)
+        dotsView.center = CGPoint(
+            x: backgroundFrame.midX,
+            y: bounds.height - Metrics.dotBottomOffset * dotDiameter
+        )
+        dotsView.layer.cornerRadius = dotDiameter / 2
     }
 
     private func applyStyle() {

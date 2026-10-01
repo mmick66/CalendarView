@@ -412,6 +412,28 @@ struct CalendarViewTests: CalendarFixture {
         #expect(view.eventsByIndexPath[view.indexPathForDate(Date())!]?.count == 1)
     }
 
+    @Test func theCellShapeSetsTheBackgroundsFrameAndCorners() {
+        let rect = CGRect(x: 3, y: 3, width: 40, height: 30)
+        let circle = CGRect(x: 8, y: 3, width: 30, height: 30)
+        #expect(CalendarView.Style.CellShapeOptions.round.backgroundFrame(in: rect) == circle)
+        #expect(CalendarView.Style.CellShapeOptions.round.cornerRadius(for: circle) == 15)
+        #expect(CalendarView.Style.CellShapeOptions.square.backgroundFrame(in: rect) == rect)
+        #expect(CalendarView.Style.CellShapeOptions.square.cornerRadius(for: rect) == 0)
+        #expect(CalendarView.Style.CellShapeOptions.bevel(6).backgroundFrame(in: rect) == rect)
+        #expect(CalendarView.Style.CellShapeOptions.bevel(6).cornerRadius(for: rect) == 6)
+
+        // The cell insets its content, then asks the shape for the background.
+        var style = CalendarView.Style.default
+        style.cellShape = .round
+        let dayCell = CalendarDayCell(frame: CGRect(x: 0, y: 0, width: 46, height: 36))
+        dayCell.configuration = DayCellConfiguration(day: 1, eventsCount: 1, style: style)
+        dayCell.layoutIfNeeded()
+        #expect(dayCell.bgView.frame == circle)
+        #expect(dayCell.bgView.layer.cornerRadius == 15)
+        #expect(dayCell.textLabel.frame == circle)
+        #expect(dayCell.dotsView.center.x == circle.midX)
+    }
+
     // MARK: Header and display date
 
     @Test func headerShowsMonthAndYearInTheStyleLocale() {
