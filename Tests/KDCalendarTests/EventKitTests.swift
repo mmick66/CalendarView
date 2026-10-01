@@ -245,6 +245,8 @@ struct EventKitTests: CalendarFixture {
         }
     }
 
+    /// Called from the main actor, as ``EventsManager`` calls it. Once
+    /// `NonisolatedNonsendingByDefault` is on, only `@concurrent` keeps the query off it.
     @Test func theSystemStoreQueriesOffTheMainThread() async {
         let systemStore = ThreadRecordingStore()
         let events = await systemStore.events(from: date(2020, 1, 1), to: date(2031, 1, 1))
