@@ -46,7 +46,7 @@ extension CalendarView: UICollectionViewDataSource {
         switch currentMonths?.content(at: indexPath) {
         case .day(let date, let dayOfMonth):
             let isToday = indexPath == todayIndexPath
-            let eventsCount = eventsByIndexPath[indexPath]?.count ?? 0
+            let eventsCount = eventIndex.count(at: indexPath)
             configuration.style = delegate?.calendar(self, styleForDate: date) ?? style
             configuration.day = dayOfMonth
             configuration.date = date
