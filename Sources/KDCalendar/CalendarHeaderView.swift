@@ -35,6 +35,15 @@ open class CalendarHeaderView: UIView {
 
     let dayLabels = (0..<7).map { _ in UILabel() }
 
+    /// Lays the weekday labels out in equal columns, mirrored right to left with the header.
+    private let weekdaysStack = UIStackView()
+
+    // The constants come from the style's margins; updateStyle() sets them.
+    private lazy var monthTop = monthLabel.topAnchor.constraint(equalTo: topAnchor)
+    private lazy var monthBottom = monthLabel.bottomAnchor.constraint(equalTo: weekdaysStack.topAnchor)
+    private lazy var weekdaysBottom = weekdaysStack.bottomAnchor.constraint(equalTo: bottomAnchor)
+    private lazy var weekdaysHeight = weekdaysStack.heightAnchor.constraint(equalToConstant: 0)
+
     public override init(frame: CGRect) {
         super.init(frame: frame)
         buildLabels()
@@ -51,14 +60,36 @@ open class CalendarHeaderView: UIView {
         monthLabel.backgroundColor = UIColor.clear
         monthLabel.adjustsFontForContentSizeCategory = true
         monthLabel.accessibilityTraits = .header
+        monthLabel.translatesAutoresizingMaskIntoConstraints = false
         self.addSubview(monthLabel)
 
         for label in dayLabels {
             label.backgroundColor = UIColor.clear
             label.adjustsFontForContentSizeCategory = true
-            self.addSubview(label)
+            weekdaysStack.addArrangedSubview(label)
         }
+        weekdaysStack.axis = .horizontal
+        weekdaysStack.distribution = .fillEqually
+        weekdaysStack.semanticContentAttribute = semanticContentAttribute
+        weekdaysStack.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(weekdaysStack)
+
+        NSLayoutConstraint.activate([
+            monthTop, monthBottom, weekdaysBottom, weekdaysHeight,
+            monthLabel.leadingAnchor.constraint(equalTo: leadingAnchor),
+            monthLabel.trailingAnchor.constraint(equalTo: trailingAnchor),
+            weekdaysStack.leadingAnchor.constraint(equalTo: leadingAnchor),
+            weekdaysStack.trailingAnchor.constraint(equalTo: trailingAnchor),
+        ])
         updateStyle()
+    }
+
+    /// The weekday labels follow the header's direction: a stack view mirrors with its own
+    /// semantic content attribute.
+    open override var semanticContentAttribute: UISemanticContentAttribute {
+        didSet {
+            weekdaysStack.semanticContentAttribute = semanticContentAttribute
+        }
     }
 
     /// Restyles the header with `style` and the formatters built for it.
@@ -68,6 +99,10 @@ open class CalendarHeaderView: UIView {
         updateStyle()
     }
 
+    /// Applies the header's current style again: fonts, colours, margins and weekday names.
+    ///
+    /// The calendar view calls this whenever its ``CalendarView/style`` changes, so there is no
+    /// need to call it yourself.
     public func updateStyle() {
         self.monthLabel.textAlignment = NSTextAlignment.center
         self.monthLabel.font = style.headerFont
@@ -90,41 +125,10 @@ open class CalendarHeaderView: UIView {
         }
 
         self.backgroundColor = style.weekdaysBackgroundColor
-    }
 
-    override open func layoutSubviews() {
-        super.layoutSubviews()
-
-        let isRtl = self.effectiveUserInterfaceLayoutDirection == .rightToLeft
-
-        self.monthLabel.frame = CGRect(
-            x: 0.0,
-            y: style.headerTopMargin,
-            width: self.bounds.size.width,
-            height: self.bounds.size.height
-                - style.headerTopMargin
-                - style.weekdaysHeight
-                - style.weekdaysBottomMargin
-                - style.weekdaysTopMargin
-        )
-
-        var labelFrame = CGRect(
-            x: 0.0,
-            y: self.bounds.size.height
-                - style.weekdaysBottomMargin
-                - style.weekdaysHeight,
-            width: self.bounds.size.width / 7.0,
-            height: style.weekdaysHeight
-        )
-
-        if isRtl {
-            labelFrame.origin.x = self.bounds.size.width - labelFrame.width
-        }
-
-        for lbl in self.dayLabels {
-            lbl.frame = labelFrame
-
-            labelFrame.origin.x += isRtl ? -labelFrame.size.width : labelFrame.size.width
-        }
+        monthTop.constant = style.headerTopMargin
+        monthBottom.constant = -style.weekdaysTopMargin
+        weekdaysBottom.constant = -style.weekdaysBottomMargin
+        weekdaysHeight.constant = style.weekdaysHeight
     }
 }

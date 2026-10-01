@@ -497,6 +497,23 @@ struct CalendarViewTests: CalendarFixture {
         #expect(sunday.headerView.dayLabels.map(\.text) == ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"])
     }
 
+    @Test func headerLaysOutItsLabelsFromTheStyleMargins() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        let header = view.headerView
+        func frames() -> [CGRect] { header.dayLabels.map { header.convert($0.bounds, from: $0) } }
+
+        #expect(header.monthLabel.frame == CGRect(x: 0, y: 5, width: 350, height: 30), "80 - 5 - 5 - 35 - 5")
+        #expect(frames().map(\.minX) == [0, 50, 100, 150, 200, 250, 300], "seven equal columns")
+        #expect(frames().allSatisfy { $0.minY == 40 && $0.size == CGSize(width: 50, height: 35) })
+
+        view.style.headerHeight = 100
+        view.style.headerTopMargin = 10
+        view.style.weekdaysHeight = 40
+        view.layoutIfNeeded()
+        #expect(header.monthLabel.frame == CGRect(x: 0, y: 10, width: 350, height: 40), "100 - 10 - 5 - 40 - 5")
+        #expect(frames().allSatisfy { $0.minY == 55 && $0.height == 40 }, "a new style moves the labels")
+    }
+
     @Test func didScrollToMonthFiresOncePerSettledMonth() {
         // Issue #109: the delegate used to hear about month zero on every reload.
         let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
