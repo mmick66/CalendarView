@@ -45,3 +45,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Lint
         run: xcrun swift-format lint --strict --recursive Sources Tests Example/KDCalendarDemo
+      - name: Documentation of open declarations
+        run: scripts/lint-open-documentation.sh

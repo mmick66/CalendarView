@@ -145,6 +145,7 @@ xcodebuild -project Example/KDCalendarDemo.xcodeproj -scheme KDCalendarDemo \
 
 # Lint (must pass with no warnings)
 xcrun swift-format lint --strict --recursive Sources Tests Example/KDCalendarDemo
+scripts/lint-open-documentation.sh   # swift-format skips `open` declarations
 ```
 
 When several worktrees test at once, give each its own simulator (see `bd memories simulator`):
@@ -206,8 +207,9 @@ mirrors them as the `Core` and `EventKit` subspecs of `KDCalendar.podspec`.
 - Formatting is `swift-format` with the repo's `.swift-format` (4 spaces, 120 columns, ordered
   imports); `lint --strict` must pass.
 - Public API gets `///` documentation with DocC symbol links (``` ``CalendarView/style`` ```),
-  protocol witnesses included; the lint enforces it. The first sentence stands alone as the
-  summary, followed by a blank `///` line before any discussion.
+  protocol witnesses included; the lint enforces it (`scripts/lint-open-documentation.sh` for
+  `open` declarations, which swift-format skips). The first sentence stands alone as the summary,
+  followed by a blank `///` line before any discussion.
 - Tests use Swift Testing (`@Test`, `#expect`); suites that lay out views are
   `@Suite(.serialized) @MainActor`.
 - A file header, where there is one, is the MIT notice (see `CalendarView.swift`); files without

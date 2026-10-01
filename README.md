@@ -221,6 +221,7 @@ Taps update the binding; assigning to it selects or deselects days. An assigned 
 xcodebuild -scheme KDCalendar-Package -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test
 xcodebuild -project Example/KDCalendarDemo.xcodeproj -scheme KDCalendarDemo -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 xcrun swift-format lint --strict --recursive Sources Tests Example/KDCalendarDemo
+scripts/lint-open-documentation.sh   # swift-format skips `open` declarations
 ```
 
 Requires Xcode 26. Documentation is a DocC catalog in `Sources/KDCalendar/KDCalendar.docc`, including a guide for migrating from 1.x.
