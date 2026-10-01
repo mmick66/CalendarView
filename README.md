@@ -147,7 +147,7 @@ The defaults are dynamic system colours, so a calendar follows dark mode, and fo
 The data source can replace the month title:
 
 ```swift
-func headerString(_ date: Date) -> String? { date.formatted(.dateTime.month(.wide)) }
+func title(forMonth month: Date) -> String? { month.formatted(.dateTime.month(.wide)) }
 ```
 
 The delegate can style single days. Return `nil` for the calendar's own style. Together with `canSelectDate` this greys out days the user must not pick:

@@ -45,6 +45,8 @@ final class FixedDataSource: CalendarViewDataSource {
     var start: Date
     var end: Date
     var header: String?
+    /// The months the view asked a title for.
+    var titledMonths: [Date] = []
     /// How many times the view asked for the start or the end.
     var calls = 0
     init(start: Date, end: Date) {
@@ -59,7 +61,10 @@ final class FixedDataSource: CalendarViewDataSource {
         calls += 1
         return end
     }
-    func headerString(_ date: Date) -> String? { header }
+    func title(forMonth month: Date) -> String? {
+        titledMonths.append(month)
+        return header
+    }
 }
 
 /// Records every delegate callback; `canSelect` and `styleForDate` answer the view's questions.

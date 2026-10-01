@@ -6,6 +6,12 @@ All notable changes to KDCalendar are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `CalendarViewDataSource.title(forMonth:)`, which receives the first day of the
+  month the header shows. Its default returns `headerString(_:)`, so existing
+  data sources keep their titles.
+
 ### Changed
 
 - `EventsManager` is a struct around one `CalendarEventStore` instead of an enum
@@ -21,6 +27,8 @@ All notable changes to KDCalendar are documented here. The format follows
   `save(_:store:)` and `add(event:store:)`, and the `store` argument of
   `CalendarView.loadEvents`, `saveEvent` and `addEvent`. Use
   `EventsManager.shared` or set `CalendarView.eventsManager` instead.
+- `CalendarViewDataSource.headerString(_:)`. Implement `title(forMonth:)`
+  instead; `headerString(_:)` will be removed in 3.0.
 
 ## [2.1.0] - 2026-09-30
 

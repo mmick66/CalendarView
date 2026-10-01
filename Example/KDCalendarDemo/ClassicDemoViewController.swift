@@ -145,7 +145,7 @@ extension ClassicDemoViewController: CalendarViewDataSource {
         calendarView.calendar.date(byAdding: .month, value: 12, to: Date())!
     }
 
-    func headerString(_ date: Date) -> String? {
+    func title(forMonth month: Date) -> String? {
         nil
     }
 }
