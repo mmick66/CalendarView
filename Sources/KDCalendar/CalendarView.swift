@@ -381,7 +381,7 @@ extension CalendarView {
     func rebuildEventIndex() {
         eventsByIndexPath.removeAll()
         guard let months = months, let first = months.months.first, let lastMonth = months.months.last,
-            let gridEnd = calendar.date(byAdding: .day, value: lastMonth.daysTotal, to: lastMonth.firstDate)
+            let gridEnd = calendar.date(byAdding: .day, value: lastMonth.dayCount, to: lastMonth.firstDate)
         else { return }
         let gridStart = first.firstDate
         for event in events {
@@ -410,11 +410,11 @@ extension CalendarView {
         currentMonths?.date(at: indexPath)
     }
 
-    /// The grid offset of the first day and the number of days for the month in `section`.
+    /// The column of the first day and the number of days for the month in `section`.
     public func getCachedSectionInfo(_ section: Int) -> (firstDay: Int, daysTotal: Int)? {
         guard let months = currentMonths, months.months.indices.contains(section) else { return nil }
         let month = months.months[section]
-        return (firstDay: month.firstDay, daysTotal: month.daysTotal)
+        return (firstDay: month.firstColumn, daysTotal: month.dayCount)
     }
 
     func isOutOfRange(_ indexPath: IndexPath) -> Bool {

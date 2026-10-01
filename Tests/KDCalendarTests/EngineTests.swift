@@ -105,6 +105,22 @@ struct EngineTests: CalendarFixture {
         #expect(grid.date(at: IndexPath(item: 31, section: 0)) == nil)
     }
 
+    @Test func outOfRangeComparesTheCellsDayWithTheRange() throws {
+        let utc = calendar("UTC")
+        // 15 January to 10 February 2024, Monday first: 15 January is item 14, 10 February item 12.
+        let grid = try #require(
+            MonthGrid(start: date(utc, 2024, 1, 15), end: date(utc, 2024, 2, 10), calendar: utc, firstWeekday: 2))
+        #expect(grid.months.map(\.firstColumn) == [0, 3])
+        #expect(grid.months.map(\.dayCount) == [31, 29])
+        #expect(grid.firstDayOfMonth(inSection: 1) == date(utc, 2024, 2, 1))
+        #expect(grid.firstDayOfMonth(inSection: 2) == nil)
+        #expect(grid.isOutOfRange(IndexPath(item: 13, section: 0)))
+        #expect(!grid.isOutOfRange(IndexPath(item: 14, section: 0)))
+        #expect(!grid.isOutOfRange(IndexPath(item: 12, section: 1)))
+        #expect(grid.isOutOfRange(IndexPath(item: 13, section: 1)))
+        #expect(grid.isOutOfRange(IndexPath(item: 0, section: 1)), "a cell without a day of its month")
+    }
+
     @Test func theFirstMonthBorrowsItsLeadingDaysFromTheCalendar() throws {
         let utc = calendar("UTC")
         // February 2024 starts on a Thursday: the three cells before it are 29, 30, 31 January.

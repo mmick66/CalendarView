@@ -15,7 +15,7 @@ extension CalendarView {
     /// is already on screen.
     public func setDisplayDate(_ date: Date, animated: Bool = false) {
         guard let indexPath = self.indexPathForDate(date),
-            let month = self.months?.firstDay(ofSection: indexPath.section)
+            let month = self.months?.firstDayOfMonth(inSection: indexPath.section)
         else {
             return
         }
@@ -145,8 +145,8 @@ extension CalendarView {
             length = self.collectionView.bounds.size.width
         }
 
-        guard length > 0 else { return months.firstDay(ofSection: 0) }
+        guard length > 0 else { return months.firstDayOfMonth(inSection: 0) }
         let page = min(max(Int((offset / length).rounded()), 0), months.numberOfSections - 1)
-        return months.firstDay(ofSection: flowLayout.mirroredPage(page))
+        return months.firstDayOfMonth(inSection: flowLayout.mirroredPage(page))
     }
 }

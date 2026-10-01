@@ -10,10 +10,11 @@ struct MonthGrid {
     struct Month {
         /// The first day of the month at the start of the day.
         let firstDate: Date
-        /// The grid index of the first day, 0 for the first column.
-        let firstDay: Int
+        /// The column of the first day, 0 to 6, which is also its item in the section. The cells
+        /// before it hold the end of the previous month.
+        let firstColumn: Int
         /// The number of days in the month.
-        let daysTotal: Int
+        let dayCount: Int
     }
 
     let calendar: Calendar
@@ -22,10 +23,6 @@ struct MonthGrid {
     /// The last selectable day, at the start of the day.
     let endDay: Date
     let months: [Month]
-    /// The cell of `startDay`.
-    let startIndexPath: IndexPath
-    /// The cell of `endDay`.
-    let endIndexPath: IndexPath
 
     /// Returns `nil` when the range is empty, when `end` precedes `start`, or when the
     /// calendar cannot resolve the months.
@@ -44,23 +41,20 @@ struct MonthGrid {
                 let days = calendar.range(of: .day, in: .month, for: firstDate)
             else { return nil }
             let weekday = calendar.component(.weekday, from: firstDate)
-            let firstDay = (weekday - firstWeekday + 7) % 7
-            months.append(Month(firstDate: firstDate, firstDay: firstDay, daysTotal: days.count))
+            let firstColumn = (weekday - firstWeekday + 7) % 7
+            months.append(Month(firstDate: firstDate, firstColumn: firstColumn, dayCount: days.count))
         }
 
         self.calendar = calendar
         self.startDay = startDay
         self.endDay = endDay
         self.months = months
-        self.startIndexPath = IndexPath(
-            item: months[0].firstDay + calendar.component(.day, from: startDay) - 1, section: 0)
-        self.endIndexPath = IndexPath(
-            item: months[monthCount].firstDay + calendar.component(.day, from: endDay) - 1, section: monthCount)
     }
 
     var numberOfSections: Int { months.count }
 
-    func firstDay(ofSection section: Int) -> Date? {
+    /// The first day of the month in `section`, at the start of the day.
+    func firstDayOfMonth(inSection section: Int) -> Date? {
         months.indices.contains(section) ? months[section].firstDate : nil
     }
 
@@ -72,7 +66,7 @@ struct MonthGrid {
             months.indices.contains(section)
         else { return nil }
         let dayOfMonth = calendar.component(.day, from: day)
-        return IndexPath(item: months[section].firstDay + dayOfMonth - 1, section: section)
+        return IndexPath(item: months[section].firstColumn + dayOfMonth - 1, section: section)
     }
 
     /// What a cell shows.
@@ -92,13 +86,13 @@ struct MonthGrid {
     func content(at indexPath: IndexPath) -> Content {
         guard months.indices.contains(indexPath.section) else { return .empty }
         let month = months[indexPath.section]
-        let offset = indexPath.item - month.firstDay
+        let offset = indexPath.item - month.firstColumn
         guard let date = calendar.date(byAdding: .day, value: offset, to: month.firstDate) else { return .empty }
         if offset < 0 {
             return .leading(dayOfMonth: calendar.component(.day, from: date))
         }
-        if offset >= month.daysTotal {
-            return .trailing(dayOfMonth: offset - month.daysTotal + 1)
+        if offset >= month.dayCount {
+            return .trailing(dayOfMonth: offset - month.dayCount + 1)
         }
         return .day(date, dayOfMonth: offset + 1)
     }
@@ -109,7 +103,10 @@ struct MonthGrid {
         return date
     }
 
+    /// Whether the cell shows no day between `startDay` and `endDay`. Cells without a day of
+    /// their month are out of range.
     func isOutOfRange(_ indexPath: IndexPath) -> Bool {
-        indexPath < startIndexPath || indexPath > endIndexPath
+        guard let date = date(at: indexPath) else { return true }
+        return !(startDay...endDay).contains(date)
     }
 }

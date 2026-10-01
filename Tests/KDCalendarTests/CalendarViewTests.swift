@@ -73,8 +73,8 @@ struct CalendarViewTests: CalendarFixture {
     @Test func numberOfSectionsCoversEveryMonthTouchedByTheRange() {
         let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
         #expect(view.numberOfSections(in: view.collectionView) == 3)
-        #expect(view.months?.startIndexPath == IndexPath(item: 14, section: 0))
-        #expect(view.months?.endIndexPath == IndexPath(item: 13, section: 2))
+        #expect(view.indexPathForDate(view.startDay) == IndexPath(item: 14, section: 0))
+        #expect(view.indexPathForDate(view.endDay) == IndexPath(item: 13, section: 2))
     }
 
     @Test func singleMonthRangeHasOneSection() {
