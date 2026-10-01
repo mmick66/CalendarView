@@ -71,7 +71,7 @@ public struct KDCalendarView: UIViewRepresentable {
         self._selection = selection
     }
 
-    // MARK: Modifiers
+    // MARK: - Modifiers
 
     /// The look of the calendar.
     public func calendarStyle(_ style: CalendarView.Style) -> Self { with(\.style, style) }
@@ -127,7 +127,7 @@ public struct KDCalendarView: UIViewRepresentable {
         return copy
     }
 
-    // MARK: UIViewRepresentable
+    // MARK: - UIViewRepresentable
 
     /// Creates the coordinator that serves as the calendar's data source and delegate.
     public func makeCoordinator() -> Coordinator {
@@ -160,30 +160,30 @@ public struct KDCalendarView: UIViewRepresentable {
     /// A new mode drops the days it cannot hold. Unless the binding brings a selection of its own,
     /// the binding drops them too rather than being reapplied in the new mode's shape.
     private func applyConfiguration(to view: CalendarView) -> Bool {
-        if view.style != self.style { view.style = self.style }
-        if view.direction != self.direction { view.direction = self.direction }
+        if view.style != style { view.style = style }
+        if view.direction != direction { view.direction = direction }
         var bindingFollowsView = false
-        if view.selectionMode != self.selectionMode {
-            bindingFollowsView = self.selection.map { view.layoutCalendar.startOfDay(for: $0) } == view.selectedDates
-            view.selectionMode = self.selectionMode
+        if view.selectionMode != selectionMode {
+            bindingFollowsView = selection.map { view.layoutCalendar.startOfDay(for: $0) } == view.selectedDates
+            view.selectionMode = selectionMode
         }
-        view.enableDeselection = self.allowsDeselection
-        if view.marksWeekends != self.marksWeekends { view.marksWeekends = self.marksWeekends }
-        view.isScrollEnabled = self.isScrollEnabled
+        view.enableDeselection = allowsDeselection
+        if view.marksWeekends != marksWeekends { view.marksWeekends = marksWeekends }
+        view.isScrollEnabled = isScrollEnabled
         return bindingFollowsView
     }
 
     /// Hands the view a new range, new events or a new display date, each only when it changed.
     private func applyContent(to view: CalendarView, coordinator: Coordinator, animated: Bool) {
-        if coordinator.range != self.range {
-            coordinator.range = self.range
+        if coordinator.range != range {
+            coordinator.range = range
             view.reloadData()
         }
-        if coordinator.events != self.events {
-            coordinator.events = self.events
-            view.events = self.events
+        if coordinator.events != events {
+            coordinator.events = events
+            view.events = events
         }
-        if let displayDate = self.displayDate, coordinator.lastDisplayDate != displayDate {
+        if let displayDate, coordinator.lastDisplayDate != displayDate {
             coordinator.lastDisplayDate = displayDate
             view.setDisplayDate(displayDate, animated: animated)
         }
@@ -195,11 +195,11 @@ public struct KDCalendarView: UIViewRepresentable {
     /// Replaying the days as taps would pair them into ranges or keep only the last, so they are
     /// applied as a whole. What the view cannot show as given goes back to the binding.
     private func syncSelection(of view: CalendarView, coordinator: Coordinator, bindingFollowsView: Bool) {
-        let wanted = self.selection.map { view.layoutCalendar.startOfDay(for: $0) }
+        let wanted = selection.map { view.layoutCalendar.startOfDay(for: $0) }
         guard wanted != view.selectedDates else { return }
         if !bindingFollowsView { view.setSelection(wanted) }
         if view.selectedDates != wanted {
-            coordinator.correctSelection(self.selection, to: view.selectedDates)
+            coordinator.correctSelection(selection, to: view.selectedDates)
         }
     }
 
@@ -214,7 +214,7 @@ public struct KDCalendarView: UIViewRepresentable {
 
         init(_ parent: KDCalendarView) {
             self.parent = parent
-            self.range = parent.range
+            range = parent.range
         }
 
         /// Runs `action` now, or once the view update ends if one is under way: state must not

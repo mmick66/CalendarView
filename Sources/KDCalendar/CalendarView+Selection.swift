@@ -50,16 +50,16 @@ extension CalendarView {
     /// In single-selection mode the previous selection is cleared first. The delegate receives
     /// `didSelectDate`.
     public func selectDate(_ date: Date) {
-        guard let indexPath = self.indexPathForDate(date), self.shouldSelect(indexPath) else { return }
-        self.didSelect(indexPath)
+        guard let indexPath = indexPathForDate(date), shouldSelect(indexPath) else { return }
+        didSelect(indexPath)
     }
 
     /// Deselects the day containing `date` if it is selected.
     ///
     /// The delegate receives `didDeselectDate`. Does nothing for a day that is not selected.
     public func deselectDate(_ date: Date) {
-        guard let indexPath = self.indexPathForDate(date) else { return }
-        self.didDeselect(indexPath)
+        guard let indexPath = indexPathForDate(date) else { return }
+        didDeselect(indexPath)
     }
 
     /// Selects every selectable day in `range`, replacing the current selection, and tells the
@@ -180,14 +180,14 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
     /// Whether the day at `indexPath` may be selected: it must be a day, in range, and allowed
     /// by the delegate.
     func shouldSelect(_ indexPath: IndexPath) -> Bool {
-        guard let date = self.dateFromIndexPath(indexPath), !isOutOfRange(indexPath) else { return false }
+        guard let date = dateFromIndexPath(indexPath), !isOutOfRange(indexPath) else { return false }
         return delegate?.calendar(self, canSelectDate: date) ?? true
     }
 
     /// Selects the day at `indexPath` as a tap does, shows the change and notifies the delegate:
     /// first of the days the tap dropped, then of the tapped day, then of a range it completed.
     func didSelect(_ indexPath: IndexPath) {
-        guard let date = self.dateFromIndexPath(indexPath) else { return }
+        guard let date = dateFromIndexPath(indexPath) else { return }
         updateSelection(notify: true, tapped: indexPath) { $0.tap(date, selectable: selectableDays(in:)) }
     }
 
@@ -195,13 +195,13 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
     ///
     /// In range mode a deselection clears the whole range.
     func didDeselect(_ indexPath: IndexPath) {
-        guard let date = self.dateFromIndexPath(indexPath) else { return }
+        guard let date = dateFromIndexPath(indexPath) else { return }
         updateSelection(notify: true) { $0.deselect(date) }
     }
 
     /// Allows a tap on a day in range that the delegate's `canSelectDate` accepts.
     public func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
-        return shouldSelect(indexPath)
+        shouldSelect(indexPath)
     }
 
     /// Selects the tapped day and notifies the delegate.
@@ -211,7 +211,7 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
 
     /// Allows a tap to deselect a day when ``enableDeselection`` is `true`.
     public func collectionView(_ collectionView: UICollectionView, shouldDeselectItemAt indexPath: IndexPath) -> Bool {
-        return enableDeselection
+        enableDeselection
     }
 
     /// Deselects the tapped day and notifies the delegate.
@@ -221,6 +221,6 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
 
     /// Highlights only the days in range.
     public func collectionView(_ collectionView: UICollectionView, shouldHighlightItemAt indexPath: IndexPath) -> Bool {
-        return self.dateFromIndexPath(indexPath) != nil && !isOutOfRange(indexPath)
+        dateFromIndexPath(indexPath) != nil && !isOutOfRange(indexPath)
     }
 }

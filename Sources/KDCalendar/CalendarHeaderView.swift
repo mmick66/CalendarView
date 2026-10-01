@@ -60,14 +60,14 @@ open class CalendarHeaderView: UIView {
     }
 
     private func buildLabels() {
-        monthLabel.backgroundColor = UIColor.clear
+        monthLabel.backgroundColor = .clear
         monthLabel.adjustsFontForContentSizeCategory = true
         monthLabel.accessibilityTraits = .header
         monthLabel.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(monthLabel)
+        addSubview(monthLabel)
 
         for label in dayLabels {
-            label.backgroundColor = UIColor.clear
+            label.backgroundColor = .clear
             label.adjustsFontForContentSizeCategory = true
             weekdaysStack.addArrangedSubview(label)
         }
@@ -75,7 +75,7 @@ open class CalendarHeaderView: UIView {
         weekdaysStack.distribution = .fillEqually
         weekdaysStack.semanticContentAttribute = semanticContentAttribute
         weekdaysStack.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(weekdaysStack)
+        addSubview(weekdaysStack)
 
         NSLayoutConstraint.activate([
             monthTop, monthBottom, weekdaysBottom, weekdaysHeight,
@@ -107,10 +107,10 @@ open class CalendarHeaderView: UIView {
     /// The calendar view calls this whenever its ``CalendarView/style`` changes, so there is no
     /// need to call it yourself.
     public func updateStyle() {
-        self.monthLabel.textAlignment = NSTextAlignment.center
-        self.monthLabel.font = style.headerFont
-        self.monthLabel.textColor = style.headerTextColor
-        self.monthLabel.backgroundColor = style.headerBackgroundColor
+        monthLabel.textAlignment = .center
+        monthLabel.font = style.headerFont
+        monthLabel.textColor = style.headerTextColor
+        monthLabel.backgroundColor = style.headerBackgroundColor
 
         // Weekday symbols are indexed from Sunday; rotate so the first label is the first weekday.
         let symbols = formatters.weekdaySymbols
@@ -127,7 +127,7 @@ open class CalendarHeaderView: UIView {
             label.textAlignment = .center
         }
 
-        self.backgroundColor = style.weekdaysBackgroundColor
+        backgroundColor = style.weekdaysBackgroundColor
 
         monthTop.constant = style.headerTopMargin
         monthBottom.constant = -style.weekdaysTopMargin

@@ -338,10 +338,10 @@ struct ScrollingTests: CalendarFixture {
         let selected = cell(view, IndexPath(item: 9, section: 0))!
         view.traitOverrides.userInterfaceStyle = .light
         view.layoutIfNeeded()
-        #expect(selected.bgView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.black)
+        #expect(selected.dayBackgroundView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.black)
         view.traitOverrides.userInterfaceStyle = .dark
         view.layoutIfNeeded()
-        #expect(selected.bgView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.white)
+        #expect(selected.dayBackgroundView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.white)
     }
 
     @Test func cellBordersFollowAContrastChange() {
@@ -352,10 +352,10 @@ struct ScrollingTests: CalendarFixture {
         let selected = cell(view, IndexPath(item: 9, section: 0))!
         view.traitOverrides.accessibilityContrast = .normal
         view.layoutIfNeeded()
-        #expect(selected.bgView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.gray)
+        #expect(selected.dayBackgroundView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.gray)
         view.traitOverrides.accessibilityContrast = .high
         view.layoutIfNeeded()
-        #expect(selected.bgView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.black)
+        #expect(selected.dayBackgroundView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.black)
     }
 
     @Test func cellBordersResolveAgainstTheCellsOwnAppearance() {
@@ -370,11 +370,11 @@ struct ScrollingTests: CalendarFixture {
             var style = CalendarView.Style()
             style.cellBorderColor = dynamic
             dayCell.configuration = DayCellConfiguration(day: 7, style: style)
-            #expect(dayCell.bgView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.white)
+            #expect(dayCell.dayBackgroundView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.white)
             style.cellSelectedBorderColor = dynamic
             dayCell.configuration = DayCellConfiguration(day: 7, style: style)
             dayCell.isSelected = true
-            #expect(dayCell.bgView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.white)
+            #expect(dayCell.dayBackgroundView.layer.borderColor.map { UIColor(cgColor: $0) } == UIColor.white)
         }
     }
 

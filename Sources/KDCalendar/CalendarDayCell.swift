@@ -119,7 +119,7 @@ open class CalendarDayCell: UICollectionViewCell {
         didSet { applyStyle() }
     }
 
-    // MARK: - Public methods
+    // MARK: - Reuse
 
     /// Resets the day and the derived look, keeping the style. `prepareForReuse` calls this.
     public func clearStyles() {
@@ -131,9 +131,11 @@ open class CalendarDayCell: UICollectionViewCell {
         clearStyles()
     }
 
+    // MARK: - Subviews
+
     let textLabel = UILabel()
     let dotsView = UIView()
-    let bgView = UIView()
+    let dayBackgroundView = UIView()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -149,15 +151,15 @@ open class CalendarDayCell: UICollectionViewCell {
     }
 
     private func buildSubviews() {
-        self.textLabel.textAlignment = NSTextAlignment.center
+        textLabel.textAlignment = .center
 
-        self.addSubview(self.bgView)
-        self.addSubview(self.textLabel)
-        self.addSubview(self.dotsView)
+        addSubview(dayBackgroundView)
+        addSubview(textLabel)
+        addSubview(dotsView)
 
-        self.textLabel.adjustsFontForContentSizeCategory = true
-        self.dotsView.isHidden = true
-        self.applyStyle()
+        textLabel.adjustsFontForContentSizeCategory = true
+        dotsView.isHidden = true
+        applyStyle()
 
         // Border colours are CGColors, which do not follow appearance changes on their own:
         // reapply them whenever a trait a dynamic colour may depend on changes (style, contrast, level...).
@@ -182,8 +184,8 @@ open class CalendarDayCell: UICollectionViewCell {
 
         let contentFrame = bounds.insetBy(dx: Metrics.contentInset, dy: Metrics.contentInset)
         let backgroundFrame = style.cellShape.backgroundFrame(in: contentFrame)
-        bgView.frame = backgroundFrame
-        bgView.layer.cornerRadius = style.cellShape.cornerRadius(for: backgroundFrame)
+        dayBackgroundView.frame = backgroundFrame
+        dayBackgroundView.layer.cornerRadius = style.cellShape.cornerRadius(for: backgroundFrame)
         textLabel.frame = backgroundFrame
 
         let dotDiameter = bounds.height * Metrics.dotDiameterRatio
@@ -197,13 +199,13 @@ open class CalendarDayCell: UICollectionViewCell {
 
     private func applyStyle() {
         let appearance = configuration.appearance(isSelected: isSelected)
-        self.dotsView.backgroundColor = style.cellEventColor
-        self.textLabel.font = style.cellFont
-        self.textLabel.textColor = appearance.textColor
-        self.bgView.backgroundColor = appearance.backgroundColor
-        self.bgView.layer.borderColor = appearance.borderColor.resolvedColor(with: traitCollection).cgColor
-        self.bgView.layer.borderWidth = appearance.borderWidth
-        self.isAccessibilityElement = appearance.isAccessibilityElement
-        self.accessibilityTraits = appearance.accessibilityTraits
+        dotsView.backgroundColor = style.cellEventColor
+        textLabel.font = style.cellFont
+        textLabel.textColor = appearance.textColor
+        dayBackgroundView.backgroundColor = appearance.backgroundColor
+        dayBackgroundView.layer.borderColor = appearance.borderColor.resolvedColor(with: traitCollection).cgColor
+        dayBackgroundView.layer.borderWidth = appearance.borderWidth
+        isAccessibilityElement = appearance.isAccessibilityElement
+        accessibilityTraits = appearance.accessibilityTraits
     }
 }

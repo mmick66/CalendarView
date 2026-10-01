@@ -325,7 +325,7 @@ extension CalendarView {
         defer {
             if load == eventsLoad { eventsSavedDuringLoad = nil }
         }
-        let range = self.dateRange
+        let range = dateRange
         guard let end = calendar.date(byAdding: .day, value: 1, to: range.upperBound) else { return }
         let events = try await manager.load(from: range.lowerBound, to: end)
         // Queries can finish out of order; only the latest load may assign its events.
@@ -341,7 +341,7 @@ extension CalendarView {
         Task { [weak self] in
             guard let self else { return }
             do {
-                try await self.loadEvents(using: manager)
+                try await loadEvents(using: manager)
                 onComplete?(nil)
             } catch {
                 onComplete?(error)
@@ -351,7 +351,7 @@ extension CalendarView {
 
     private func saveEvent(_ event: CalendarEvent, using manager: EventsManager) throws {
         try manager.save(event)
-        self.events.append(event)
+        events.append(event)
         eventsSavedDuringLoad?.append(event)
     }
 
@@ -361,7 +361,7 @@ extension CalendarView {
         duration hours: Int,
         using manager: EventsManager
     ) -> Bool {
-        guard let endDate = self.calendar.date(byAdding: .hour, value: hours, to: startDate) else {
+        guard let endDate = calendar.date(byAdding: .hour, value: hours, to: startDate) else {
             return false
         }
         let event = CalendarEvent(title: title, startDate: startDate, endDate: endDate)

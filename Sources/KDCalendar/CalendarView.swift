@@ -73,8 +73,7 @@ public class CalendarView: UIView {
     /// The days the data source currently spans, from `startDate()` to `endDate()`, at the
     /// start of each day.
     ///
-    /// The first read after the data source or the calendar changes asks the data source for its
-    /// range and builds the month grid; later reads use that grid.
+    /// Read from the grid that ``reloadData()`` last built; reading it never asks the data source.
     public var dateRange: ClosedRange<Date> {
         let start = startDay
         let end = endDay
@@ -101,15 +100,13 @@ public class CalendarView: UIView {
     /// An event marks every day it covers.
     public var events: [CalendarEvent] = [] {
         didSet {
-            self.reloadData()
+            reloadData()
         }
     }
 
     var flowLayout: CalendarFlowLayout {
-        return self.collectionView.collectionViewLayout as! CalendarFlowLayout
+        collectionView.collectionViewLayout as! CalendarFlowLayout
     }
-
-    // MARK: - public
 
     /// The first day of the month currently displayed, or `nil` before the first layout.
     public internal(set) var displayDate: Date?
@@ -160,14 +157,14 @@ public class CalendarView: UIView {
     public var direction: UICollectionView.ScrollDirection = .horizontal {
         didSet {
             flowLayout.scrollDirection = direction
-            self.reloadData()
+            reloadData()
             resetDisplayDate()
         }
     }
 
     public override init(frame: CGRect) {
         super.init(frame: frame)
-        self.setup()
+        setup()
     }
 
     /// Creates a calendar from an archive, with a fresh header and grid.
@@ -177,39 +174,40 @@ public class CalendarView: UIView {
         for subview in subviews where subview is CalendarHeaderView || subview is UICollectionView {
             subview.removeFromSuperview()
         }
-        self.setup()
+        setup()
     }
 
-    // MARK: Create Subviews
+    // MARK: - Setup
+
     /// Configures the header and the grid and adds them.
     ///
     /// Each initialiser calls it once.
     private func setup() {
-        self.clipsToBounds = true
+        clipsToBounds = true
 
-        self.headerView.setStyle(style, formatters: formatters)
-        self.addSubview(self.headerView)
+        headerView.setStyle(style, formatters: formatters)
+        addSubview(headerView)
 
-        flowLayout.scrollDirection = self.direction
+        flowLayout.scrollDirection = direction
 
-        self.collectionView.dataSource = self
-        self.collectionView.delegate = self
-        self.collectionView.isPagingEnabled = true
-        self.collectionView.backgroundColor = UIColor.clear
-        self.collectionView.showsHorizontalScrollIndicator = false
-        self.collectionView.showsVerticalScrollIndicator = false
+        collectionView.dataSource = self
+        collectionView.delegate = self
+        collectionView.isPagingEnabled = true
+        collectionView.backgroundColor = .clear
+        collectionView.showsHorizontalScrollIndicator = false
+        collectionView.showsVerticalScrollIndicator = false
         // Single selection is enforced in didSelectItemAt so that taps on a selected day
         // behave the same in both modes: UIKit reports them as deselections.
-        self.collectionView.allowsMultipleSelection = true
-        self.collectionView.register(CalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
+        collectionView.allowsMultipleSelection = true
+        collectionView.register(CalendarDayCell.self, forCellWithReuseIdentifier: cellReuseIdentifier)
 
-        self.addSubview(self.collectionView)
+        addSubview(collectionView)
 
         // Update semantic content attributes
         updateLayoutDirections()
 
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(CalendarView.handleLongPress))
-        self.collectionView.addGestureRecognizer(longPress)
+        collectionView.addGestureRecognizer(longPress)
 
         // Keep the today marker honest across midnight and clock or time zone changes. The main
         // queue delivers a notification posted on the main thread at once, before the next layout.
@@ -224,7 +222,7 @@ public class CalendarView: UIView {
 
     @objc func handleLongPress(gesture: UILongPressGestureRecognizer) {
 
-        guard gesture.state == UIGestureRecognizer.State.began else {
+        guard gesture.state == .began else {
             return
         }
 
@@ -232,14 +230,16 @@ public class CalendarView: UIView {
 
         guard
             let indexPath = collectionView.indexPathForItem(at: point),
-            let date = self.dateFromIndexPath(indexPath)
+            let date = dateFromIndexPath(indexPath)
         else {
             return
         }
 
         let events = snapshot.eventIndex[indexPath]
-        self.delegate?.calendar(self, didLongPressDate: date, withEvents: events.isEmpty ? nil : events)
+        delegate?.calendar(self, didLongPressDate: date, withEvents: events.isEmpty ? nil : events)
     }
+
+    // MARK: - Layout
 
     private var lastLayoutSize = CGSize.zero
 
@@ -247,41 +247,41 @@ public class CalendarView: UIView {
 
         super.layoutSubviews()
 
-        self.headerView.frame = CGRect(
+        headerView.frame = CGRect(
             x: 0.0,
             y: 0.0,
-            width: self.bounds.size.width,
+            width: bounds.size.width,
             height: style.headerHeight
         )
 
-        self.collectionView.frame = CGRect(
+        collectionView.frame = CGRect(
             x: 0.0,
             y: style.headerHeight,
-            width: self.bounds.size.width,
-            height: max(0, self.bounds.size.height - style.headerHeight)
+            width: bounds.size.width,
+            height: max(0, bounds.size.height - style.headerHeight)
         )
 
         // Keep the displayed month in place when the size changes; do not fight a scroll.
-        if lastLayoutSize != self.bounds.size {
-            lastLayoutSize = self.bounds.size
-            self.resetDisplayDate()
+        if lastLayoutSize != bounds.size {
+            lastLayoutSize = bounds.size
+            resetDisplayDate()
         }
 
-        if displayDate == nil, self.bounds.width > 0, snapshot.grid != nil {
+        if displayDate == nil, bounds.width > 0, snapshot.grid != nil {
             // First layout with content: settle on the first month and tell the delegate once.
-            self.collectionView.layoutIfNeeded()
-            self.updateAndNotifyScrolling()
+            collectionView.layoutIfNeeded()
+            updateAndNotifyScrolling()
         }
     }
 
     internal func updateLayoutDirections() {
-        let isRtl = !forceLtr && self.effectiveUserInterfaceLayoutDirection == .rightToLeft
-        let attribute: UISemanticContentAttribute = isRtl ? .forceRightToLeft : .forceLeftToRight
+        let isRightToLeft = !forceLtr && effectiveUserInterfaceLayoutDirection == .rightToLeft
+        let attribute: UISemanticContentAttribute = isRightToLeft ? .forceRightToLeft : .forceLeftToRight
 
         // The header mirrors with the calendar, whether the direction comes from the app or
         // from this view alone.
-        self.headerView.semanticContentAttribute = attribute
-        self.headerView.setNeedsLayout()
+        headerView.semanticContentAttribute = attribute
+        headerView.setNeedsLayout()
 
         // The layout mirrors its frames when the collection view runs right to left.
         guard collectionView.semanticContentAttribute != attribute else { return }
@@ -291,11 +291,11 @@ public class CalendarView: UIView {
     }
 
     internal func updateStyle() {
-        self.reloadData()
+        reloadData()
         // The reload rebuilt the formatters if the calendar changed; the locale and the look need
         // them too.
         rebuildFormatters()
-        self.setNeedsLayout()
+        setNeedsLayout()
     }
 
 }

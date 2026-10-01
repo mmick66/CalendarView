@@ -118,7 +118,7 @@ open class CalendarFlowLayout: UICollectionViewFlowLayout {
     }
 
     override open var collectionViewContentSize: CGSize {
-        guard let collectionView = self.collectionView else { return .zero }
+        guard let collectionView else { return .zero }
         let pages = CGFloat(collectionView.numberOfSections)
         let page = pageSize
         return axis.size(page, withLength: pages * axis.length(of: page))
@@ -129,7 +129,7 @@ open class CalendarFlowLayout: UICollectionViewFlowLayout {
     }
 
     override open func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
-        guard let collectionView = self.collectionView else { return nil }
+        guard let collectionView else { return nil }
         let sections = collectionView.numberOfSections
         let length = axis.length(of: pageSize)
         guard sections > 0, length > 0 else { return [] }
@@ -154,7 +154,7 @@ open class CalendarFlowLayout: UICollectionViewFlowLayout {
     }
 
     override open func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
-        guard let collectionView = self.collectionView,
+        guard let collectionView,
             indexPath.section < collectionView.numberOfSections,
             indexPath.item < collectionView.numberOfItems(inSection: indexPath.section)
         else {

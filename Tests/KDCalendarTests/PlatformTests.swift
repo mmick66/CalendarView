@@ -281,7 +281,7 @@ struct PlatformTests: CalendarFixture {
         calendar.layoutIfNeeded()
         let fourteenth =
             calendar.collectionView.cellForItem(at: calendar.indexPathForDate(date(2024, 2, 14))!) as? CalendarDayCell
-        #expect(fourteenth?.bgView.backgroundColor == .systemPink)
+        #expect(fourteenth?.dayBackgroundView.backgroundColor == .systemPink)
         calendar.delegate?.calendar(calendar, didLongPressDate: date(2024, 2, 20), withEvents: nil)
         #expect(pressed.dates == [date(2024, 2, 20)])
 

@@ -268,7 +268,7 @@ struct CalendarViewTests: CalendarFixture {
         #expect(cell(view, IndexPath(item: 32, section: 1))?.configuration.isAdjacent == true)
         #expect(
             cell(view, IndexPath(item: 32, section: 1))?.dotsView.isHidden == true, "adjacent days never show events")
-        #expect(cell(view, IndexPath(item: 32, section: 1))?.bgView.backgroundColor == .clear)
+        #expect(cell(view, IndexPath(item: 32, section: 1))?.dayBackgroundView.backgroundColor == .clear)
         view.setDisplayDate(date(2024, 1, 1))
         view.layoutIfNeeded()
         #expect(cell(view, IndexPath(item: 31, section: 0))?.configuration.day == 1)
@@ -352,13 +352,13 @@ struct CalendarViewTests: CalendarFixture {
         let dayCell = CalendarDayCell(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
         dayCell.configuration.isToday = true
         #expect(dayCell.textLabel.textColor == dayCell.style.cellTextColorToday)
-        #expect(dayCell.bgView.backgroundColor == dayCell.style.cellColorToday)
+        #expect(dayCell.dayBackgroundView.backgroundColor == dayCell.style.cellColorToday)
         dayCell.configuration.isOutOfRange = true
         #expect(dayCell.textLabel.textColor == dayCell.style.cellColorOutOfRange)
-        #expect(dayCell.bgView.backgroundColor == dayCell.style.cellColorDefault)
+        #expect(dayCell.dayBackgroundView.backgroundColor == dayCell.style.cellColorDefault)
         dayCell.isSelected = true
         #expect(dayCell.textLabel.textColor == dayCell.style.cellSelectedTextColor)
-        #expect(dayCell.bgView.layer.borderWidth == dayCell.style.cellSelectedBorderWidth)
+        #expect(dayCell.dayBackgroundView.layer.borderWidth == dayCell.style.cellSelectedBorderWidth)
     }
 
     @Test func dayCellLookFollowsItsPrecedence() {
@@ -448,8 +448,8 @@ struct CalendarViewTests: CalendarFixture {
         let dayCell = CalendarDayCell(frame: CGRect(x: 0, y: 0, width: 46, height: 36))
         dayCell.configuration = DayCellConfiguration(day: 1, eventsCount: 1, style: style)
         dayCell.layoutIfNeeded()
-        #expect(dayCell.bgView.frame == circle)
-        #expect(dayCell.bgView.layer.cornerRadius == 15)
+        #expect(dayCell.dayBackgroundView.frame == circle)
+        #expect(dayCell.dayBackgroundView.layer.cornerRadius == 15)
         #expect(dayCell.textLabel.frame == circle)
         #expect(dayCell.dotsView.center.x == circle.midX)
     }

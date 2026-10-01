@@ -20,7 +20,7 @@ final class ClassicDemoViewController: UIViewController {
 
         var style = CalendarView.Style()
         style.cellShape = .bevel(8.0)
-        style.cellColorDefault = UIColor.clear
+        style.cellColorDefault = .clear
         style.cellColorToday = UIColor(red: 1.00, green: 0.84, blue: 0.64, alpha: 1.00)
         style.cellSelectedBorderColor = UIColor(red: 1.00, green: 0.63, blue: 0.24, alpha: 1.00)
         style.cellEventColor = UIColor(red: 1.00, green: 0.63, blue: 0.24, alpha: 1.00)

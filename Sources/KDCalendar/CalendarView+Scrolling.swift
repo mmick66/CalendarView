@@ -16,16 +16,16 @@ extension CalendarView {
     /// once the month is on screen: when the animation ends, or immediately when `animated` is
     /// `false`, the view has no size yet or the month is already on screen.
     public func setDisplayDate(_ date: Date, animated: Bool = false) {
-        guard let indexPath = self.indexPathForDate(date),
+        guard let indexPath = indexPathForDate(date),
             let month = snapshot.grid?.firstDayOfMonth(inSection: indexPath.section)
         else {
             return
         }
 
-        self.displayDateOnHeader(month)
+        displayDateOnHeader(month)
 
         collectionView.layoutIfNeeded()
-        let offset = self.scrollViewOffset(for: month)
+        let offset = scrollViewOffset(for: month)
         // UIKit sends no end-of-animation callback when the offset does not change, which is
         // always the case before the first layout, so those scrolls report at once.
         let animated =
@@ -34,7 +34,7 @@ extension CalendarView {
         animationTargetMonth = animated ? month : nil
         collectionView.setContentOffset(offset, animated: animated)
         if !animated {
-            self.notifyScrolled(to: month)
+            notifyScrolled(to: month)
         }
     }
 
@@ -49,39 +49,38 @@ extension CalendarView {
     }
 
     func goToMonth(offsetBy offset: Int) {
+        guard let displayDate else { return }
 
-        guard let displayDate = self.displayDate else { return }
-
-        guard let newDate = self.layoutCalendar.date(byAdding: .month, value: offset, to: displayDate) else { return }
-        self.setDisplayDate(newDate, animated: true)
+        guard let newDate = layoutCalendar.date(byAdding: .month, value: offset, to: displayDate) else { return }
+        setDisplayDate(newDate, animated: true)
     }
 
     internal func resetDisplayDate() {
-        guard let displayDate = self.displayDate else { return }
+        guard let displayDate else { return }
 
         collectionView.setContentOffset(
-            self.scrollViewOffset(for: displayDate),
+            scrollViewOffset(for: displayDate),
             animated: false
         )
     }
 
     func scrollViewOffset(for date: Date) -> CGPoint {
-        guard let section = self.indexPathForDate(date)?.section else { return .zero }
+        guard let section = indexPathForDate(date)?.section else { return .zero }
         return flowLayout.contentOffset(forSection: section)
     }
 
     func displayDateOnHeader(_ date: Date) {
-        self.headerView.monthLabel.text =
+        headerView.monthLabel.text =
             dataSource?.title(forMonth: date)
             ?? formatters.monthTitle.string(from: date).capitalized(with: style.locale)
 
-        self.displayDate = date
+        displayDate = date
     }
 }
 
-extension CalendarView {
+// MARK: - UIScrollViewDelegate
 
-    // MARK: UIScrollViewDelegate
+extension CalendarView {
 
     /// Forgets the month an animated scroll was heading for: the user has taken over.
     public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
@@ -91,35 +90,35 @@ extension CalendarView {
     /// Reports the month the user dragged to, unless the scroll view goes on decelerating.
     public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
         guard !decelerate else { return }  // scrollViewDidEndDecelerating reports once it settles
-        self.updateAndNotifyScrolling()
+        updateAndNotifyScrolling()
     }
 
     /// Reports the month the scroll view settled on.
     public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         animationTargetMonth = nil
-        self.updateAndNotifyScrolling()
+        updateAndNotifyScrolling()
     }
 
     /// Reports the month an animated scroll reached, unless a newer animation interrupted it.
     public func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-        if let target = animationTargetMonth, self.dateFromScrollViewPosition() != target {
+        if let target = animationTargetMonth, dateFromScrollViewPosition() != target {
             return  // interrupted by a newer animation; that one reports when it settles
         }
         animationTargetMonth = nil
-        self.updateAndNotifyScrolling()
+        updateAndNotifyScrolling()
     }
 
     func updateAndNotifyScrolling() {
-        guard let date = self.dateFromScrollViewPosition() else { return }
-        self.displayDateOnHeader(date)
-        self.notifyScrolled(to: date)
+        guard let date = dateFromScrollViewPosition() else { return }
+        displayDateOnHeader(date)
+        notifyScrolled(to: date)
     }
 
     /// Tells the delegate about a settled month, once per month.
     func notifyScrolled(to month: Date) {
         guard lastNotifiedMonth != month else { return }
         lastNotifiedMonth = month
-        self.delegate?.calendar(self, didScrollToMonth: month)
+        delegate?.calendar(self, didScrollToMonth: month)
     }
 
     /// The first day of the month on the current page.

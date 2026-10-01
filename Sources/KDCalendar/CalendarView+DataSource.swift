@@ -29,12 +29,12 @@ extension CalendarView: UICollectionViewDataSource {
 
     /// One section per month of the data source's range.
     public func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return snapshot.grid?.numberOfSections ?? 0
+        snapshot.grid?.numberOfSections ?? 0
     }
 
     /// Seven columns by six rows of days in every month.
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return MonthGrid.cellsPerMonth  // rows:7 x cols:6
+        MonthGrid.cellsPerMonth
     }
 
     /// A ``CalendarDayCell`` configured for the day at `indexPath`, its events and its style.

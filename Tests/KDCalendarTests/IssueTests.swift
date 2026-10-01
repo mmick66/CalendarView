@@ -152,9 +152,11 @@ struct IssueTests: CalendarFixture {
         delegate(of: view).styleForDate = { [utc] in utc.component(.day, from: $0) == 6 ? holiday : nil }
         view.reloadData()
         view.layoutIfNeeded()
-        #expect(cell(view, IndexPath(item: 5, section: 0))?.bgView.backgroundColor == .systemPink)
+        #expect(cell(view, IndexPath(item: 5, section: 0))?.dayBackgroundView.backgroundColor == .systemPink)
         #expect(cell(view, IndexPath(item: 5, section: 0))?.style == holiday)
-        #expect(cell(view, IndexPath(item: 4, section: 0))?.bgView.backgroundColor == view.style.cellColorDefault)
+        #expect(
+            cell(view, IndexPath(item: 4, section: 0))?.dayBackgroundView.backgroundColor == view.style.cellColorDefault
+        )
         #expect(cell(view, IndexPath(item: 4, section: 0))?.style == view.style)
     }
 
