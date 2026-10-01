@@ -91,16 +91,22 @@ A Swift package (`Package.swift`, Swift 6 language mode, iOS 17+) with two produ
 mirrors them as the `Core` and `EventKit` subspecs of `KDCalendar.podspec`.
 
 - **`KDCalendar`** (`Sources/KDCalendar`): the calendar view, UIKit first.
-  - `CalendarView.swift`: `CalendarView` (a `UIView` around a paging `UICollectionView`),
-    `CalendarEvent`, and the `CalendarViewDataSource` / `CalendarViewDelegate` protocols.
-  - `CalendarView+DataSource.swift`: `MonthGrid`, the pure date engine. It turns the data source's
-    range, the calendar and the first weekday into months of 7 × 6 cells with no UIKit involved;
-    `refreshMonths()` rebuilds it once per reload. The collection view data source reads from it.
+  - `CalendarView.swift`: `CalendarView` (a `UIView` around a paging `UICollectionView`): its
+    state, setup, layout and right-to-left handling, and the grid it reads from (`reloadData()`,
+    `refreshMonths()`, the event index).
+  - `CalendarView+Selection.swift`: the public selection API and the collection view's selection
+    callbacks. `CalendarView+Scrolling.swift`: `setDisplayDate`, the next and previous month, the
+    scroll callbacks and the month notification. `CalendarView+DataSource.swift`: the cells.
+  - `CalendarEvent.swift`, `CalendarViewDataSource.swift` and `CalendarViewDelegate.swift`: the
+    event type and the two protocols with their default implementations.
+  - `MonthGrid.swift`: `MonthGrid`, the pure date engine. It turns the data source's range, the
+    calendar and the first weekday into months of 7 × 6 cells with no UIKit involved;
+    `refreshMonths()` rebuilds it once per reload. `Calendar+Fixed.swift` pins an autoupdating calendar.
   - `SelectionState.swift`: the selected days and the rules of the selection modes, kept as
     start-of-day dates so they survive any rebuild of the grid.
   - `CalendarView+Style.swift`: `CalendarView.Style`, a value type; assigning it restyles the view.
   - `CalendarView+Formatters.swift`, `CalendarDayCell.swift` (one `DayCellConfiguration` per
-    cell), `CalendarHeaderView.swift`, `CalendarFlowLayout.swift`, `CalendarView+Delegate.swift`.
+    cell), `CalendarHeaderView.swift`, `CalendarFlowLayout.swift`.
   - `CalendarView+SwiftUI.swift`: `KDCalendarView`, a `UIViewRepresentable` with a selection binding.
   - `Resources/Localizable.xcstrings`, `PrivacyInfo.xcprivacy`, and the DocC catalog
     `KDCalendar.docc` (overview and the 1.x migration guide).

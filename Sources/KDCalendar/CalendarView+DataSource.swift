@@ -25,221 +25,6 @@
 
 import UIKit
 
-/// The months a calendar shows, as a 7 × 6 grid per month. Pure date arithmetic, built once
-/// per data source range and calendar.
-struct MonthGrid {
-
-    /// Cells per month: seven columns, six rows.
-    static let cellsPerMonth = 42
-
-    struct Month {
-        /// The first day of the month at the start of the day.
-        let firstDate: Date
-        /// The grid index of the first day, 0 for the first column.
-        let firstDay: Int
-        /// The number of days in the month.
-        let daysTotal: Int
-    }
-
-    let calendar: Calendar
-    /// The first selectable day, at the start of the day.
-    let startDay: Date
-    /// The last selectable day, at the start of the day.
-    let endDay: Date
-    let months: [Month]
-    /// The cell of `startDay`.
-    let startIndexPath: IndexPath
-    /// The cell of `endDay`.
-    let endIndexPath: IndexPath
-
-    /// Returns `nil` when the range is empty, when `end` precedes `start`, or when the
-    /// calendar cannot resolve the months.
-    init?(start: Date, end: Date, calendar: Calendar, firstWeekday: Int) {
-        let startDay = calendar.startOfDay(for: start)
-        let endDay = calendar.startOfDay(for: end)
-        guard startDay <= endDay,
-            let firstMonth = calendar.dateInterval(of: .month, for: startDay)?.start,
-            let lastMonth = calendar.dateInterval(of: .month, for: endDay)?.start,
-            let monthCount = calendar.dateComponents([.month], from: firstMonth, to: lastMonth).month
-        else { return nil }
-
-        var months: [Month] = []
-        for section in 0...monthCount {
-            guard let firstDate = calendar.date(byAdding: .month, value: section, to: firstMonth),
-                let days = calendar.range(of: .day, in: .month, for: firstDate)
-            else { return nil }
-            let weekday = calendar.component(.weekday, from: firstDate)
-            let firstDay = (weekday - firstWeekday + 7) % 7
-            months.append(Month(firstDate: firstDate, firstDay: firstDay, daysTotal: days.count))
-        }
-
-        self.calendar = calendar
-        self.startDay = startDay
-        self.endDay = endDay
-        self.months = months
-        self.startIndexPath = IndexPath(
-            item: months[0].firstDay + calendar.component(.day, from: startDay) - 1, section: 0)
-        self.endIndexPath = IndexPath(
-            item: months[monthCount].firstDay + calendar.component(.day, from: endDay) - 1, section: monthCount)
-    }
-
-    var numberOfSections: Int { months.count }
-
-    func firstDay(ofSection section: Int) -> Date? {
-        months.indices.contains(section) ? months[section].firstDate : nil
-    }
-
-    /// The cell showing the day that contains `date`, or `nil` outside the displayed months.
-    func indexPath(for date: Date) -> IndexPath? {
-        let day = calendar.startOfDay(for: date)
-        guard let monthStart = calendar.dateInterval(of: .month, for: day)?.start,
-            let section = calendar.dateComponents([.month], from: months[0].firstDate, to: monthStart).month,
-            months.indices.contains(section)
-        else { return nil }
-        let dayOfMonth = calendar.component(.day, from: day)
-        return IndexPath(item: months[section].firstDay + dayOfMonth - 1, section: section)
-    }
-
-    /// What a cell shows.
-    enum Content: Equatable {
-        /// A day of the month, at the start of the day, and its number in the month.
-        case day(Date, dayOfMonth: Int)
-        /// A day of the previous month, in the cells before the first day.
-        case leading(dayOfMonth: Int)
-        /// A day of the next month, in the cells after the last day.
-        case trailing(dayOfMonth: Int)
-        /// Nothing: a cell outside the grid, or a day the calendar cannot resolve.
-        case empty
-    }
-
-    /// What the cell at `indexPath` shows. The cells around a month hold the neighbouring
-    /// months' days, before the first month and after the last month too.
-    func content(at indexPath: IndexPath) -> Content {
-        guard months.indices.contains(indexPath.section) else { return .empty }
-        let month = months[indexPath.section]
-        let offset = indexPath.item - month.firstDay
-        guard let date = calendar.date(byAdding: .day, value: offset, to: month.firstDate) else { return .empty }
-        if offset < 0 {
-            return .leading(dayOfMonth: calendar.component(.day, from: date))
-        }
-        if offset >= month.daysTotal {
-            return .trailing(dayOfMonth: offset - month.daysTotal + 1)
-        }
-        return .day(date, dayOfMonth: offset + 1)
-    }
-
-    /// The day a cell shows, or `nil` for the empty cells before and after the month.
-    func date(at indexPath: IndexPath) -> Date? {
-        guard case .day(let date, _) = content(at: indexPath) else { return nil }
-        return date
-    }
-
-    func isOutOfRange(_ indexPath: IndexPath) -> Bool {
-        indexPath < startIndexPath || indexPath > endIndexPath
-    }
-}
-
-extension CalendarView {
-
-    /// Asks the data source for its range and rebuilds the month grid when the range moved to
-    /// other days or the calendar changed, and the formatters when the calendar changed. The
-    /// current month alone without a data source; zero months when the range is invalid. Called
-    /// once per reload, not once per cell.
-    @discardableResult
-    func refreshMonths() -> MonthGrid? {
-        let start = dataSource?.startDate() ?? Date()
-        let end = dataSource?.endDate() ?? start
-        // The grid keeps a fixed copy: an autoupdating calendar always equals itself, so
-        // comparing it would miss the time zone changes the grid has to follow.
-        let calendar = self.calendar.fixed
-        if formatters.calendar != calendar {
-            rebuildFormatters()
-        }
-        if let months = months,
-            calendar.isDate(months.startDay, inSameDayAs: start),
-            calendar.isDate(months.endDay, inSameDayAs: end),
-            months.calendar == calendar
-        {
-            todayIndexPath = months.indexPath(for: Date())
-            return months
-        }
-        let previousCalendar = months?.calendar
-        months = MonthGrid(start: start, end: end, calendar: calendar, firstWeekday: style.effectiveFirstWeekday)
-        if let previousCalendar {
-            moveSelection(from: previousCalendar)
-        }
-        if months == nil {
-            CalendarView.logger.error(
-                "The data source's start date (\(start)) is after its end date (\(end)); showing no months.")
-        }
-        todayIndexPath = months?.indexPath(for: Date())
-        rebuildEventIndex()
-        return months
-    }
-
-    /// The month grid, built on first use. Reloads refresh it from the data source.
-    var currentMonths: MonthGrid? {
-        months ?? refreshMonths()
-    }
-
-    func invalidateMonths() {
-        months = nil
-    }
-
-    var startDay: Date {
-        currentMonths?.startDay ?? calendar.startOfDay(for: Date())
-    }
-
-    var endDay: Date {
-        currentMonths?.endDay ?? calendar.startOfDay(for: Date())
-    }
-
-    /// Buckets every event into the days it covers, clamped to the displayed months so an
-    /// open-ended event costs one loop over the grid, not over the centuries.
-    func rebuildEventIndex() {
-        eventsByIndexPath.removeAll()
-        guard let months = months, let first = months.months.first, let lastMonth = months.months.last,
-            let gridEnd = calendar.date(byAdding: .day, value: lastMonth.daysTotal, to: lastMonth.firstDate)
-        else { return }
-        let gridStart = first.firstDate
-        for event in events {
-            let eventEnd = max(event.startDate, event.endDate)
-            guard event.startDate < gridEnd, eventEnd >= gridStart else { continue }
-            var day = calendar.startOfDay(for: max(event.startDate, gridStart))
-            let last = min(eventEnd, gridEnd)
-            repeat {
-                if let indexPath = months.indexPath(for: day) {
-                    eventsByIndexPath[indexPath, default: []].append(event)
-                }
-                // Where a DST change skips midnight, adding a day lands after it, so return to the start.
-                guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
-                day = calendar.startOfDay(for: next)
-            } while day < last
-        }
-    }
-
-    /// The cell showing the day that contains `date`, or `nil` outside the displayed months.
-    public func indexPathForDate(_ date: Date) -> IndexPath? {
-        currentMonths?.indexPath(for: date)
-    }
-
-    /// The day a cell shows, at the start of the day, or `nil` for an empty cell.
-    public func dateFromIndexPath(_ indexPath: IndexPath) -> Date? {
-        currentMonths?.date(at: indexPath)
-    }
-
-    /// The grid offset of the first day and the number of days for the month in `section`.
-    public func getCachedSectionInfo(_ section: Int) -> (firstDay: Int, daysTotal: Int)? {
-        guard let months = currentMonths, months.months.indices.contains(section) else { return nil }
-        let month = months.months[section]
-        return (firstDay: month.firstDay, daysTotal: month.daysTotal)
-    }
-
-    func isOutOfRange(_ indexPath: IndexPath) -> Bool {
-        currentMonths?.isOutOfRange(indexPath) ?? true
-    }
-}
-
 extension CalendarView: UICollectionViewDataSource {
 
     public func numberOfSections(in collectionView: UICollectionView) -> Int {
@@ -283,19 +68,19 @@ extension CalendarView: UICollectionViewDataSource {
 
         return dayCell
     }
-}
 
-extension Calendar {
-
-    /// This calendar with the settings it has now. An autoupdating calendar, such as
-    /// `Calendar.autoupdatingCurrent`, would follow later changes to the user's settings.
-    var fixed: Calendar {
-        guard self == .autoupdatingCurrent else { return self }
-        var calendar = Calendar(identifier: identifier)
-        calendar.locale = locale
-        calendar.timeZone = timeZone
-        calendar.firstWeekday = firstWeekday
-        calendar.minimumDaysInFirstWeek = minimumDaysInFirstWeek
-        return calendar
+    func accessibilityLabel(for date: Date, isToday: Bool, eventsCount: Int) -> String {
+        var parts = [formatters.accessibility.string(from: date)]
+        if isToday {
+            parts.append(
+                String(localized: "Today", bundle: .kdCalendar, comment: "VoiceOver suffix for the current day"))
+        }
+        if eventsCount > 0 {
+            parts.append(
+                String(
+                    localized: "\(eventsCount) events", bundle: .kdCalendar,
+                    comment: "VoiceOver suffix with the number of events on a day"))
+        }
+        return parts.joined(separator: ", ")
     }
 }
