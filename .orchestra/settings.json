@@ -1,0 +1,4 @@
+{
+  "check_timeout": "30m",
+  "concurrent": 3
+}
