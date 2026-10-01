@@ -143,3 +143,27 @@ mirrors them as the `Core` and `EventKit` subspecs of `KDCalendar.podspec`.
   one are covered by `LICENSE`. Don't add Xcode's `//  Created by` template header.
 - User-visible changes go in `CHANGELOG.md` under `[Unreleased]` (Keep a Changelog). CocoaPods
   gets no releases after 2.0.1, so `KDCalendar.podspec` stays at that version.
+
+## API Conventions
+
+Public API follows the [Swift API Design Guidelines](https://www.swift.org/documentation/api-design-guidelines/).
+The rules this codebase applies, for new names and for any name a change touches:
+
+- Booleans read as assertions about the receiver: `is…`, `has…`, `allows…`, `shows…`, `marks…`
+  (`allowsDeselection`, `marksWeekends`, `hasFullAccess`), not `enable…`, `force…` or `show…`.
+- Name by role, not type: no `String`, `Options` or `Info` suffix that only repeats the type, no
+  `get` prefix, and no implementation words such as `Cached` in public names.
+- Spell words out (`backgroundView`, `label`, `isRightToLeft`); acronyms are uniformly cased
+  (`LTR`, not `Ltr`).
+- Every public declaration has a `///` comment that starts with a one-line summary fragment, then
+  `- Parameter`, `- Returns` and `- Throws` where they add information. A computed property that
+  is not O(1) or has side effects says so.
+- Name closure parameters in public signatures:
+  `(_ date: Date, _ events: [CalendarEvent]) -> Void`, not `(Date, [CalendarEvent]) -> Void`.
+- Prefer one method with defaulted parameters to a family of overloads, with the defaults last.
+- Keep Cocoa precedent where UIKit sets it: delegate method shapes
+  (`calendar(_:didSelectDate:withEvents:)`), `setX(_:animated:)`, `isScrollEnabled`.
+
+Names that predate these rules (`enableDeselection`, `forceLtr`, `showAdjacentDays`,
+`getCachedSectionInfo(_:)`) stay for 1.x compatibility until their renames land; the
+`api-guidelines` beads track them. Don't copy them into new API.
