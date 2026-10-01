@@ -169,3 +169,24 @@ The rules this codebase applies, for new names and for any name a change touches
 Names that predate these rules (`enableDeselection`, `forceLtr`, `showAdjacentDays`,
 `getCachedSectionInfo(_:)`) stay for 1.x compatibility until their renames land; the
 `api-guidelines` beads track them. Don't copy them into new API.
+
+## Concurrency Conventions
+
+The package is source-distributed and not built for library evolution, so the rules that matter
+are the source-compatibility ones from the Swift 6 migration guide; binary compatibility doesn't
+apply. A change to public API in 2.x must not break a caller that compiles today:
+
+- Adding `@MainActor` to a public protocol, type or function, `@Sendable` to a public function
+  type, or a `Sendable` requirement to a generic parameter is source-breaking. In 2.x stage it with
+  `@preconcurrency`; make it plain only in a major release.
+- Adding `Sendable` to a public concrete type, or `sending` to a result, is compatible; adding
+  `sending` to a parameter is not.
+- Public value types state `Sendable` explicitly: public types don't get it inferred.
+- No `nonisolated(unsafe)` or `@unchecked Sendable` without a comment naming what synchronises the
+  state.
+- `MainActor.assumeIsolated` only where the callback is guaranteed to run on the main thread, with
+  a comment saying why (the `NotificationCenter` observers in `CalendarView.swift` use
+  `queue: .main`).
+- Work that must leave the main actor is `@concurrent`, not merely `nonisolated async`: under
+  `NonisolatedNonsendingByDefault` a `nonisolated async` function runs on its caller's actor.
+  `@concurrent` needs Swift 6.2 while the tools version is 6.0, so wrap it in `#if compiler(>=6.2)`.
