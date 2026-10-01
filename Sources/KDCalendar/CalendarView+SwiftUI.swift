@@ -139,19 +139,31 @@ public struct KDCalendarView: UIViewRepresentable {
         coordinator.isUpdating = true
         defer { coordinator.isUpdating = false }
 
+        let bindingFollowsView = applyConfiguration(to: view)
+        applyContent(to: view, coordinator: coordinator, animated: context.transaction.animation != nil)
+        syncSelection(of: view, coordinator: coordinator, bindingFollowsView: bindingFollowsView)
+    }
+
+    /// Sets how the view looks and behaves, and returns whether the binding should take the view's
+    /// selection instead of being applied to it. A new mode drops the days it cannot hold. Unless
+    /// the binding brings a selection of its own, the binding drops them too rather than being
+    /// reapplied in the new mode's shape.
+    private func applyConfiguration(to view: CalendarView) -> Bool {
         if view.style != self.style { view.style = self.style }
         if view.direction != self.direction { view.direction = self.direction }
-        // A new mode drops the days it cannot hold. Unless the binding brings a selection of its
-        // own, the binding drops them too rather than being reapplied in the new mode's shape.
         var bindingFollowsView = false
         if view.selectionMode != self.selectionMode {
-            let bindingIsShown = self.selection.map { view.calendar.startOfDay(for: $0) } == view.selectedDates
+            bindingFollowsView = self.selection.map { view.calendar.startOfDay(for: $0) } == view.selectedDates
             view.selectionMode = self.selectionMode
-            bindingFollowsView = bindingIsShown
         }
         view.enableDeselection = self.allowsDeselection
         if view.marksWeekends != self.marksWeekends { view.marksWeekends = self.marksWeekends }
         view.isScrollEnabled = self.isScrollEnabled
+        return bindingFollowsView
+    }
+
+    /// Hands the view a new range, new events or a new display date, each only when it changed.
+    private func applyContent(to view: CalendarView, coordinator: Coordinator, animated: Bool) {
         if coordinator.range != self.range {
             coordinator.range = self.range
             view.reloadData()
@@ -162,22 +174,20 @@ public struct KDCalendarView: UIViewRepresentable {
         }
         if let displayDate = self.displayDate, coordinator.lastDisplayDate != displayDate {
             coordinator.lastDisplayDate = displayDate
-            view.setDisplayDate(displayDate, animated: context.transaction.animation != nil)
+            view.setDisplayDate(displayDate, animated: animated)
         }
+    }
 
-        // Bring the view's selection in line with the binding. Replaying the days as taps would
-        // pair them into ranges or keep only the last, so they are applied as a whole.
-        let calendar = view.calendar
-        let wanted = self.selection.map { calendar.startOfDay(for: $0) }
-        if bindingFollowsView {
-            if wanted != view.selectedDates {
-                coordinator.correctSelection(self.selection, to: view.selectedDates)
-            }
-        } else if wanted != view.selectedDates {
-            view.setSelection(wanted)
-            if view.selectedDates != wanted {
-                coordinator.correctSelection(self.selection, to: view.selectedDates)
-            }
+    /// Brings the view's selection in line with the binding, or the binding in line with the view
+    /// when `bindingFollowsView`. Replaying the days as taps would pair them into ranges or keep
+    /// only the last, so they are applied as a whole. What the view cannot show as given goes back
+    /// to the binding.
+    private func syncSelection(of view: CalendarView, coordinator: Coordinator, bindingFollowsView: Bool) {
+        let wanted = self.selection.map { view.calendar.startOfDay(for: $0) }
+        guard wanted != view.selectedDates else { return }
+        if !bindingFollowsView { view.setSelection(wanted) }
+        if view.selectedDates != wanted {
+            coordinator.correctSelection(self.selection, to: view.selectedDates)
         }
     }
 
@@ -195,27 +205,35 @@ public struct KDCalendarView: UIViewRepresentable {
             self.range = parent.range
         }
 
-        /// Replaces a binding value the view could not hold as given with what the view shows.
-        /// State must not change during a view update, so this waits for the update to end, and
-        /// gives up if a tap or the app changed the binding in the meantime.
+        /// Runs `action` now, or once the view update ends if one is under way: state must not
+        /// change during a view update.
+        func afterUpdate(_ action: @escaping @MainActor () -> Void) {
+            guard isUpdating else { return action() }
+            Task { @MainActor in action() }
+        }
+
+        /// Replaces a binding value the view could not hold as given with what the view shows,
+        /// after the update, unless a tap or the app changed the binding in the meantime.
         func correctSelection(_ requested: [Date], to shown: [Date]) {
-            Task { @MainActor in
+            afterUpdate {
                 guard self.parent.selection == requested else { return }
                 self.parent.selection = shown
             }
         }
 
+        /// Hands the view's selection to the binding after a tap. Selections that updateUIView
+        /// makes are the binding's own and are not echoed back.
+        private func selectionChanged(in calendar: CalendarView) {
+            guard !isUpdating else { return }
+            parent.selection = calendar.selectedDates
+        }
+
         public func startDate() -> Date { range.lowerBound }
         public func endDate() -> Date { range.upperBound }
 
-        // A display date applied by updateUIView announces its month during the view update,
-        // where the action must not change state, so the action waits for the update to end.
+        // A display date applied by updateUIView announces its month during the view update.
         public func calendar(_ calendar: CalendarView, didScrollToMonth date: Date) {
-            guard isUpdating else {
-                parent.onScrollToMonth?(date)
-                return
-            }
-            Task { @MainActor in self.parent.onScrollToMonth?(date) }
+            afterUpdate { self.parent.onScrollToMonth?(date) }
         }
 
         public func calendar(_ calendar: CalendarView, canSelectDate date: Date) -> Bool {
@@ -227,18 +245,15 @@ public struct KDCalendarView: UIViewRepresentable {
         }
 
         public func calendar(_ calendar: CalendarView, didSelectRange range: ClosedRange<Date>) {
-            guard !isUpdating else { return }
-            parent.selection = calendar.selectedDates
+            selectionChanged(in: calendar)
         }
 
         public func calendar(_ calendar: CalendarView, didSelectDate date: Date, withEvents events: [CalendarEvent]) {
-            guard !isUpdating else { return }
-            parent.selection = calendar.selectedDates
+            selectionChanged(in: calendar)
         }
 
         public func calendar(_ calendar: CalendarView, didDeselectDate date: Date) {
-            guard !isUpdating else { return }
-            parent.selection = calendar.selectedDates
+            selectionChanged(in: calendar)
         }
 
         public func calendar(_ calendar: CalendarView, didLongPressDate date: Date, withEvents events: [CalendarEvent]?)
