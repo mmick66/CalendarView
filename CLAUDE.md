@@ -105,8 +105,9 @@ mirrors them as the `Core` and `EventKit` subspecs of `KDCalendar.podspec`.
   - `Resources/Localizable.xcstrings`, `PrivacyInfo.xcprivacy`, and the DocC catalog
     `KDCalendar.docc` (overview and the 1.x migration guide).
 - **`KDCalendarEventKit`** (`Sources/KDCalendarEventKit/EventsManager.swift`): the optional
-  EventKit bridge. `EventsManager` talks to a `CalendarEventStore` (the shared `EKEventStore` by
-  default, a fake in tests) and extends `CalendarView` with `loadEvents()`, `addEvent` and `saveEvent`.
+  EventKit bridge. An `EventsManager` wraps one `CalendarEventStore` (`EventsManager.shared` the
+  system `EKEventStore`, a fake in tests); `CalendarView.eventsManager` picks the one its
+  `loadEvents()`, `addEvent` and `saveEvent` use.
 - **`Tests/KDCalendarTests`**: Swift Testing suites. `EngineTests` (dates, DST, calendars),
   `SelectionStateTests` (no view), `CalendarViewTests`, `ScrollingTests`, `PlatformTests`,
   `EventKitTests` (fake store) and `IssueTests` (named after the GitHub issues they close).

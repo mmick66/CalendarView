@@ -47,7 +47,8 @@ restyles the view, because ``CalendarView/Style`` is a value.
 - Events mark every day they cover, not only their first day.
 - The default colours are dynamic system colours and the default fonts follow Dynamic
   Type. Explicit colours and fonts are used as given.
-- `EventsManager` is a `@MainActor` enum with an `async` `load(from:to:)`;
+- `EventsManager` is a `@MainActor` struct around an event store, used through
+  `EventsManager.shared` or `CalendarView.eventsManager`, with an `async` `load(from:to:)`;
   `loadEvents()` has an `async throws` form and the completion form calls its handler on
   the main actor. Full calendar access is requested, as iOS 17 requires.
 
