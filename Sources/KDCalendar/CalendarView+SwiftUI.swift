@@ -164,7 +164,7 @@ public struct KDCalendarView: UIViewRepresentable {
         if view.direction != self.direction { view.direction = self.direction }
         var bindingFollowsView = false
         if view.selectionMode != self.selectionMode {
-            bindingFollowsView = self.selection.map { view.calendar.startOfDay(for: $0) } == view.selectedDates
+            bindingFollowsView = self.selection.map { view.layoutCalendar.startOfDay(for: $0) } == view.selectedDates
             view.selectionMode = self.selectionMode
         }
         view.enableDeselection = self.allowsDeselection
@@ -195,7 +195,7 @@ public struct KDCalendarView: UIViewRepresentable {
     /// Replaying the days as taps would pair them into ranges or keep only the last, so they are
     /// applied as a whole. What the view cannot show as given goes back to the binding.
     private func syncSelection(of view: CalendarView, coordinator: Coordinator, bindingFollowsView: Bool) {
-        let wanted = self.selection.map { view.calendar.startOfDay(for: $0) }
+        let wanted = self.selection.map { view.layoutCalendar.startOfDay(for: $0) }
         guard wanted != view.selectedDates else { return }
         if !bindingFollowsView { view.setSelection(wanted) }
         if view.selectedDates != wanted {

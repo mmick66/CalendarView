@@ -217,8 +217,28 @@ struct CalendarViewTests: CalendarFixture {
         let selectedDay = after.date(from: before.dateComponents([.era, .year, .month, .day], from: now))!
         #expect(view.selectedDates == [selectedDay])
         #expect(view.collectionView.indexPathsForSelectedItems == [view.indexPathForDate(selectedDay)!])
-        #expect(view.formatters.calendar.timeZone == after.timeZone, "the formatters follow the grid")
+        #expect(view.layoutCalendar.timeZone == after.timeZone)
+        #expect(view.formatters.monthTitle.timeZone == after.timeZone, "the formatters follow the grid")
         #expect(view.formatters.accessibility.timeZone == after.timeZone)
+    }
+
+    @Test func untilTheReloadDatesFollowTheGridsCalendar() {
+        let original = NSTimeZone.default
+        defer { NSTimeZone.default = original }
+        NSTimeZone.default = TimeZone(identifier: "America/New_York")!
+        let before = Calendar.current
+        let now = Date()
+        let view = makeCalendar(
+            start: before.date(byAdding: .month, value: -1, to: now)!,
+            end: before.date(byAdding: .month, value: 1, to: now)!,
+            calendar: CalendarView.Style().calendar)
+
+        // The device moves east, but the view has not heard of it yet.
+        NSTimeZone.default = TimeZone(identifier: "Europe/Athens")!
+        #expect(view.calendar.timeZone != before.timeZone)
+        view.setSelection([now])
+        #expect(view.selectedDates == [before.startOfDay(for: now)], "the day the grid shows")
+        #expect(view.collectionView.indexPathsForSelectedItems == [view.indexPathForDate(now)!])
     }
 
     // MARK: Cell configuration
@@ -480,8 +500,8 @@ struct CalendarViewTests: CalendarFixture {
     @Test func formattersAreBuiltOncePerStyleWithTheGridsCalendar() {
         let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10), locale: Locale(identifier: "de_DE"))
         let formatters = view.formatters
-        #expect(formatters.calendar == view.calendar, "the style's calendar with its locale filled in")
-        #expect(formatters.calendar.locale == Locale(identifier: "de_DE"))
+        #expect(formatters.monthTitle.calendar == view.calendar, "the style's calendar with its locale filled in")
+        #expect(formatters.monthTitle.calendar.locale == Locale(identifier: "de_DE"))
         view.setDisplayDate(date(2024, 2, 10))
         view.setDisplayDate(date(2024, 3, 1))
         view.reloadData()

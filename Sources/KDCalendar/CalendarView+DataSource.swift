@@ -55,7 +55,7 @@ extension CalendarView: UICollectionViewDataSource {
             configuration.date = date
             configuration.isOutOfRange = isOutOfRange(indexPath)
             configuration.isToday = isToday
-            configuration.isWeekend = marksWeekends && calendar.isDateInWeekend(date)
+            configuration.isWeekend = marksWeekends && layoutCalendar.isDateInWeekend(date)
             configuration.eventsCount = eventsCount
             configuration.accessibilityLabel = accessibilityLabel(for: date, isToday: isToday, eventsCount: eventsCount)
         case .leading(let dayOfMonth) where style.showAdjacentDays,

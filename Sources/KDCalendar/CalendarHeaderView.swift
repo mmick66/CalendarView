@@ -30,7 +30,8 @@ open class CalendarHeaderView: UIView {
 
     private(set) var style: CalendarView.Style = .default
     /// The weekday names come from here; the calendar view builds them once per style.
-    private(set) var formatters = CalendarView.Formatters(style: .default)
+    private(set) var formatters = CalendarView.Formatters(
+        calendar: CalendarView.Style.default.resolvedCalendar.fixed, locale: CalendarView.Style.default.locale)
 
     let monthLabel = UILabel()
 

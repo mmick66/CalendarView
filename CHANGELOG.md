@@ -55,6 +55,11 @@ All notable changes to KDCalendar are documented here. The format follows
 - An event saved with `saveEvent(_:)` or `addEvent(_:date:duration:)` while a
   `loadEvents()` query was running lost its dot when the load assigned a result
   that did not contain it. The load now keeps the events saved while it ran.
+- A `KDCalendarView` selection binding applied after the device changed time
+  zone, but before the calendar reloaded, could select the day before or after
+  the one shown. The view now computes every date in the calendar its grid is
+  laid out in until the reload moves the grid, the selection and the month
+  titles to the new time zone together.
 
 ## [2.1.0] - 2026-09-30
 

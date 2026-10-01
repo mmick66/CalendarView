@@ -62,6 +62,14 @@ public class CalendarView: UIView {
         style.resolvedCalendar
     }
 
+    /// The calendar the grid is laid out in: ``calendar`` as it was at the last reload, fixed.
+    ///
+    /// The view computes every date in it, so the dates always match the cells, even when the
+    /// device moves to another time zone before the next reload.
+    var layoutCalendar: Calendar {
+        snapshot.calendar
+    }
+
     /// The days the data source currently spans, from `startDate()` to `endDate()`, at the
     /// start of each day.
     ///
@@ -134,12 +142,15 @@ public class CalendarView: UIView {
         }
     }
 
-    /// The date formatters for the style and the calendar, rebuilt when either changes.
-    private(set) var formatters = Formatters(style: .default)
+    /// The date formatters for the style's locale and ``layoutCalendar``, rebuilt when either
+    /// changes.
+    private(set) var formatters = Formatters(
+        calendar: Style.default.resolvedCalendar.fixed, locale: Style.default.locale)
 
-    /// Builds the formatters again for the current style and restyles the header with them.
+    /// Builds the formatters again for the current style and ``layoutCalendar`` and restyles the
+    /// header with them.
     func rebuildFormatters() {
-        formatters = Formatters(style: style)
+        formatters = Formatters(calendar: layoutCalendar, locale: style.locale)
         headerView.setStyle(style, formatters: formatters)
     }
 
@@ -280,8 +291,10 @@ public class CalendarView: UIView {
     }
 
     internal func updateStyle() {
-        rebuildFormatters()
         self.reloadData()
+        // The reload rebuilt the formatters if the calendar changed; the locale and the look need
+        // them too.
+        rebuildFormatters()
         self.setNeedsLayout()
     }
 
@@ -314,17 +327,18 @@ extension CalendarView {
     /// The snapshot is built from the range, the style and the events, reusing the grid and the
     /// event index when none of them changed: the current day alone without a data source, zero
     /// months when the range is invalid. Called once per reload, not once per cell.
+    ///
+    /// This is the one place that notices a new ``layoutCalendar``, from the style or from the
+    /// device's time zone: it rebuilds the formatters and moves the selection to the new days.
     func refreshSnapshot() {
         let start = dataSource?.startDate() ?? Date()
         let end = dataSource?.endDate() ?? start
         let inputs = CalendarSnapshot.Inputs(start: start, end: end, style: style, events: events)
         let previous = snapshot
         snapshot = CalendarSnapshot(inputs, now: Date(), reusing: previous)
-        if formatters.calendar != snapshot.calendar {
+        if snapshot.calendar != previous.calendar {
             rebuildFormatters()
-        }
-        if previous.calendar != snapshot.calendar {
-            moveSelection(from: previous.calendar)
+            moveSelection(from: previous.calendar, to: snapshot.calendar)
         }
         if snapshot.grid == nil, previous.inputs != inputs {
             CalendarView.logger.error(
@@ -333,11 +347,11 @@ extension CalendarView {
     }
 
     var startDay: Date {
-        snapshot.grid?.startDay ?? calendar.startOfDay(for: Date())
+        snapshot.grid?.startDay ?? layoutCalendar.startOfDay(for: Date())
     }
 
     var endDay: Date {
-        snapshot.grid?.endDay ?? calendar.startOfDay(for: Date())
+        snapshot.grid?.endDay ?? layoutCalendar.startOfDay(for: Date())
     }
 
     /// The cell showing the day that contains `date`, or `nil` outside the displayed months.

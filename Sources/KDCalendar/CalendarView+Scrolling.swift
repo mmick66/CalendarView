@@ -52,7 +52,7 @@ extension CalendarView {
 
         guard let displayDate = self.displayDate else { return }
 
-        guard let newDate = self.calendar.date(byAdding: .month, value: offset, to: displayDate) else { return }
+        guard let newDate = self.layoutCalendar.date(byAdding: .month, value: offset, to: displayDate) else { return }
         self.setDisplayDate(newDate, animated: true)
     }
 

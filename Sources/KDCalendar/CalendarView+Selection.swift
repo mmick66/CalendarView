@@ -88,7 +88,7 @@ extension CalendarView {
     /// See ``SelectionState/assign(_:selectable:)``.
     func setSelection(_ dates: [Date]) {
         updateSelection(notify: false) { selection in
-            selection.assign(dates.map { calendar.startOfDay(for: $0) }, selectable: selectableDays(in:))
+            selection.assign(dates.map { layoutCalendar.startOfDay(for: $0) }, selectable: selectableDays(in:))
         }
     }
 
@@ -131,6 +131,7 @@ extension CalendarView {
     func selectableDays(in range: ClosedRange<Date>) -> [Date] {
         // Only days in range can be selected, so far-off ends cost nothing.
         let bounds = dateRange
+        let calendar = layoutCalendar
         let last = min(calendar.startOfDay(for: range.upperBound), bounds.upperBound)
         var day = max(calendar.startOfDay(for: range.lowerBound), bounds.lowerBound)
         var days = [Date]()
@@ -154,12 +155,11 @@ extension CalendarView {
         }
     }
 
-    /// Keeps the same days selected when the calendar moves to another time zone.
+    /// Keeps the same days selected when the calendar moves from `previous` to `current`.
     ///
     /// A selected day is the start of that day in the old time zone, which can fall on the day
     /// before in the new one.
-    func moveSelection(from previous: Calendar) {
-        let current = calendar
+    func moveSelection(from previous: Calendar, to current: Calendar) {
         guard previous.timeZone != current.timeZone else { return }
         // Days run from midnight to midnight in every calendar, so Gregorian ones can carry the
         // day from one time zone to the other whatever the identifiers.
