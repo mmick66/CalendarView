@@ -23,6 +23,7 @@
  *
  */
 
+import Combine
 import OSLog
 import UIKit
 
@@ -73,7 +74,8 @@ public class CalendarView: UIView {
     var months: MonthGrid?
     /// The cell showing today, refreshed with the grid and when the day changes.
     var todayIndexPath: IndexPath?
-    nonisolated(unsafe) private var observers: [NSObjectProtocol] = []
+    /// The notification observers, removed when the view goes away.
+    private var observers = Set<AnyCancellable>()
     var eventsByIndexPath = [IndexPath: [CalendarEvent]]()
 
     /// Events to show as dots. An event marks every day it covers.
@@ -148,32 +150,16 @@ public class CalendarView: UIView {
         self.setup()
     }
 
-    override open func awakeFromNib() {
-        super.awakeFromNib()
-        MainActor.assumeIsolated {
-            self.setup()
-        }
-    }
-
     // MARK: Create Subviews
-    /// Configures the header and the grid and adds them once; safe to call again.
+    /// Configures the header and the grid and adds them. Each initialiser calls it once.
     private func setup() {
-        guard collectionView.superview == nil else { return }
-
         self.clipsToBounds = true
 
-        /* Header View */
         self.headerView.setStyle(style, formatters: formatters)
         self.addSubview(self.headerView)
 
-        /* Layout */
-        let layout = flowLayout
-        layout.scrollDirection = self.direction
-        layout.sectionInset = UIEdgeInsets.zero
-        layout.minimumInteritemSpacing = 0
-        layout.minimumLineSpacing = 0
+        flowLayout.scrollDirection = self.direction
 
-        /* Collection View */
         self.collectionView.dataSource = self
         self.collectionView.delegate = self
         self.collectionView.isPagingEnabled = true
@@ -193,18 +179,14 @@ public class CalendarView: UIView {
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(CalendarView.handleLongPress))
         self.collectionView.addGestureRecognizer(longPress)
 
-        // Keep the today marker honest across midnight and clock or time zone changes.
+        // Keep the today marker honest across midnight and clock or time zone changes. The main
+        // queue delivers a notification posted on the main thread at once, before the next layout.
         for name in [Notification.Name.NSCalendarDayChanged, UIApplication.significantTimeChangeNotification] {
-            observers.append(
-                NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-                    MainActor.assumeIsolated { self?.reloadData() }
-                })
-        }
-    }
-
-    deinit {
-        for observer in observers {
-            NotificationCenter.default.removeObserver(observer)
+            let observer = NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) {
+                [weak self] _ in
+                MainActor.assumeIsolated { self?.reloadData() }
+            }
+            observers.insert(AnyCancellable { NotificationCenter.default.removeObserver(observer) })
         }
     }
 
