@@ -447,11 +447,22 @@ struct CalendarViewTests: CalendarFixture {
         #expect(german.headerView.monthLabel.text == "Februar 2024")
     }
 
-    @Test func headerStringFromTheDataSourceWins() {
+    @Test func titleFromTheDataSourceWins() {
         let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
         dataSource(of: view).header = "Custom"
         view.setDisplayDate(date(2024, 2, 10))
         #expect(view.headerView.monthLabel.text == "Custom")
+        #expect(dataSource(of: view).titledMonths.last == date(2024, 2, 1), "the title is asked for the first day")
+    }
+
+    @Test func aDataSourceWithOnlyTheDeprecatedHeaderStringKeepsItsTitle() {
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
+        let legacy = LegacyHeaderDataSource(start: date(2024, 1, 15), end: date(2024, 3, 10))
+        retained.objects.append(legacy)
+        view.dataSource = legacy
+        view.setDisplayDate(date(2024, 2, 10))
+        #expect(view.headerView.monthLabel.text == "Legacy")
+        #expect(legacy.headerDates == [date(2024, 2, 1)])
     }
 
     @Test func nonGregorianCalendarsUseTheirOwnMonthNames() {
@@ -965,5 +976,22 @@ extension CalendarViewTests: DeprecatedStyleNames {
         #expect(style.effectiveFirstWeekday == 1)
         #expect(style.weekdayCasing == .uppercase)
         #expect(style.weekDayTransform == .uppercase)
+    }
+}
+
+/// A data source written for 2.1, which implements only `headerString(_:)`.
+private final class LegacyHeaderDataSource: CalendarViewDataSource {
+    let start: Date
+    let end: Date
+    var headerDates: [Date] = []
+    init(start: Date, end: Date) {
+        self.start = start
+        self.end = end
+    }
+    func startDate() -> Date { start }
+    func endDate() -> Date { end }
+    func headerString(_ date: Date) -> String? {
+        headerDates.append(date)
+        return "Legacy"
     }
 }

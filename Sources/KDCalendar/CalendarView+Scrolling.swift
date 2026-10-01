@@ -83,7 +83,7 @@ extension CalendarView {
 
     func displayDateOnHeader(_ date: Date) {
         self.headerView.monthLabel.text =
-            dataSource?.headerString(date)
+            dataSource?.title(forMonth: date)
             ?? formatters.monthTitle.string(from: date).capitalized(with: style.locale)
 
         self.displayDate = date
