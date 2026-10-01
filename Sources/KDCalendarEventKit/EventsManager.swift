@@ -48,6 +48,41 @@ public protocol CalendarEventStore: AnyObject {
     func save(_ event: CalendarEvent) throws
 }
 
+extension TimeInterval {
+    /// The longest interval sent to EventKit in one query: four years less a day, inside the
+    /// four-year span `predicateForEvents(withStart:end:calendars:)` accepts.
+    static let eventKitQueryLimit: TimeInterval = (4 * 365 - 1) * 24 * 60 * 60
+}
+
+extension DateInterval {
+    /// Splits the interval into consecutive intervals no longer than `maxDuration`, each
+    /// starting where the previous one ends. An interval that fits comes back whole.
+    func chunked(maxDuration: TimeInterval) -> [DateInterval] {
+        precondition(maxDuration > 0, "maxDuration must be positive")
+        var chunks: [DateInterval] = []
+        var chunkStart = start
+        while end.timeIntervalSince(chunkStart) > maxDuration {
+            let chunk = DateInterval(start: chunkStart, duration: maxDuration)
+            chunks.append(chunk)
+            chunkStart = chunk.end
+        }
+        chunks.append(DateInterval(start: chunkStart, end: end))
+        return chunks
+    }
+}
+
+/// An event as EventKit returns it, so that one found by two chunked queries counts once.
+/// Occurrences of a recurring event share an identifier, so the start date tells them apart.
+private struct Occurrence: Hashable {
+    let identifier: String?
+    let startDate: Date?
+
+    init(_ event: EKEvent) {
+        self.identifier = event.eventIdentifier
+        self.startDate = event.startDate
+    }
+}
+
 extension EKEventStore: CalendarEventStore {
 
     public var hasFullAccess: Bool {
@@ -60,20 +95,16 @@ extension EKEventStore: CalendarEventStore {
 
     /// Queries the interval in chunks shorter than four years, since EventKit shortens a
     /// longer interval to its first four years. An event that overlaps two chunks is
-    /// returned once. The query is synchronous and can be slow, so it runs off the main actor.
+    /// returned once, and an interval that ends before it starts finds nothing. The query is
+    /// synchronous and can be slow, so it runs off the main actor.
     public nonisolated func events(from start: Date, to end: Date) async -> [CalendarEvent] {
-        struct Occurrence: Hashable {
-            let identifier: String?
-            let startDate: Date?
-        }
+        guard start <= end else { return [] }
         var seen = Set<Occurrence>()
         var result: [CalendarEvent] = []
-        for chunk in EventsManager.queryIntervals(from: start, to: end) {
+        for chunk in DateInterval(start: start, end: end).chunked(maxDuration: .eventKitQueryLimit) {
             let predicate = predicateForEvents(withStart: chunk.start, end: chunk.end, calendars: nil)
             for event in events(matching: predicate) {
-                // Occurrences of a recurring event share an identifier but not a start date.
-                let occurrence = Occurrence(identifier: event.eventIdentifier, startDate: event.startDate)
-                guard seen.insert(occurrence).inserted else { continue }
+                guard seen.insert(Occurrence(event)).inserted else { continue }
                 result.append(CalendarEvent(title: event.title, startDate: event.startDate, endDate: event.endDate))
             }
         }
@@ -107,24 +138,6 @@ public enum EventsManager {
     /// Whether the app currently holds full access to the user's calendars.
     public static var hasFullAccess: Bool {
         store.hasFullAccess
-    }
-
-    /// The longest interval sent to EventKit in one query: four years less a day, inside the
-    /// four-year span `predicateForEvents(withStart:end:calendars:)` accepts.
-    nonisolated static let maximumQueryLength: TimeInterval = (4 * 365 - 1) * 24 * 60 * 60
-
-    /// Splits the interval into consecutive chunks no longer than ``maximumQueryLength``.
-    /// An interval that fits, or that ends before it starts, comes back as one chunk.
-    nonisolated static func queryIntervals(from start: Date, to end: Date) -> [(start: Date, end: Date)] {
-        var intervals: [(start: Date, end: Date)] = []
-        var chunkStart = start
-        while end.timeIntervalSince(chunkStart) > maximumQueryLength {
-            let chunkEnd = chunkStart.addingTimeInterval(maximumQueryLength)
-            intervals.append((chunkStart, chunkEnd))
-            chunkStart = chunkEnd
-        }
-        intervals.append((chunkStart, end))
-        return intervals
     }
 
     /// Requests full access if needed and returns the events between the two dates.

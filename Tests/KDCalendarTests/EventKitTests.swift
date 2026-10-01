@@ -137,34 +137,43 @@ struct EventKitTests {
         #expect(store.stored.count == 1)
     }
 
-    @Test func aShortIntervalIsQueriedInOneChunk() {
-        let chunks = EventsManager.queryIntervals(from: date(2024, 1, 1), to: date(2025, 1, 1))
-        #expect(chunks.count == 1)
-        #expect(chunks.first?.start == date(2024, 1, 1))
-        #expect(chunks.first?.end == date(2025, 1, 1))
+    // MARK: Chunking
 
-        let exact = date(2024, 1, 1).addingTimeInterval(EventsManager.maximumQueryLength)
-        #expect(EventsManager.queryIntervals(from: date(2024, 1, 1), to: exact).count == 1)
+    @Test func anIntervalThatFitsIsOneChunk() {
+        let year = DateInterval(start: date(2024, 1, 1), end: date(2025, 1, 1))
+        #expect(year.chunked(maxDuration: .eventKitQueryLimit) == [year])
 
-        let backwards = EventsManager.queryIntervals(from: date(2025, 1, 1), to: date(2024, 1, 1))
-        #expect(backwards.count == 1)
-        #expect(backwards.first?.start == date(2025, 1, 1))
+        let exact = DateInterval(start: date(2024, 1, 1), duration: .eventKitQueryLimit)
+        #expect(exact.chunked(maxDuration: .eventKitQueryLimit) == [exact])
+
+        let instant = DateInterval(start: date(2024, 1, 1), duration: 0)
+        #expect(instant.chunked(maxDuration: .eventKitQueryLimit) == [instant])
     }
 
-    @Test func aLongIntervalIsSplitIntoContiguousChunksUnderFourYears() {
-        let start = date(2020, 1, 1)
-        let end = date(2031, 1, 1)
-        let chunks = EventsManager.queryIntervals(from: start, to: end)
+    @Test func aLongIntervalIsSplitIntoContiguousChunks() {
+        let interval = DateInterval(start: date(2024, 1, 1), duration: 25)
+        #expect(
+            interval.chunked(maxDuration: 10) == [
+                DateInterval(start: interval.start, duration: 10),
+                DateInterval(start: interval.start.addingTimeInterval(10), duration: 10),
+                DateInterval(start: interval.start.addingTimeInterval(20), duration: 5),
+            ]
+        )
+    }
+
+    @Test func eventKitChunksAreUnderFourYears() {
+        let interval = DateInterval(start: date(2020, 1, 1), end: date(2031, 1, 1))
+        let chunks = interval.chunked(maxDuration: .eventKitQueryLimit)
         #expect(chunks.count == 3)
-        #expect(chunks.first?.start == start)
-        #expect(chunks.last?.end == end)
+        #expect(chunks.first?.start == interval.start)
+        #expect(chunks.last?.end == interval.end)
         for (previous, next) in zip(chunks, chunks.dropFirst()) {
             #expect(previous.end == next.start, "no gap or overlap between chunks")
         }
         for chunk in chunks {
-            #expect(chunk.end > chunk.start)
+            #expect(chunk.duration > 0)
             // EventKit's limit is four calendar years; the shortest such span is 1460 days.
-            #expect(chunk.end.timeIntervalSince(chunk.start) < 1460 * 24 * 60 * 60)
+            #expect(chunk.duration < 1460 * 24 * 60 * 60)
         }
     }
 
@@ -270,5 +279,12 @@ struct EventKitTests {
             systemStore.queriedOnMainThread == [false, false, false],
             "one query per chunk, none on the main thread"
         )
+    }
+
+    @Test func theSystemStoreFindsNothingInABackwardsInterval() async {
+        let systemStore = ThreadRecordingStore()
+        let events = await systemStore.events(from: date(2025, 1, 1), to: date(2024, 1, 1))
+        #expect(events.isEmpty)
+        #expect(systemStore.queriedOnMainThread.isEmpty, "no query is made")
     }
 }
