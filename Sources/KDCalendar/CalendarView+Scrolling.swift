@@ -17,7 +17,7 @@ extension CalendarView {
     /// `false`, the view has no size yet or the month is already on screen.
     public func setDisplayDate(_ date: Date, animated: Bool = false) {
         guard let indexPath = self.indexPathForDate(date),
-            let month = self.months?.firstDayOfMonth(inSection: indexPath.section)
+            let month = snapshot.grid?.firstDayOfMonth(inSection: indexPath.section)
         else {
             return
         }
@@ -135,7 +135,7 @@ extension CalendarView {
 
     /// The first day of the month on the current page.
     func dateFromScrollViewPosition() -> Date? {
-        guard let months = currentMonths else { return nil }
+        guard let grid = snapshot.grid else { return nil }
 
         let offset: CGFloat
         let length: CGFloat
@@ -151,8 +151,8 @@ extension CalendarView {
             length = self.collectionView.bounds.size.width
         }
 
-        guard length > 0 else { return months.firstDayOfMonth(inSection: 0) }
-        let page = min(max(Int((offset / length).rounded()), 0), months.numberOfSections - 1)
-        return months.firstDayOfMonth(inSection: flowLayout.mirroredPage(page))
+        guard length > 0 else { return grid.firstDayOfMonth(inSection: 0) }
+        let page = min(max(Int((offset / length).rounded()), 0), grid.numberOfSections - 1)
+        return grid.firstDayOfMonth(inSection: flowLayout.mirroredPage(page))
     }
 }

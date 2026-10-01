@@ -98,10 +98,10 @@ struct CalendarViewTests: CalendarFixture {
         view.reloadData()
         #expect(view.numberOfSections(in: view.collectionView) == 5)
         // A different time on the same days does not rebuild the grid.
-        let grid = view.months
+        let grid = view.snapshot.grid
         source.start = date(2024, 1, 15, hour: 20)
         view.reloadData()
-        #expect(view.months?.startDay == grid?.startDay)
+        #expect(view.snapshot.grid?.startDay == grid?.startDay)
     }
 
     @Test func assigningADataSourceReplacesAGridBuiltWithoutIt() {
@@ -109,7 +109,7 @@ struct CalendarViewTests: CalendarFixture {
         style.calendar = utc
         let view = CalendarView(frame: CGRect(x: 0, y: 0, width: 350, height: 420))
         view.style = style
-        #expect(view.months != nil, "setting the style builds the current month alone")
+        #expect(view.snapshot.grid != nil, "setting the style builds the current month alone")
         let source = FixedDataSource(start: date(2024, 1, 15), end: date(2024, 3, 10))
         retained.objects.append(source)
         view.dataSource = source
@@ -178,7 +178,7 @@ struct CalendarViewTests: CalendarFixture {
         view.setDisplayDate(now)
         view.layoutIfNeeded()
         let indexPath = view.indexPathForDate(now)!
-        #expect(view.todayIndexPath == indexPath)
+        #expect(view.snapshot.today == indexPath)
         #expect(cell(view, indexPath)?.configuration.isToday == true)
         #expect(cell(view, indexPath)?.configuration.day == local.component(.day, from: now))
     }
@@ -201,7 +201,7 @@ struct CalendarViewTests: CalendarFixture {
             end: before.startOfDay(for: before.date(byAdding: .month, value: 1, to: now)!),
             calendar: CalendarView.Style().calendar)
         view.selectDate(now)
-        #expect(view.dateFromIndexPath(view.todayIndexPath!) == before.startOfDay(for: now))
+        #expect(view.dateFromIndexPath(view.snapshot.today!) == before.startOfDay(for: now))
 
         NSTimeZone.default = TimeZone(identifier: "Europe/Athens")!
         NotificationCenter.default.post(name: UIApplication.significantTimeChangeNotification, object: nil)
@@ -209,7 +209,7 @@ struct CalendarViewTests: CalendarFixture {
         view.layoutIfNeeded()
 
         let after = Calendar.current
-        let today = view.todayIndexPath!
+        let today = view.snapshot.today!
         #expect(view.dateFromIndexPath(today) == after.startOfDay(for: now))
         #expect(cell(view, today)?.configuration.isToday == true)
         #expect(cell(view, today)?.configuration.day == after.component(.day, from: now))
@@ -392,14 +392,14 @@ struct CalendarViewTests: CalendarFixture {
             CalendarEvent(title: "midnight", startDate: date(2024, 1, 20), endDate: date(2024, 1, 21)),
             CalendarEvent(title: "c", startDate: date(2024, 2, 1), endDate: date(2024, 2, 2)),
         ]
-        #expect(view.eventIndex.count(at: IndexPath(item: 9, section: 0)) == 2)
-        #expect(view.eventIndex[IndexPath(item: 10, section: 0)].map(\.title) == ["b"])
-        #expect(view.eventIndex[IndexPath(item: 11, section: 0)].map(\.title) == ["b"])
-        #expect(view.eventIndex[IndexPath(item: 12, section: 0)].isEmpty)
+        #expect(view.snapshot.eventIndex.count(at: IndexPath(item: 9, section: 0)) == 2)
+        #expect(view.snapshot.eventIndex[IndexPath(item: 10, section: 0)].map(\.title) == ["b"])
+        #expect(view.snapshot.eventIndex[IndexPath(item: 11, section: 0)].map(\.title) == ["b"])
+        #expect(view.snapshot.eventIndex[IndexPath(item: 12, section: 0)].isEmpty)
         #expect(
-            view.eventIndex.count(at: IndexPath(item: 19, section: 0)) == 1,
+            view.snapshot.eventIndex.count(at: IndexPath(item: 19, section: 0)) == 1,
             "an event ending at midnight stays on its day")
-        #expect(view.eventIndex[IndexPath(item: 20, section: 0)].isEmpty)
+        #expect(view.snapshot.eventIndex[IndexPath(item: 20, section: 0)].isEmpty)
         view.layoutIfNeeded()
         #expect(cell(view, IndexPath(item: 9, section: 0))?.configuration.eventsCount == 2)
         #expect(cell(view, IndexPath(item: 9, section: 0))?.dotsView.isHidden == false)
@@ -409,7 +409,7 @@ struct CalendarViewTests: CalendarFixture {
         let view = CalendarView(frame: .zero)
         view.events = [CalendarEvent(title: "a", startDate: Date(), endDate: Date())]
         #expect(view.numberOfSections(in: view.collectionView) == 1, "the current month stands in for a data source")
-        #expect(view.eventIndex.count(at: view.indexPathForDate(Date())!) == 1)
+        #expect(view.snapshot.eventIndex.count(at: view.indexPathForDate(Date())!) == 1)
     }
 
     @Test func theCellShapeSetsTheBackgroundsFrameAndCorners() {

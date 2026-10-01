@@ -78,23 +78,21 @@ public class CalendarView: UIView {
     /// Cells are derived from it on demand.
     var selection = SelectionState()
 
-    /// The month grid derived from the data source.
+    /// The grid, today and the events on each cell.
     ///
-    /// Rebuilt whenever the range changes.
-    var months: MonthGrid?
-    /// The cell showing today, refreshed with the grid and when the day changes.
-    var todayIndexPath: IndexPath?
+    /// Derived from the data source, the style and ``events``. ``reloadData()`` brings it up to
+    /// date; until the first reload it shows the current month alone, as a view without a data
+    /// source does.
+    private(set) var snapshot = CalendarSnapshot(
+        CalendarSnapshot.Inputs(start: Date(), end: Date(), style: .default, events: []), now: Date())
     /// The notification observers, removed when the view goes away.
     private var observers = Set<AnyCancellable>()
-    /// The events on each cell, refreshed with the grid and the events.
-    var eventIndex = EventIndex()
 
     /// Events to show as dots.
     ///
     /// An event marks every day it covers.
     public var events: [CalendarEvent] = [] {
         didSet {
-            rebuildEventIndex()
             self.reloadData()
         }
     }
@@ -132,7 +130,6 @@ public class CalendarView: UIView {
     /// Assigning one reloads the calendar from it.
     public weak var dataSource: CalendarViewDataSource? {
         didSet {
-            invalidateMonths()
             reloadData()
         }
     }
@@ -229,7 +226,7 @@ public class CalendarView: UIView {
             return
         }
 
-        let events = self.eventIndex[indexPath]
+        let events = snapshot.eventIndex[indexPath]
         self.delegate?.calendar(self, didLongPressDate: date, withEvents: events.isEmpty ? nil : events)
     }
 
@@ -264,7 +261,7 @@ public class CalendarView: UIView {
             self.resetDisplayDate()
         }
 
-        if displayDate == nil, self.bounds.width > 0, currentMonths != nil {
+        if displayDate == nil, self.bounds.width > 0, snapshot.grid != nil {
             // First layout with content: settle on the first month and tell the delegate once.
             self.collectionView.layoutIfNeeded()
             self.updateAndNotifyScrolling()
@@ -296,11 +293,6 @@ public class CalendarView: UIView {
 
     internal func updateStyle() {
         rebuildFormatters()
-        let previousCalendar = months?.calendar
-        self.invalidateMonths()
-        if let previousCalendar {
-            moveSelection(from: previousCalendar)
-        }
         self.reloadData()
         self.setNeedsLayout()
     }
@@ -317,7 +309,7 @@ extension CalendarView {
     /// puts them. Days that are no longer in range are deselected, and the delegate receives
     /// `didDeselectDate` for each.
     public func reloadData() {
-        refreshMonths()
+        refreshSnapshot()
         let change = selection.retain { date in
             indexPathForDate(date).map { !isOutOfRange($0) } ?? false
         }
@@ -330,84 +322,55 @@ extension CalendarView {
         }
     }
 
-    /// Asks the data source for its range and rebuilds the month grid when the range moved to other
-    /// days or the calendar changed, and the formatters when the calendar changed.
+    /// Asks the data source for its range and builds the snapshot again.
     ///
-    /// The current month alone without a data source; zero months when the range is invalid. Called
-    /// once per reload, not once per cell.
-    @discardableResult
-    func refreshMonths() -> MonthGrid? {
+    /// The snapshot is built from the range, the style and the events, reusing the grid and the
+    /// event index when none of them changed: the current day alone without a data source, zero
+    /// months when the range is invalid. Called once per reload, not once per cell.
+    func refreshSnapshot() {
         let start = dataSource?.startDate() ?? Date()
         let end = dataSource?.endDate() ?? start
-        // The grid keeps a fixed copy: an autoupdating calendar always equals itself, so
-        // comparing it would miss the time zone changes the grid has to follow.
-        let calendar = self.calendar.fixed
-        if formatters.calendar != calendar {
+        let inputs = CalendarSnapshot.Inputs(start: start, end: end, style: style, events: events)
+        let previous = snapshot
+        snapshot = CalendarSnapshot(inputs, now: Date(), reusing: previous)
+        if formatters.calendar != snapshot.calendar {
             rebuildFormatters()
         }
-        if let months = months,
-            calendar.isDate(months.startDay, inSameDayAs: start),
-            calendar.isDate(months.endDay, inSameDayAs: end),
-            months.calendar == calendar
-        {
-            todayIndexPath = months.indexPath(for: Date())
-            return months
+        if previous.calendar != snapshot.calendar {
+            moveSelection(from: previous.calendar)
         }
-        let previousCalendar = months?.calendar
-        months = MonthGrid(start: start, end: end, calendar: calendar, firstWeekday: style.effectiveFirstWeekday)
-        if let previousCalendar {
-            moveSelection(from: previousCalendar)
-        }
-        if months == nil {
+        if snapshot.grid == nil, previous.inputs != inputs {
             CalendarView.logger.error(
                 "The data source's start date (\(start)) is after its end date (\(end)); showing no months.")
         }
-        todayIndexPath = months?.indexPath(for: Date())
-        rebuildEventIndex()
-        return months
-    }
-
-    /// The month grid, built on first use.
-    ///
-    /// Reloads refresh it from the data source.
-    var currentMonths: MonthGrid? {
-        months ?? refreshMonths()
-    }
-
-    func invalidateMonths() {
-        months = nil
     }
 
     var startDay: Date {
-        currentMonths?.startDay ?? calendar.startOfDay(for: Date())
+        snapshot.grid?.startDay ?? calendar.startOfDay(for: Date())
     }
 
     var endDay: Date {
-        currentMonths?.endDay ?? calendar.startOfDay(for: Date())
-    }
-
-    func rebuildEventIndex() {
-        eventIndex = months.map { EventIndex(events: events, grid: $0) } ?? EventIndex()
+        snapshot.grid?.endDay ?? calendar.startOfDay(for: Date())
     }
 
     /// The cell showing the day that contains `date`, or `nil` outside the displayed months.
     public func indexPathForDate(_ date: Date) -> IndexPath? {
-        currentMonths?.indexPath(for: date)
+        snapshot.grid?.indexPath(for: date)
     }
 
     /// The day a cell shows, at the start of the day, or `nil` for an empty cell.
     public func dateFromIndexPath(_ indexPath: IndexPath) -> Date? {
-        currentMonths?.date(at: indexPath)
+        snapshot.grid?.date(at: indexPath)
     }
 
     /// The column of the first day and the number of days for the month in `section`.
     public func getCachedSectionInfo(_ section: Int) -> (firstDay: Int, daysTotal: Int)? {
-        guard let months = currentMonths, months.months.indices.contains(section) else { return nil }
-        let month = months.months[section]
+        guard let grid = snapshot.grid, grid.months.indices.contains(section) else { return nil }
+        let month = grid.months[section]
         return (firstDay: month.firstColumn, daysTotal: month.dayCount)
     }
 
     func isOutOfRange(_ indexPath: IndexPath) -> Bool {
-        currentMonths?.isOutOfRange(indexPath) ?? true
+        snapshot.grid?.isOutOfRange(indexPath) ?? true
     }
 }

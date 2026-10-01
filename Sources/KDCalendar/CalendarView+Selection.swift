@@ -168,7 +168,7 @@ extension CalendarView: UICollectionViewDelegateFlowLayout {
         for dropped in change.deselected {
             delegate?.calendar(self, didDeselectDate: dropped)
         }
-        delegate?.calendar(self, didSelectDate: date, withEvents: eventIndex[indexPath])
+        delegate?.calendar(self, didSelectDate: date, withEvents: snapshot.eventIndex[indexPath])
         if let range = change.completedRange {
             delegate?.calendar(self, didSelectRange: range)
         }

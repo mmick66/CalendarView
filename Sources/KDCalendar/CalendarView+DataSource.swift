@@ -29,7 +29,7 @@ extension CalendarView: UICollectionViewDataSource {
 
     /// One section per month of the data source's range.
     public func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return refreshMonths()?.numberOfSections ?? 0
+        return snapshot.grid?.numberOfSections ?? 0
     }
 
     /// Seven columns by six rows of days in every month.
@@ -46,10 +46,10 @@ extension CalendarView: UICollectionViewDataSource {
             as! CalendarDayCell
 
         var configuration = DayCellConfiguration(style: style)
-        switch currentMonths?.content(at: indexPath) {
+        switch snapshot.grid?.content(at: indexPath) {
         case .day(let date, let dayOfMonth):
-            let isToday = indexPath == todayIndexPath
-            let eventsCount = eventIndex.count(at: indexPath)
+            let isToday = indexPath == snapshot.today
+            let eventsCount = snapshot.eventIndex.count(at: indexPath)
             configuration.style = delegate?.calendar(self, styleForDate: date) ?? style
             configuration.day = dayOfMonth
             configuration.date = date
