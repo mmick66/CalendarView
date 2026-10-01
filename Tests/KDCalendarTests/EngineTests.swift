@@ -225,6 +225,71 @@ struct EngineTests: CalendarFixture {
         #expect(Set([event, same]).count == 1)
     }
 
+    // MARK: Snapshot
+
+    private func snapshotInputs(
+        _ start: Date, _ end: Date, firstWeekday: CalendarView.Style.FirstWeekdayOptions = .monday,
+        events: [CalendarEvent] = []
+    ) -> CalendarSnapshot.Inputs {
+        var style = CalendarView.Style()
+        style.calendar = calendar("UTC")
+        style.firstWeekday = firstWeekday
+        return CalendarSnapshot.Inputs(start: start, end: end, style: style, events: events)
+    }
+
+    @Test func aSnapshotBuildsTheGridTodayAndTheEventsFromItsInputs() throws {
+        let utc = calendar("UTC")
+        let event = CalendarEvent(title: "a", startDate: date(utc, 2024, 2, 1), endDate: date(utc, 2024, 2, 2))
+        let snapshot = CalendarSnapshot(
+            snapshotInputs(date(utc, 2024, 1, 15), date(utc, 2024, 2, 20), events: [event]),
+            now: date(utc, 2024, 1, 31, hour: 12))
+        let grid = try #require(snapshot.grid)
+        #expect(snapshot.calendar.timeZone == utc.timeZone)
+        #expect(grid.numberOfSections == 2)
+        #expect(grid.months[0].firstColumn == 0, "January 2024 starts on the Monday column")
+        #expect(snapshot.today == grid.indexPath(for: date(utc, 2024, 1, 31)))
+        #expect(snapshot.eventIndex[try #require(grid.indexPath(for: date(utc, 2024, 2, 1)))] == [event])
+    }
+
+    @Test func snapshotInputsCountOnlyTheDays() {
+        let utc = calendar("UTC")
+        let morning = snapshotInputs(date(utc, 2024, 1, 15, hour: 9), date(utc, 2024, 2, 20, hour: 9))
+        #expect(morning == snapshotInputs(date(utc, 2024, 1, 15, hour: 20), date(utc, 2024, 2, 20, hour: 23)))
+        #expect(morning.startDay == date(utc, 2024, 1, 15))
+        #expect(morning != snapshotInputs(date(utc, 2024, 1, 16), date(utc, 2024, 2, 20)))
+        #expect(morning != snapshotInputs(date(utc, 2024, 1, 15), date(utc, 2024, 2, 20), firstWeekday: .sunday))
+        let event = CalendarEvent(title: "a", startDate: date(utc, 2024, 2, 1), endDate: date(utc, 2024, 2, 2))
+        #expect(morning != snapshotInputs(date(utc, 2024, 1, 15), date(utc, 2024, 2, 20), events: [event]))
+    }
+
+    @Test func aSnapshotReusingThePreviousOneStillFollowsTodayAndTheEvents() throws {
+        let utc = calendar("UTC")
+        let inputs = snapshotInputs(date(utc, 2024, 1, 15), date(utc, 2024, 2, 20))
+        let first = CalendarSnapshot(inputs, now: date(utc, 2024, 1, 20))
+        let nextDay = CalendarSnapshot(inputs, now: date(utc, 2024, 1, 21), reusing: first)
+        let grid = try #require(nextDay.grid)
+        #expect(nextDay.today == grid.indexPath(for: date(utc, 2024, 1, 21)), "today moves on a kept grid")
+        #expect(nextDay.today != first.today)
+
+        let event = CalendarEvent(title: "a", startDate: date(utc, 2024, 1, 21), endDate: date(utc, 2024, 1, 21))
+        let withEvent = CalendarSnapshot(
+            snapshotInputs(date(utc, 2024, 1, 15), date(utc, 2024, 2, 20), events: [event]),
+            now: date(utc, 2024, 1, 21), reusing: nextDay)
+        #expect(nextDay.eventIndex.isEmpty)
+        #expect(withEvent.eventIndex[try #require(withEvent.today)] == [event], "new events rebuild the index")
+    }
+
+    @Test func aSnapshotOfAnInvalidRangeHasNoMonths() {
+        let utc = calendar("UTC")
+        let event = CalendarEvent(title: "a", startDate: date(utc, 2024, 2, 1), endDate: date(utc, 2024, 2, 2))
+        let snapshot = CalendarSnapshot(
+            snapshotInputs(date(utc, 2024, 3, 10), date(utc, 2024, 1, 15), events: [event]),
+            now: date(utc, 2024, 2, 1))
+        #expect(snapshot.grid == nil)
+        #expect(snapshot.today == nil)
+        #expect(snapshot.eventIndex.isEmpty)
+    }
+
     // MARK: Data source traffic
 
     @Test func theDataSourceIsAskedOncePerReloadNotOncePerCell() {

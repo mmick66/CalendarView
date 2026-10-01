@@ -168,7 +168,7 @@ struct EventKitTests: CalendarFixture {
         #expect(view.events.map(\.title) == ["first", "last day"])
         #expect(store.queried.first?.0 == date(2024, 1, 15))
         #expect(store.queried.first?.1 == date(2024, 3, 11), "the query runs to the end of the last day")
-        #expect(view.eventIndex.count(at: view.indexPathForDate(date(2024, 3, 10))!) == 1)
+        #expect(view.snapshot.eventIndex.count(at: view.indexPathForDate(date(2024, 3, 10))!) == 1)
     }
 
     @Test func completionFormReportsSuccessAndDenialOnTheMainActor() async {
@@ -200,7 +200,7 @@ struct EventKitTests: CalendarFixture {
         #expect(store.stored.first?.startDate == date(2024, 1, 10, hour: 12))
         #expect(store.stored.first?.endDate == date(2024, 1, 10, hour: 14))
         #expect(view.events.map(\.title) == ["Lunch"])
-        #expect(view.eventIndex.count(at: IndexPath(item: 9, section: 0)) == 1)
+        #expect(view.snapshot.eventIndex.count(at: IndexPath(item: 9, section: 0)) == 1)
 
         store.hasFullAccess = false
         #expect(view.addEvent("Nope", date: date(2024, 1, 11)) == false)

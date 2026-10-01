@@ -28,7 +28,7 @@ import UIKit
 extension CalendarView: UICollectionViewDataSource {
 
     public func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return refreshMonths()?.numberOfSections ?? 0
+        return snapshot.grid?.numberOfSections ?? 0
     }
 
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -43,10 +43,10 @@ extension CalendarView: UICollectionViewDataSource {
             as! CalendarDayCell
 
         var configuration = DayCellConfiguration(style: style)
-        switch currentMonths?.content(at: indexPath) {
+        switch snapshot.grid?.content(at: indexPath) {
         case .day(let date, let dayOfMonth):
-            let isToday = indexPath == todayIndexPath
-            let eventsCount = eventIndex.count(at: indexPath)
+            let isToday = indexPath == snapshot.today
+            let eventsCount = snapshot.eventIndex.count(at: indexPath)
             configuration.style = delegate?.calendar(self, styleForDate: date) ?? style
             configuration.day = dayOfMonth
             configuration.date = date

@@ -93,17 +93,20 @@ mirrors them as the `Core` and `EventKit` subspecs of `KDCalendar.podspec`.
 - **`KDCalendar`** (`Sources/KDCalendar`): the calendar view, UIKit first.
   - `CalendarView.swift`: `CalendarView` (a `UIView` around a paging `UICollectionView`): its
     state, setup, layout and right-to-left handling, and the grid it reads from (`reloadData()`,
-    `refreshMonths()`, `rebuildEventIndex()`).
+    `refreshSnapshot()`).
   - `CalendarView+Selection.swift`: the public selection API and the collection view's selection
     callbacks. `CalendarView+Scrolling.swift`: `setDisplayDate`, the next and previous month, the
     scroll callbacks and the month notification. `CalendarView+DataSource.swift`: the cells.
   - `CalendarEvent.swift`, `CalendarViewDataSource.swift` and `CalendarViewDelegate.swift`: the
     event type and the two protocols with their default implementations.
   - `MonthGrid.swift`: `MonthGrid`, the pure date engine. It turns the data source's range, the
-    calendar and the first weekday into months of 7 × 6 cells with no UIKit involved;
-    `refreshMonths()` rebuilds it once per reload. `Calendar+Fixed.swift` pins an autoupdating calendar.
-  - `EventIndex.swift`: `EventIndex`, the events on each cell of a `MonthGrid`, also pure; it is
-    rebuilt with the grid and whenever `events` changes.
+    calendar and the first weekday into months of 7 × 6 cells with no UIKit involved.
+    `Calendar+Fixed.swift` pins an autoupdating calendar.
+  - `EventIndex.swift`: `EventIndex`, the events on each cell of a `MonthGrid`, also pure.
+  - `CalendarSnapshot.swift`: `CalendarSnapshot`, the grid, today's cell and the event index built
+    by one pure initialiser from the range, calendar, first weekday, events and the time. The view
+    keeps one, `refreshSnapshot()` rebuilds it once per reload (reusing the grid and index when the
+    inputs did not change), and every reader uses it; no computed property asks the data source.
   - `SelectionState.swift`: the selected days and the rules of the selection modes, kept as
     start-of-day dates so they survive any rebuild of the grid.
   - `CalendarView+Style.swift`: `CalendarView.Style`, a value type; assigning it restyles the view.
@@ -130,8 +133,8 @@ mirrors them as the `Core` and `EventKit` subspecs of `KDCalendar.podspec`.
   `Sendable`.
 - Every date the view computes or hands out is the start of a day in `CalendarView.calendar`
   (`Style.resolvedCalendar`). Never assume Gregorian, UTC or a Sunday first weekday.
-- Keep date logic in `MonthGrid` and `EventIndex` and selection logic in `SelectionState`, all
-  testable without a view; `CalendarView` wires them to UIKit and the delegate.
+- Keep date logic in `MonthGrid`, `EventIndex` and `CalendarSnapshot` and selection logic in
+  `SelectionState`, all testable without a view; `CalendarView` wires them to UIKit and the delegate.
 - Errors are explicit: APIs throw (`EventsManagerError` or the store's own error) rather than
   return `Bool` or swallow with `try?`; the `Bool` forms remain only for 1.x compatibility.
 - Formatting is `swift-format` with the repo's `.swift-format` (4 spaces, 120 columns, ordered
