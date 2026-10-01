@@ -30,7 +30,7 @@ https://github.com/mmick66/CalendarView
 Or in `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/mmick66/CalendarView", from: "2.0.0")
+.package(url: "https://github.com/mmick66/CalendarView", from: "2.1.0")
 ```
 
 Add the `KDCalendar` product to your target, and `KDCalendarEventKit` as well if you want system calendar events.

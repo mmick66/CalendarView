@@ -6,6 +6,8 @@ All notable changes to KDCalendar are documented here. The format follows
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-09-30
+
 ### Added
 
 - `CalendarEventStore`, the part of `EKEventStore` the EventKit bridge uses.
