@@ -19,6 +19,9 @@ struct EventKitTests: CalendarFixture {
         var stored: [CalendarEvent] = []
         var saveFails = false
         var queried: [(Date, Date)] = []
+        /// Whether queries wait for ``release(_:)`` before returning.
+        var holdsQueries = false
+        var heldQueries: [CheckedContinuation<Void, Never>] = []
 
         func requestFullAccess() async throws -> Bool {
             requests += 1
@@ -29,7 +32,21 @@ struct EventKitTests: CalendarFixture {
 
         func events(from start: Date, to end: Date) async -> [CalendarEvent] {
             queried.append((start, end))
-            return stored.filter { $0.startDate < end && $0.endDate >= start }
+            let found = stored.filter { $0.startDate < end && $0.endDate >= start }
+            if holdsQueries {
+                await withCheckedContinuation { heldQueries.append($0) }
+            }
+            return found
+        }
+
+        /// Lets the `index`th held query return.
+        func release(_ index: Int) {
+            heldQueries[index].resume()
+        }
+
+        /// Waits until `count` queries are held.
+        func waitForHeldQueries(_ count: Int) async {
+            while heldQueries.count < count { await Task.yield() }
         }
 
         func save(_ event: CalendarEvent) throws {
@@ -191,6 +208,54 @@ struct EventKitTests: CalendarFixture {
         }
         #expect(failure as? EventsManagerError == .authorization)
         #expect(view.events.count == 1, "a failed load keeps the previous events")
+    }
+
+    @Test func theLatestLoadWinsWhenAnEarlierQueryFinishesLast() async throws {
+        store.hasFullAccess = true
+        store.holdsQueries = true
+        store.stored = [event("january", date(2024, 1, 10)), event("march", date(2024, 3, 10))]
+        let view = makeCalendarWithStore(start: date(2024, 1, 1), end: date(2024, 1, 31))
+
+        let first = Task { try await view.loadEvents() }
+        await store.waitForHeldQueries(1)
+        dataSource(of: view).start = date(2024, 3, 1)
+        dataSource(of: view).end = date(2024, 3, 31)
+        view.reloadData()
+        let second = Task { try await view.loadEvents() }
+        await store.waitForHeldQueries(2)
+
+        store.release(1)
+        try await second.value
+        #expect(view.events.map(\.title) == ["march"])
+
+        store.release(0)
+        await #expect(throws: CancellationError.self) { try await first.value }
+        #expect(view.events.map(\.title) == ["march"], "the superseded load leaves the events alone")
+    }
+
+    @Test func completionFormReportsASupersededLoadAsCancelled() async {
+        store.hasFullAccess = true
+        store.holdsQueries = true
+        store.stored = [event("a", date(2024, 1, 10))]
+        let view = makeCalendarWithStore(start: date(2024, 1, 1), end: date(2024, 1, 31))
+
+        let first = Task {
+            await withCheckedContinuation { continuation in
+                view.loadEvents { continuation.resume(returning: $0) }
+            }
+        }
+        await store.waitForHeldQueries(1)
+        let second = Task {
+            await withCheckedContinuation { continuation in
+                view.loadEvents { continuation.resume(returning: $0) }
+            }
+        }
+        await store.waitForHeldQueries(2)
+        store.release(0)
+        store.release(1)
+        #expect(await first.value is CancellationError)
+        #expect(await second.value == nil)
+        #expect(view.events.map(\.title) == ["a"])
     }
 
     @Test func addEventSavesForTheGivenDurationAndShowsADot() {

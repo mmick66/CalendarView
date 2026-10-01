@@ -47,6 +47,11 @@ All notable changes to KDCalendar are documented here. The format follows
   selection silently. The delegate now receives `didDeselectDate` for each day
   dropped, before `didSelectRange`, as it does when a tap or the selection mode
   drops days.
+- Overlapping `loadEvents()` calls assigned their events in the order their
+  queries finished, so an earlier load, such as one for the range before the
+  data source changed it, could overwrite a later one. The latest call wins
+  now: a load that a later one supersedes leaves `events` alone and throws
+  `CancellationError`, which the completion form passes to its handler.
 
 ## [2.1.0] - 2026-09-30
 

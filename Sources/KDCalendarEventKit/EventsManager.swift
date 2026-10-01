@@ -242,6 +242,7 @@ extension EventsManager {
 // MARK: - CalendarView integration
 
 @MainActor private var eventsManagerKey: UInt8 = 0
+@MainActor private var eventsLoadKey: UInt8 = 0
 
 extension CalendarView {
 
@@ -260,8 +261,12 @@ extension CalendarView {
     /// Asks for full calendar access if it has not been granted yet; the app must declare
     /// `NSCalendarsFullAccessUsageDescription`.
     ///
-    /// - Throws: ``EventsManagerError/authorization`` when access is denied, or the error
-    ///   the store threw while asking for it.
+    /// A load supersedes any load still running, so the last call wins however long each query
+    /// takes: a superseded load leaves `events` alone and throws `CancellationError`.
+    ///
+    /// - Throws: ``EventsManagerError/authorization`` when access is denied, the error the
+    ///   store threw while asking for it, or `CancellationError` when a later load started
+    ///   before this one finished.
     public func loadEvents() async throws {
         try await loadEvents(using: eventsManager)
     }
@@ -269,7 +274,7 @@ extension CalendarView {
     /// Completion-handler form of ``loadEvents()``.
     ///
     /// The handler runs on the main actor with `nil` on success or the error ``loadEvents()``
-    /// threw.
+    /// threw, which is `CancellationError` when a later load superseded this one.
     public func loadEvents(onComplete: (@MainActor (_ error: Error?) -> Void)? = nil) {
         loadEvents(using: eventsManager, onComplete: onComplete)
     }
@@ -292,10 +297,22 @@ extension CalendarView {
         addEvent(title, date: startDate, duration: hours, using: eventsManager)
     }
 
+    /// Counts the loads started on this view, so that a load can tell whether a later one has
+    /// superseded it.
+    private var eventsLoad: Int {
+        get { objc_getAssociatedObject(self, &eventsLoadKey) as? Int ?? 0 }
+        set { objc_setAssociatedObject(self, &eventsLoadKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+    }
+
     private func loadEvents(using manager: EventsManager) async throws {
+        eventsLoad += 1
+        let load = eventsLoad
         let range = self.dateRange
         guard let end = calendar.date(byAdding: .day, value: 1, to: range.upperBound) else { return }
-        self.events = try await manager.load(from: range.lowerBound, to: end)
+        let events = try await manager.load(from: range.lowerBound, to: end)
+        // Queries can finish out of order; only the latest load may assign its events.
+        guard load == eventsLoad else { throw CancellationError() }
+        self.events = events
     }
 
     private func loadEvents(using manager: EventsManager, onComplete: (@MainActor (_ error: Error?) -> Void)?) {
