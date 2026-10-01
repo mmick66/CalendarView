@@ -27,14 +27,17 @@ import UIKit
 
 extension CalendarView: UICollectionViewDataSource {
 
+    /// One section per month of the data source's range.
     public func numberOfSections(in collectionView: UICollectionView) -> Int {
         return refreshMonths()?.numberOfSections ?? 0
     }
 
+    /// Seven columns by six rows of days in every month.
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return MonthGrid.cellsPerMonth  // rows:7 x cols:6
     }
 
+    /// A ``CalendarDayCell`` configured for the day at `indexPath`, its events and its style.
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath)
         -> UICollectionViewCell
     {

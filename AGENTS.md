@@ -205,7 +205,9 @@ mirrors them as the `Core` and `EventKit` subspecs of `KDCalendar.podspec`.
   return `Bool` or swallow with `try?`; the `Bool` forms remain only for 1.x compatibility.
 - Formatting is `swift-format` with the repo's `.swift-format` (4 spaces, 120 columns, ordered
   imports); `lint --strict` must pass.
-- Public API gets `///` documentation with DocC symbol links (``` ``CalendarView/style`` ```).
+- Public API gets `///` documentation with DocC symbol links (``` ``CalendarView/style`` ```),
+  protocol witnesses included; the lint enforces it. The first sentence stands alone as the
+  summary, followed by a blank `///` line before any discussion.
 - Tests use Swift Testing (`@Test`, `#expect`); suites that lay out views are
   `@Suite(.serialized) @MainActor`.
 - A file header, where there is one, is the MIT notice (see `CalendarView.swift`); files without

@@ -49,8 +49,9 @@ struct SelectionState: Equatable, Sendable {
         }
     }
 
-    /// Deselects `day`. In `.range` mode that clears the whole range. Nothing changes when
-    /// `day` is not selected.
+    /// Deselects `day`.
+    ///
+    /// In `.range` mode that clears the whole range. Nothing changes when `day` is not selected.
     mutating func deselect(_ day: Date) -> Change {
         guard days.contains(day) else { return Change() }
         return replace(with: mode == .range ? [] : days.filter { $0 != day })
@@ -88,7 +89,9 @@ struct SelectionState: Equatable, Sendable {
         return replace(with: kept, rangeStart: mode == .range && !isRange ? kept.first : nil)
     }
 
-    /// Keeps the days `isKept` accepts, in order. A range start goes with its day.
+    /// Keeps the days `isKept` accepts, in order.
+    ///
+    /// A range start goes with its day.
     mutating func retain(where isKept: (Date) -> Bool) -> Change {
         let kept = days.filter(isKept)
         return replace(with: kept, rangeStart: rangeStart.flatMap { kept.contains($0) ? $0 : nil })
@@ -100,8 +103,9 @@ struct SelectionState: Equatable, Sendable {
         rangeStart = rangeStart.map(transform)
     }
 
-    /// Replaces the selection with `newDays`. Any range they make is complete unless
-    /// `rangeStart` says it waits for its second end.
+    /// Replaces the selection with `newDays`.
+    ///
+    /// Any range they make is complete unless `rangeStart` says it waits for its second end.
     mutating func replace(with newDays: [Date], rangeStart: Date? = nil) -> Change {
         let old = days
         let oldSet = Set(old)

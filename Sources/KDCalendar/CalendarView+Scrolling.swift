@@ -2,17 +2,19 @@ import UIKit
 
 extension CalendarView {
 
-    /// Whether the user can scroll between months. Programmatic scrolling always works.
+    /// Whether the user can scroll between months.
+    ///
+    /// Programmatic scrolling always works.
     public var isScrollEnabled: Bool {
         get { collectionView.isScrollEnabled }
         set { collectionView.isScrollEnabled = newValue }
     }
 
-    /// Scrolls to the month containing `date`. Dates outside the data source's months are ignored.
+    /// Scrolls to the month containing `date`.
     ///
-    /// The delegate receives `didScrollToMonth` once the month is on screen: when the animation
-    /// ends, or immediately when `animated` is `false`, the view has no size yet or the month
-    /// is already on screen.
+    /// Dates outside the data source's months are ignored. The delegate receives `didScrollToMonth`
+    /// once the month is on screen: when the animation ends, or immediately when `animated` is
+    /// `false`, the view has no size yet or the month is already on screen.
     public func setDisplayDate(_ date: Date, animated: Bool = false) {
         guard let indexPath = self.indexPathForDate(date),
             let month = self.months?.firstDayOfMonth(inSection: indexPath.section)
@@ -92,20 +94,24 @@ extension CalendarView {
 
     // MARK: UIScrollViewDelegate
 
+    /// Forgets the month an animated scroll was heading for: the user has taken over.
     public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         animationTargetMonth = nil
     }
 
+    /// Reports the month the user dragged to, unless the scroll view goes on decelerating.
     public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
         guard !decelerate else { return }  // scrollViewDidEndDecelerating reports once it settles
         self.updateAndNotifyScrolling()
     }
 
+    /// Reports the month the scroll view settled on.
     public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         animationTargetMonth = nil
         self.updateAndNotifyScrolling()
     }
 
+    /// Reports the month an animated scroll reached, unless a newer animation interrupted it.
     public func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
         if let target = animationTargetMonth, self.dateFromScrollViewPosition() != target {
             return  // interrupted by a newer animation; that one reports when it settles

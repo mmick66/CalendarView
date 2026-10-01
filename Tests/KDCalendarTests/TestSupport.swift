@@ -3,8 +3,9 @@ import UIKit
 
 @testable import KDCalendar
 
-/// A Gregorian calendar in UTC. Tests build their dates through it so they do not depend on the
-/// machine's time zone.
+/// A Gregorian calendar in UTC.
+///
+/// Tests build their dates through it so they do not depend on the machine's time zone.
 private let utcCalendar: Calendar = {
     var calendar = Calendar(identifier: .gregorian)
     calendar.timeZone = TimeZone(identifier: "UTC")!
@@ -24,9 +25,10 @@ extension UTCDates {
     }
 }
 
-/// Lays out calendars in a window for a suite. A suite keeps its own window, so suites running
-/// side by side never clear each other's views, and keeps what the view holds weakly in
-/// ``retained``.
+/// Lays out calendars in a window for a suite.
+///
+/// A suite keeps its own window, so suites running side by side never clear each other's views, and
+/// keeps what the view holds weakly in ``retained``.
 @MainActor
 protocol CalendarFixture: UTCDates {
     /// The suite's window, made with ``makeWindow(height:)``.

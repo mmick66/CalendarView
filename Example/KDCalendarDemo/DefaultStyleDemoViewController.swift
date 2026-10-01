@@ -3,6 +3,7 @@ import UIKit
 
 /// The default style, untouched: dynamic colours for dark mode, fonts that follow Dynamic Type,
 /// vertical paging, multiple selection, adjacent days and the calendar's own first weekday.
+///
 /// The delegate greys out Sundays, which cannot be selected, and colours the 15th as a holiday.
 final class DefaultStyleDemoViewController: UIViewController {
 

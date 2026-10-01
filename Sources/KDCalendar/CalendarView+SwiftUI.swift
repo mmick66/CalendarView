@@ -47,8 +47,9 @@ public struct KDCalendarView: UIViewRepresentable {
 
     /// The first and last selectable days.
     public var range: ClosedRange<Date>
-    /// The selected days, in selection order. See the type's discussion for how an assigned value
-    /// is shaped by the selection mode.
+    /// The selected days, in selection order.
+    ///
+    /// See the type's discussion for how an assigned value is shaped by the selection mode.
     @Binding public var selection: [Date]
 
     var style = CalendarView.Style.default
@@ -78,7 +79,9 @@ public struct KDCalendarView: UIViewRepresentable {
     /// The scrolling axis.
     public func direction(_ direction: UICollectionView.ScrollDirection) -> Self { with(\.direction, direction) }
 
-    /// Whether more than one day can be selected. Shorthand for `.single` or `.multiple`.
+    /// Whether more than one day can be selected.
+    ///
+    /// Shorthand for `.single` or `.multiple`.
     public func allowsMultipleSelection(_ allows: Bool) -> Self {
         selectionMode(allows ? .multiple : .single)
     }
@@ -102,16 +105,20 @@ public struct KDCalendarView: UIViewRepresentable {
     public func displayDate(_ date: Date?) -> Self { with(\.displayDate, date) }
 
     /// Decides whether a day in range may be selected.
-    public func canSelect(_ predicate: @escaping (Date) -> Bool) -> Self { with(\.canSelect, predicate) }
+    public func canSelect(_ predicate: @escaping (_ date: Date) -> Bool) -> Self { with(\.canSelect, predicate) }
 
     /// A style for one day, or `nil` for the calendar's style.
-    public func styleForDate(_ style: @escaping (Date) -> CalendarView.Style?) -> Self { with(\.styleForDate, style) }
+    public func styleForDate(_ style: @escaping (_ date: Date) -> CalendarView.Style?) -> Self {
+        with(\.styleForDate, style)
+    }
 
     /// Called with the first day of each month the calendar settles on.
-    public func onScrollToMonth(_ action: @escaping (Date) -> Void) -> Self { with(\.onScrollToMonth, action) }
+    public func onScrollToMonth(_ action: @escaping (_ month: Date) -> Void) -> Self { with(\.onScrollToMonth, action) }
 
     /// Called when a day is long-pressed, with the events on that day.
-    public func onLongPress(_ action: @escaping (Date, [CalendarEvent]) -> Void) -> Self { with(\.onLongPress, action) }
+    public func onLongPress(_ action: @escaping (_ date: Date, _ events: [CalendarEvent]) -> Void) -> Self {
+        with(\.onLongPress, action)
+    }
 
     /// A copy with one property set to `value`, the body of every modifier.
     private func with<Value>(_ keyPath: WritableKeyPath<Self, Value>, _ value: Value) -> Self {
@@ -122,10 +129,12 @@ public struct KDCalendarView: UIViewRepresentable {
 
     // MARK: UIViewRepresentable
 
+    /// Creates the coordinator that serves as the calendar's data source and delegate.
     public func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
 
+    /// Creates the calendar view and connects it to the coordinator.
     public func makeUIView(context: Context) -> CalendarView {
         let view = CalendarView(frame: .zero)
         view.dataSource = context.coordinator
@@ -133,6 +142,7 @@ public struct KDCalendarView: UIViewRepresentable {
         return view
     }
 
+    /// Applies the modifiers and the selection binding to the calendar view.
     public func updateUIView(_ view: CalendarView, context: Context) {
         let coordinator = context.coordinator
         coordinator.parent = self
@@ -145,9 +155,10 @@ public struct KDCalendarView: UIViewRepresentable {
     }
 
     /// Sets how the view looks and behaves, and returns whether the binding should take the view's
-    /// selection instead of being applied to it. A new mode drops the days it cannot hold. Unless
-    /// the binding brings a selection of its own, the binding drops them too rather than being
-    /// reapplied in the new mode's shape.
+    /// selection instead of being applied to it.
+    ///
+    /// A new mode drops the days it cannot hold. Unless the binding brings a selection of its own,
+    /// the binding drops them too rather than being reapplied in the new mode's shape.
     private func applyConfiguration(to view: CalendarView) -> Bool {
         if view.style != self.style { view.style = self.style }
         if view.direction != self.direction { view.direction = self.direction }
@@ -179,9 +190,10 @@ public struct KDCalendarView: UIViewRepresentable {
     }
 
     /// Brings the view's selection in line with the binding, or the binding in line with the view
-    /// when `bindingFollowsView`. Replaying the days as taps would pair them into ranges or keep
-    /// only the last, so they are applied as a whole. What the view cannot show as given goes back
-    /// to the binding.
+    /// when `bindingFollowsView`.
+    ///
+    /// Replaying the days as taps would pair them into ranges or keep only the last, so they are
+    /// applied as a whole. What the view cannot show as given goes back to the binding.
     private func syncSelection(of view: CalendarView, coordinator: Coordinator, bindingFollowsView: Bool) {
         let wanted = self.selection.map { view.calendar.startOfDay(for: $0) }
         guard wanted != view.selectedDates else { return }
@@ -221,41 +233,51 @@ public struct KDCalendarView: UIViewRepresentable {
             }
         }
 
-        /// Hands the view's selection to the binding after a tap. Selections that updateUIView
-        /// makes are the binding's own and are not echoed back.
+        /// Hands the view's selection to the binding after a tap.
+        ///
+        /// Selections that updateUIView makes are the binding's own and are not echoed back.
         private func selectionChanged(in calendar: CalendarView) {
             guard !isUpdating else { return }
             parent.selection = calendar.selectedDates
         }
 
+        /// The lower bound of the view's range.
         public func startDate() -> Date { range.lowerBound }
+        /// The upper bound of the view's range.
         public func endDate() -> Date { range.upperBound }
 
         // A display date applied by updateUIView announces its month during the view update.
+        /// Calls the ``KDCalendarView/onScrollToMonth(_:)`` action.
         public func calendar(_ calendar: CalendarView, didScrollToMonth date: Date) {
             afterUpdate { self.parent.onScrollToMonth?(date) }
         }
 
+        /// Asks the ``KDCalendarView/canSelect(_:)`` predicate; `true` without one.
         public func calendar(_ calendar: CalendarView, canSelectDate date: Date) -> Bool {
             parent.canSelect?(date) ?? true
         }
 
+        /// Asks the ``KDCalendarView/styleForDate(_:)`` closure; `nil` without one.
         public func calendar(_ calendar: CalendarView, styleForDate date: Date) -> CalendarView.Style? {
             parent.styleForDate?(date)
         }
 
+        /// Hands the view's selection to the binding.
         public func calendar(_ calendar: CalendarView, didSelectRange range: ClosedRange<Date>) {
             selectionChanged(in: calendar)
         }
 
+        /// Hands the view's selection to the binding.
         public func calendar(_ calendar: CalendarView, didSelectDate date: Date, withEvents events: [CalendarEvent]) {
             selectionChanged(in: calendar)
         }
 
+        /// Hands the view's selection to the binding.
         public func calendar(_ calendar: CalendarView, didDeselectDate date: Date) {
             selectionChanged(in: calendar)
         }
 
+        /// Calls the ``KDCalendarView/onLongPress(_:)`` action, with no events for a day that has none.
         public func calendar(_ calendar: CalendarView, didLongPressDate date: Date, withEvents events: [CalendarEvent]?)
         {
             parent.onLongPress?(date, events ?? [])

@@ -38,15 +38,18 @@ public class CalendarView: UIView {
     let headerView = CalendarHeaderView(frame: .zero)
     let collectionView = UICollectionView(frame: .zero, collectionViewLayout: CalendarFlowLayout())
 
-    /// Whether the grid always runs left to right. When `false` the grid mirrors in
-    /// right-to-left layouts.
+    /// Whether the grid always runs left to right.
+    ///
+    /// When `false` the grid mirrors in right-to-left layouts.
     public var forceLtr: Bool = true {
         didSet {
             updateLayoutDirections()
         }
     }
 
-    /// The look of the calendar. Assign a new value, or mutate in place, to restyle.
+    /// The look of the calendar.
+    ///
+    /// Assign a new value, or mutate in place, to restyle.
     public var style: Style = .default {
         didSet {
             updateStyle()
@@ -61,16 +64,23 @@ public class CalendarView: UIView {
 
     /// The days the data source currently spans, from `startDate()` to `endDate()`, at the
     /// start of each day.
+    ///
+    /// The first read after the data source or the calendar changes asks the data source for its
+    /// range and builds the month grid; later reads use that grid.
     public var dateRange: ClosedRange<Date> {
         let start = startDay
         let end = endDay
         return start <= end ? start...end : start...start
     }
 
-    /// The selected days and the range being picked. Cells are derived from it on demand.
+    /// The selected days and the range being picked.
+    ///
+    /// Cells are derived from it on demand.
     var selection = SelectionState()
 
-    /// The month grid derived from the data source. Rebuilt whenever the range changes.
+    /// The month grid derived from the data source.
+    ///
+    /// Rebuilt whenever the range changes.
     var months: MonthGrid?
     /// The cell showing today, refreshed with the grid and when the day changes.
     var todayIndexPath: IndexPath?
@@ -79,7 +89,9 @@ public class CalendarView: UIView {
     /// The events on each cell, refreshed with the grid and the events.
     var eventIndex = EventIndex()
 
-    /// Events to show as dots. An event marks every day it covers.
+    /// Events to show as dots.
+    ///
+    /// An event marks every day it covers.
     public var events: [CalendarEvent] = [] {
         didSet {
             rebuildEventIndex()
@@ -97,11 +109,15 @@ public class CalendarView: UIView {
     public internal(set) var displayDate: Date?
     /// The last month the delegate was told about, so it hears about each month once.
     var lastNotifiedMonth: Date?
-    /// The month an animated scroll is heading for. An animation that is interrupted by
-    /// another one reports its end at the wrong offset; the target tells them apart.
+    /// The month an animated scroll is heading for.
+    ///
+    /// An animation that is interrupted by another one reports its end at the wrong offset; the
+    /// target tells them apart.
     var animationTargetMonth: Date?
 
-    /// Whether tapping a selected day deselects it. Programmatic deselection always works.
+    /// Whether tapping a selected day deselects it.
+    ///
+    /// Programmatic deselection always works.
     public var enableDeselection = true
 
     /// Whether weekend days use `Style.cellTextColorWeekend`.
@@ -111,7 +127,9 @@ public class CalendarView: UIView {
 
     /// Receives scrolling and selection events.
     public weak var delegate: CalendarViewDelegate?
-    /// Provides the range of days to show. Assigning one reloads the calendar from it.
+    /// Provides the range of days to show.
+    ///
+    /// Assigning one reloads the calendar from it.
     public weak var dataSource: CalendarViewDataSource? {
         didSet {
             invalidateMonths()
@@ -128,7 +146,9 @@ public class CalendarView: UIView {
         headerView.setStyle(style, formatters: formatters)
     }
 
-    /// The scrolling axis. Each month is one page.
+    /// The scrolling axis.
+    ///
+    /// Each month is one page.
     public var direction: UICollectionView.ScrollDirection = .horizontal {
         didSet {
             flowLayout.scrollDirection = direction
@@ -142,6 +162,7 @@ public class CalendarView: UIView {
         self.setup()
     }
 
+    /// Creates a calendar from an archive, with a fresh header and grid.
     required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         // A view decoded from an archive brings its old header and grid along; replace them.
@@ -152,7 +173,9 @@ public class CalendarView: UIView {
     }
 
     // MARK: Create Subviews
-    /// Configures the header and the grid and adds them. Each initialiser calls it once.
+    /// Configures the header and the grid and adds them.
+    ///
+    /// Each initialiser calls it once.
     private func setup() {
         self.clipsToBounds = true
 
@@ -288,10 +311,11 @@ public class CalendarView: UIView {
 
 extension CalendarView {
 
-    /// Reloads every day cell, keeping the selection. Asks the data source for its range again.
+    /// Reloads every day cell, keeping the selection.
     ///
-    /// Selected days stay selected wherever the new grid puts them. Days that are no longer in
-    /// range are deselected, and the delegate receives `didDeselectDate` for each.
+    /// Asks the data source for its range again. Selected days stay selected wherever the new grid
+    /// puts them. Days that are no longer in range are deselected, and the delegate receives
+    /// `didDeselectDate` for each.
     public func reloadData() {
         refreshMonths()
         let change = selection.retain { date in
@@ -306,9 +330,10 @@ extension CalendarView {
         }
     }
 
-    /// Asks the data source for its range and rebuilds the month grid when the range moved to
-    /// other days or the calendar changed, and the formatters when the calendar changed. The
-    /// current month alone without a data source; zero months when the range is invalid. Called
+    /// Asks the data source for its range and rebuilds the month grid when the range moved to other
+    /// days or the calendar changed, and the formatters when the calendar changed.
+    ///
+    /// The current month alone without a data source; zero months when the range is invalid. Called
     /// once per reload, not once per cell.
     @discardableResult
     func refreshMonths() -> MonthGrid? {
@@ -342,7 +367,9 @@ extension CalendarView {
         return months
     }
 
-    /// The month grid, built on first use. Reloads refresh it from the data source.
+    /// The month grid, built on first use.
+    ///
+    /// Reloads refresh it from the data source.
     var currentMonths: MonthGrid? {
         months ?? refreshMonths()
     }

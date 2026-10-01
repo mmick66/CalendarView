@@ -16,7 +16,10 @@ public protocol CalendarViewDataSource: AnyObject {
 }
 
 extension CalendarViewDataSource {
+    /// Today.
     public func startDate() -> Date { Date() }
+    /// Today.
     public func endDate() -> Date { Date() }
+    /// `nil`, for the localized month and year.
     public func headerString(_ date: Date) -> String? { nil }
 }

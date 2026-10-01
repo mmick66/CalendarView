@@ -25,6 +25,7 @@
 
 import UIKit
 
+/// The header of a ``CalendarView``: the month title above a row of weekday labels.
 open class CalendarHeaderView: UIView {
 
     private(set) var style: CalendarView.Style = .default
@@ -49,6 +50,7 @@ open class CalendarHeaderView: UIView {
         buildLabels()
     }
 
+    /// Creates a header from an archive, with fresh labels.
     required public init?(coder: NSCoder) {
         super.init(coder: coder)
         // Labels decoded from an archive are replaced by fresh ones; the style recreates the text.

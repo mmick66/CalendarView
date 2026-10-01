@@ -44,6 +44,7 @@ extension CalendarView {
             traits.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.1) : UIColor(white: 0.0, alpha: 0.1)
         }
 
+        /// The default style; renamed ``default``.
         @available(
             *, deprecated, renamed: "default",
             message: "Style is a value now; use Style.default and assign a modified copy to the view."
@@ -91,6 +92,7 @@ extension CalendarView {
             case automatic
         }
 
+        /// How days outside the range would be shown; the view never read it.
         @available(
             *, deprecated,
             message: "Never used by the view; days outside the range are always styled with cellColorOutOfRange."
@@ -106,6 +108,7 @@ extension CalendarView {
             case capitalized, uppercase
         }
 
+        /// Creates the default style, the same as ``default``.
         public init() {
         }
 
@@ -124,7 +127,9 @@ extension CalendarView {
         public var headerTextColor = UIColor.secondaryLabel
         /// The background behind the month title.
         public var headerBackgroundColor = UIColor.systemBackground
-        /// The font of the month title. Scales with Dynamic Type by default.
+        /// The font of the month title.
+        ///
+        /// Scales with Dynamic Type by default.
         public var headerFont = UIFontMetrics(forTextStyle: .title3).scaledFont(for: UIFont.systemFont(ofSize: 20))
 
         /// The space above the weekday labels.
@@ -137,7 +142,9 @@ extension CalendarView {
         public var weekdaysTextColor = UIColor.secondaryLabel
         /// The background behind the weekday labels.
         public var weekdaysBackgroundColor = UIColor.systemBackground
-        /// The font of the weekday labels. Scales with Dynamic Type by default.
+        /// The font of the weekday labels.
+        ///
+        /// Scales with Dynamic Type by default.
         public var weekdaysFont = UIFontMetrics(forTextStyle: .footnote).scaledFont(for: UIFont.systemFont(ofSize: 14))
 
         // MARK: Grid
@@ -145,7 +152,9 @@ extension CalendarView {
         /// The shape of every day's background.
         public var cellShape = CellShapeOptions.bevel(4.0)
 
-        /// The day the week starts on. Monday by default; use `.automatic` to follow the calendar's locale.
+        /// The day the week starts on.
+        ///
+        /// Monday by default; use `.automatic` to follow the calendar's locale.
         public var firstWeekday = FirstWeekdayOptions.monday
         /// Whether the empty cells before and after a month show the neighbouring months' days.
         public var showAdjacentDays = false
@@ -160,7 +169,9 @@ extension CalendarView {
         public var cellBorderColor = UIColor.clear
         /// The border width of an unselected day.
         public var cellBorderWidth = CGFloat(0.0)
-        /// The font of the day numbers. Scales with Dynamic Type by default.
+        /// The font of the day numbers.
+        ///
+        /// Scales with Dynamic Type by default.
         public var cellFont = UIFontMetrics(forTextStyle: .body).scaledFont(for: UIFont.systemFont(ofSize: 17))
 
         // MARK: Today
@@ -194,13 +205,15 @@ extension CalendarView {
 
         // MARK: Locale and calendar
 
-        /// The locale for the month title and weekday labels. Defaults to the user's locale,
-        /// following it when it changes.
+        /// The locale for the month title and weekday labels.
+        ///
+        /// Defaults to the user's locale, following it when it changes.
         public var locale = Locale.autoupdatingCurrent
 
-        /// The calendar, and with it the time zone, every date is interpreted in. Defaults to
-        /// the user's calendar, following it when it changes, so the grid and today's marker
-        /// move with the device's time zone. Set a Gregorian calendar in UTC to get the 1.x
+        /// The calendar, and with it the time zone, every date is interpreted in.
+        ///
+        /// Defaults to the user's calendar, following it when it changes, so the grid and today's
+        /// marker move with the device's time zone. Set a Gregorian calendar in UTC to get the 1.x
         /// behaviour.
         public var calendar: Calendar = Calendar.autoupdatingCurrent
 

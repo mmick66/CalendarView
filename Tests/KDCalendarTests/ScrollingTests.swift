@@ -188,8 +188,10 @@ struct ScrollingTests: CalendarFixture {
 
     /// At some widths a flow of the items wraps six days to a row, which must not leak into the
     /// page geometry: the content stays a whole number of pages and every day of the last page
-    /// shows. The size is whole pixels at 3x, as Auto Layout makes it, so the content offset is
-    /// not rounded off a page.
+    /// shows.
+    ///
+    /// The size is whole pixels at 3x, as Auto Layout makes it, so the content offset is not
+    /// rounded off a page.
     @Test(arguments: [UICollectionView.ScrollDirection.horizontal, .vertical])
     func fractionalSizesKeepWholePagesAndEveryCell(direction: UICollectionView.ScrollDirection) {
         let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10), direction: direction)

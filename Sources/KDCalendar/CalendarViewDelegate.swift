@@ -25,9 +25,14 @@ public protocol CalendarViewDelegate: AnyObject {
 }
 
 extension CalendarViewDelegate {
+    /// `true`: every day in range may be selected.
     public func calendar(_ calendar: CalendarView, canSelectDate date: Date) -> Bool { true }
+    /// Does nothing.
     public func calendar(_ calendar: CalendarView, didDeselectDate date: Date) {}
+    /// Does nothing.
     public func calendar(_ calendar: CalendarView, didLongPressDate date: Date, withEvents events: [CalendarEvent]?) {}
+    /// Does nothing.
     public func calendar(_ calendar: CalendarView, didSelectRange range: ClosedRange<Date>) {}
+    /// `nil`: every day uses the calendar's own style.
     public func calendar(_ calendar: CalendarView, styleForDate date: Date) -> CalendarView.Style? { nil }
 }

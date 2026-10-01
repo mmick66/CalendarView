@@ -263,8 +263,9 @@ struct EventKitTests: CalendarFixture {
     }
 }
 
-/// Calls the 2.1 forms that take a `store` argument. Reached through a protocol so that the
-/// tests compile without deprecation warnings.
+/// Calls the 2.1 forms that take a `store` argument.
+///
+/// Reached through a protocol so that the tests compile without deprecation warnings.
 @MainActor
 private protocol DeprecatedForms {
     func exerciseDeprecatedForms() async throws

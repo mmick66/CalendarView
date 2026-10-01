@@ -15,6 +15,11 @@ All notable changes to KDCalendar are documented here. The format follows
   default, is the manager `loadEvents()`, `saveEvent(_:)` and
   `addEvent(_:date:duration:)` use.
 
+- Every public declaration has a documentation comment, and the lint keeps it
+  that way. The closures of the SwiftUI modifiers and of
+  `loadEvents(onComplete:)` name their parameters, such as
+  `onLongPress(_ action: (_ date: Date, _ events: [CalendarEvent]) -> Void)`.
+
 ### Deprecated
 
 - The static `EventsManager.store`, `hasFullAccess`, `load(from:to:store:)`,

@@ -8,11 +8,13 @@
   "lineBreakBeforeEachArgument": false,
   "indentConditionalCompilationBlocks": false,
   "rules": {
-    "AllPublicDeclarationsHaveDocumentation": false,
+    "AllPublicDeclarationsHaveDocumentation": true,
     "AlwaysUseLiteralForEmptyCollectionInit": false,
+    "BeginDocumentationCommentWithOneLineSummary": true,
     "NoBlockComments": false,
     "NoAccessLevelOnExtensionDeclaration": false,
     "OrderedImports": true,
-    "UseLetInEveryBoundCaseVariable": false
+    "UseLetInEveryBoundCaseVariable": false,
+    "ValidateDocumentationComments": true
   }
 }

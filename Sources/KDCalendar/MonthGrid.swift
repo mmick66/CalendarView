@@ -1,7 +1,8 @@
 import Foundation
 
-/// The months a calendar shows, as a 7 × 6 grid per month. Pure date arithmetic, built once
-/// per data source range and calendar.
+/// The months a calendar shows, as a 7 × 6 grid per month.
+///
+/// Pure date arithmetic, built once per data source range and calendar.
 struct MonthGrid {
 
     /// Cells per month: seven columns, six rows.
@@ -10,8 +11,9 @@ struct MonthGrid {
     struct Month {
         /// The first day of the month at the start of the day.
         let firstDate: Date
-        /// The column of the first day, 0 to 6, which is also its item in the section. The cells
-        /// before it hold the end of the previous month.
+        /// The column of the first day, 0 to 6, which is also its item in the section.
+        ///
+        /// The cells before it hold the end of the previous month.
         let firstColumn: Int
         /// The number of days in the month.
         let dayCount: Int
@@ -81,8 +83,10 @@ struct MonthGrid {
         case empty
     }
 
-    /// What the cell at `indexPath` shows. The cells around a month hold the neighbouring
-    /// months' days, before the first month and after the last month too.
+    /// What the cell at `indexPath` shows.
+    ///
+    /// The cells around a month hold the neighbouring months' days, before the first month and
+    /// after the last month too.
     func content(at indexPath: IndexPath) -> Content {
         guard months.indices.contains(indexPath.section) else { return .empty }
         let month = months[indexPath.section]
@@ -103,8 +107,9 @@ struct MonthGrid {
         return date
     }
 
-    /// Whether the cell shows no day between `startDay` and `endDay`. Cells without a day of
-    /// their month are out of range.
+    /// Whether the cell shows no day between `startDay` and `endDay`.
+    ///
+    /// Cells without a day of their month are out of range.
     func isOutOfRange(_ indexPath: IndexPath) -> Bool {
         guard let date = date(at: indexPath) else { return true }
         return !(startDay...endDay).contains(date)

@@ -2,8 +2,9 @@ import KDCalendar
 import KDCalendarEventKit
 import UIKit
 
-/// The original demo: a styled horizontal calendar, previous and next month
-/// buttons, and a date picker that scrolls the calendar to the picked month.
+/// The original demo: a styled horizontal calendar, previous and next month buttons, and a date
+/// picker that scrolls the calendar to the picked month.
+///
 /// Long-press a day to add an event to the system calendar.
 final class ClassicDemoViewController: UIViewController {
 

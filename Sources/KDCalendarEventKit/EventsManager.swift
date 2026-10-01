@@ -55,8 +55,10 @@ extension TimeInterval {
 }
 
 extension DateInterval {
-    /// Splits the interval into consecutive intervals no longer than `maxDuration`, each
-    /// starting where the previous one ends. An interval that fits comes back whole.
+    /// Splits the interval into consecutive intervals no longer than `maxDuration`, each starting
+    /// where the previous one ends.
+    ///
+    /// An interval that fits comes back whole.
     func chunked(maxDuration: TimeInterval) -> [DateInterval] {
         precondition(maxDuration > 0, "maxDuration must be positive")
         var chunks: [DateInterval] = []
@@ -72,6 +74,7 @@ extension DateInterval {
 }
 
 /// An event as EventKit returns it, so that one found by two chunked queries counts once.
+///
 /// Occurrences of a recurring event share an identifier, so the start date tells them apart.
 private struct Occurrence: Hashable {
     let identifier: String?
@@ -85,18 +88,22 @@ private struct Occurrence: Hashable {
 
 extension EKEventStore: CalendarEventStore {
 
+    /// Whether the authorization status for events is full access.
     public var hasFullAccess: Bool {
         EKEventStore.authorizationStatus(for: .event) == .fullAccess
     }
 
+    /// Asks for full access to events with `requestFullAccessToEvents()`.
     public func requestFullAccess() async throws -> Bool {
         try await requestFullAccessToEvents()
     }
 
-    /// Queries the interval in chunks shorter than four years, since EventKit shortens a
-    /// longer interval to its first four years. An event that overlaps two chunks is
-    /// returned once, and an interval that ends before it starts finds nothing. The query is
-    /// synchronous and can be slow, so it runs off the main actor.
+    /// Queries the interval in chunks shorter than four years, since EventKit shortens a longer
+    /// interval to its first four years.
+    ///
+    /// An event that overlaps two chunks is returned once, and an interval that ends before it
+    /// starts finds nothing. The query is synchronous and can be slow, so it runs off the main
+    /// actor.
     public nonisolated func events(from start: Date, to end: Date) async -> [CalendarEvent] {
         guard start <= end else { return [] }
         var seen = Set<Occurrence>()
@@ -111,6 +118,7 @@ extension EKEventStore: CalendarEventStore {
         return result
     }
 
+    /// Saves the event to the default calendar for new events.
     public func save(_ calendarEvent: CalendarEvent) throws {
         let event = EKEvent(eventStore: self)
         event.title = calendarEvent.title
@@ -131,8 +139,9 @@ extension EKEventStore: CalendarEventStore {
 @MainActor
 public struct EventsManager {
 
-    /// The manager of the system event store. One store is shared because an `EKEventStore`
-    /// is expensive to create.
+    /// The manager of the system event store.
+    ///
+    /// One store is shared because an `EKEventStore` is expensive to create.
     public static let shared = EventsManager(store: systemStore)
 
     private static let systemStore = EKEventStore()
@@ -160,7 +169,10 @@ public struct EventsManager {
         return await store.events(from: fromDate, to: toDate)
     }
 
-    /// Saves an event to the user's default calendar. Does not ask for access.
+    /// Saves an event to the user's default calendar.
+    ///
+    /// Does not ask for access.
+    ///
     /// - Throws: ``EventsManagerError/authorization`` when access has not been granted, or
     ///   the error the store threw when it refused the event.
     public func save(_ calendarEvent: CalendarEvent) throws {
@@ -195,7 +207,9 @@ extension EventsManager {
         try await EventsManager(store: store).load(from: fromDate, to: toDate)
     }
 
-    /// Saves an event to the user's default calendar. Does not ask for access.
+    /// Saves an event to the user's default calendar.
+    ///
+    /// Does not ask for access.
     @available(*, deprecated, message: "Use EventsManager.shared.save(_:), or EventsManager(store:)")
     public static func save(
         _ calendarEvent: CalendarEvent,
@@ -204,8 +218,9 @@ extension EventsManager {
         try EventsManager(store: store).save(calendarEvent)
     }
 
-    /// Saves an event to the user's default calendar. Returns `false` when access has not
-    /// been granted or the store refuses the event.
+    /// Saves an event to the user's default calendar.
+    ///
+    /// Returns `false` when access has not been granted or the store refuses the event.
     @available(*, deprecated, message: "Use EventsManager.shared.save(_:), which throws the reason")
     public static func add(
         event calendarEvent: CalendarEvent,
@@ -221,40 +236,49 @@ extension EventsManager {
 
 extension CalendarView {
 
-    /// The manager that ``loadEvents()``, ``saveEvent(_:)`` and
-    /// ``addEvent(_:date:duration:)`` use; ``EventsManager/shared`` by default. Assign a
-    /// manager around another ``CalendarEventStore`` to test without calendar access.
+    /// The manager that ``loadEvents()``, ``saveEvent(_:)`` and ``addEvent(_:date:duration:)`` use;
+    /// ``EventsManager/shared`` by default.
+    ///
+    /// Assign a manager around another ``CalendarEventStore`` to test without calendar access.
     public var eventsManager: EventsManager {
         get { objc_getAssociatedObject(self, &eventsManagerKey) as? EventsManager ?? .shared }
         set { objc_setAssociatedObject(self, &eventsManagerKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
 
     /// Loads the events from the system calendar that fall inside the data source's range and
-    /// assigns them to `events`. Asks for full calendar access if it
-    /// has not been granted yet; the app must declare `NSCalendarsFullAccessUsageDescription`.
+    /// assigns them to `events`.
+    ///
+    /// Asks for full calendar access if it has not been granted yet; the app must declare
+    /// `NSCalendarsFullAccessUsageDescription`.
+    ///
     /// - Throws: ``EventsManagerError/authorization`` when access is denied, or the error
     ///   the store threw while asking for it.
     public func loadEvents() async throws {
         try await loadEvents(using: eventsManager)
     }
 
-    /// Completion-handler form of ``loadEvents()``. The handler runs on the main actor with
-    /// `nil` on success or the error ``loadEvents()`` threw.
-    public func loadEvents(onComplete: (@MainActor (Error?) -> Void)? = nil) {
+    /// Completion-handler form of ``loadEvents()``.
+    ///
+    /// The handler runs on the main actor with `nil` on success or the error ``loadEvents()``
+    /// threw.
+    public func loadEvents(onComplete: (@MainActor (_ error: Error?) -> Void)? = nil) {
         loadEvents(using: eventsManager, onComplete: onComplete)
     }
 
-    /// Saves an event to the user's default calendar and shows it in the view. Does not ask
-    /// for access.
+    /// Saves an event to the user's default calendar and shows it in the view.
+    ///
+    /// Does not ask for access.
+    ///
     /// - Throws: ``EventsManagerError/authorization`` when access has not been granted, or
     ///   the error the store threw when it refused the event.
     public func saveEvent(_ event: CalendarEvent) throws {
         try saveEvent(event, using: eventsManager)
     }
 
-    /// Saves a new event of `hours` hours to the user's default calendar and shows it in
-    /// the view. Returns `false` when access has not been granted or the store refuses the
-    /// event; ``saveEvent(_:)`` says which.
+    /// Saves a new event of `hours` hours to the user's default calendar and shows it in the view.
+    ///
+    /// Returns `false` when access has not been granted or the store refuses the event;
+    /// ``saveEvent(_:)`` says which.
     @discardableResult public func addEvent(_ title: String, date startDate: Date, duration hours: Int = 1) -> Bool {
         addEvent(title, date: startDate, duration: hours, using: eventsManager)
     }
@@ -265,7 +289,7 @@ extension CalendarView {
         self.events = try await manager.load(from: range.lowerBound, to: end)
     }
 
-    private func loadEvents(using manager: EventsManager, onComplete: (@MainActor (Error?) -> Void)?) {
+    private func loadEvents(using manager: EventsManager, onComplete: (@MainActor (_ error: Error?) -> Void)?) {
         Task { [weak self] in
             guard let self else { return }
             do {
@@ -308,7 +332,7 @@ extension CalendarView {
 
     /// Completion-handler form of ``loadEvents(store:)``.
     @available(*, deprecated, message: "Set eventsManager to EventsManager(store:) and call loadEvents(onComplete:)")
-    public func loadEvents(store: any CalendarEventStore, onComplete: (@MainActor (Error?) -> Void)? = nil) {
+    public func loadEvents(store: any CalendarEventStore, onComplete: (@MainActor (_ error: Error?) -> Void)? = nil) {
         loadEvents(using: EventsManager(store: store), onComplete: onComplete)
     }
 

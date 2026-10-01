@@ -53,8 +53,9 @@ struct DayCellConfiguration: Equatable {
         var accessibilityTraits: UIAccessibilityTraits
     }
 
-    /// Precedence for the text: selected, out of range, today, adjacent, weekend, default. The
-    /// background marks selection, then today unless out of range, and adjacent days have none.
+    /// Precedence for the text: selected, out of range, today, adjacent, weekend, default.
+    ///
+    /// The background marks selection, then today unless out of range, and adjacent days have none.
     func appearance(isSelected: Bool) -> Appearance {
         let textColor: UIColor
         if isSelected {
@@ -96,7 +97,9 @@ struct DayCellConfiguration: Equatable {
     }
 }
 
-/// One day in the month grid. Its look is derived from the day it is configured with and whether it is selected.
+/// One day in the month grid.
+///
+/// Its look is derived from the day it is configured with and whether it is selected.
 open class CalendarDayCell: UICollectionViewCell {
 
     var configuration = DayCellConfiguration() {
@@ -137,6 +140,7 @@ open class CalendarDayCell: UICollectionViewCell {
         buildSubviews()
     }
 
+    /// Creates a cell from an archive, with fresh subviews.
     required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         contentView.subviews.forEach { $0.removeFromSuperview() }

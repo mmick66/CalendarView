@@ -1,7 +1,9 @@
 import Foundation
 
-/// The events each cell of a ``MonthGrid`` shows. An event marks every day it covers, in the
-/// grid's calendar. Pure date arithmetic, built once per grid and list of events.
+/// The events each cell of a ``MonthGrid`` shows.
+///
+/// An event marks every day it covers, in the grid's calendar. Pure date arithmetic, built once per
+/// grid and list of events.
 struct EventIndex {
 
     private var eventsByIndexPath: [IndexPath: [CalendarEvent]] = [:]
