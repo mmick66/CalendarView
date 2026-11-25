@@ -6,47 +6,68 @@ import Foundation
 /// grid and list of events.
 struct EventIndex {
 
-    private var eventsByIndexPath: [IndexPath: [CalendarEvent]] = [:]
+    /// An event and the days of one month it covers.
+    private struct Span {
+        let event: CalendarEvent
+        /// The items of those days in the month's section.
+        let items: ClosedRange<Int>
+    }
+
+    /// The events that cover a day of each month, by section, in the order they were given.
+    private var spansBySection: [[Span]] = []
 
     /// An index with no events.
     init() {}
 
-    /// Buckets every event into the days it covers, clamped to the grid's months so an
-    /// open-ended event costs one loop over the grid, not over the centuries.
+    /// Finds the days each event covers, clamped to the grid's months.
+    ///
+    /// The calendar is asked for the event's first and last day only. The days between them are
+    /// the cells between theirs, so a long event costs one step per month it covers, not per day.
     init(events: [CalendarEvent], grid: MonthGrid) {
         let calendar = grid.calendar
-        guard let first = grid.months.first, let lastMonth = grid.months.last,
-            let gridEnd = calendar.date(byAdding: .day, value: lastMonth.dayCount, to: lastMonth.firstDate)
-        else { return }
-        let gridStart = first.firstDate
+        let months = grid.months
+        let gridStart = months[0].firstDate
+        let gridEnd = grid.lastMonthEnd
+        spansBySection = Array(repeating: [], count: months.count)
         for event in events {
             let eventEnd = max(event.startDate, event.endDate)
-            guard event.startDate < gridEnd, eventEnd >= gridStart else { continue }
-            var day = calendar.startOfDay(for: max(event.startDate, gridStart))
-            let last = min(eventEnd, gridEnd)
-            repeat {
-                if let indexPath = grid.indexPath(for: day) {
-                    eventsByIndexPath[indexPath, default: []].append(event)
-                }
-                // Where a DST change skips midnight, adding a day lands after it, so return to the start.
-                guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
-                day = calendar.startOfDay(for: next)
-            } while day < last
+            guard event.startDate < gridEnd, eventEnd >= gridStart,
+                let first = grid.indexPath(for: max(event.startDate, gridStart))
+            else { continue }
+            // After its first day the event marks each day that starts before it ends. An end at
+            // the very start of a day, as the end of the grid is, leaves that day out: its last
+            // day is then the one a second earlier. For an event that ends as its first day
+            // starts, that is the day before or no day of the grid, and the first day stands.
+            let end = min(eventEnd, gridEnd)
+            let endsInsideADay = end < gridEnd && calendar.startOfDay(for: end) < end
+            let lastMoment = endsInsideADay ? end : end.addingTimeInterval(-1)
+            let last = grid.indexPath(for: lastMoment).map { max($0, first) } ?? first
+
+            // The days between the two are the cells between theirs, month by month.
+            for section in first.section...last.section {
+                let month = months[section]
+                let lower = section == first.section ? first.item : month.firstColumn
+                let upper = section == last.section ? last.item : month.firstColumn + month.dayCount - 1
+                guard lower <= upper else { continue }
+                spansBySection[section].append(Span(event: event, items: lower...upper))
+            }
         }
     }
 
     /// The events on the day a cell shows, in the order they were given; empty for any other cell.
     subscript(indexPath: IndexPath) -> [CalendarEvent] {
-        eventsByIndexPath[indexPath] ?? []
+        guard spansBySection.indices.contains(indexPath.section) else { return [] }
+        return spansBySection[indexPath.section].compactMap { $0.items.contains(indexPath.item) ? $0.event : nil }
     }
 
     /// The number of events on the day a cell shows.
     func count(at indexPath: IndexPath) -> Int {
-        self[indexPath].count
+        guard spansBySection.indices.contains(indexPath.section) else { return 0 }
+        return spansBySection[indexPath.section].count { $0.items.contains(indexPath.item) }
     }
 
     /// Whether no day of the grid has an event.
     var isEmpty: Bool {
-        eventsByIndexPath.isEmpty
+        spansBySection.allSatisfy(\.isEmpty)
     }
 }

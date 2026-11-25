@@ -54,6 +54,8 @@ extension CalendarView: UICollectionViewDataSource {
             configuration.day = dayOfMonth
             configuration.date = date
             configuration.isOutOfRange = isOutOfRange(indexPath)
+            // Asks the delegate, once for this cell, whether it lets the day be selected.
+            configuration.isSelectable = isSelectable(date)
             configuration.isToday = isToday
             configuration.isWeekend = marksWeekends && layoutCalendar.isDateInWeekend(date)
             configuration.eventsCount = eventsCount
@@ -72,16 +74,25 @@ extension CalendarView: UICollectionViewDataSource {
         return dayCell
     }
 
+    /// What VoiceOver reads for a day: its full date, then "Today" and the number of events where
+    /// they apply.
+    ///
+    /// The date is formatted in ``Style/locale``. The words after it are in the same language
+    /// when the library is localized in it, and in the app's language otherwise.
     func accessibilityLabel(for date: Date, isToday: Bool, eventsCount: Int) -> String {
+        let bundle = formatters.stringsBundle
+        let locale = formatters.stringsLocale
         var parts = [formatters.accessibility.string(from: date)]
         if isToday {
             parts.append(
-                String(localized: "Today", bundle: .kdCalendar, comment: "VoiceOver suffix for the current day"))
+                String(
+                    localized: "Today", bundle: bundle, locale: locale, comment: "VoiceOver suffix for the current day")
+            )
         }
         if eventsCount > 0 {
             parts.append(
                 String(
-                    localized: "\(eventsCount) events", bundle: .kdCalendar,
+                    localized: "\(eventsCount) events", bundle: bundle, locale: locale,
                     comment: "VoiceOver suffix with the number of events on a day"))
         }
         return parts.joined(separator: ", ")

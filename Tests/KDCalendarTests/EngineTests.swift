@@ -85,6 +85,109 @@ struct EngineTests: CalendarFixture {
         #expect(view.selectedDates == days)
     }
 
+    // MARK: A month without a first midnight
+
+    /// Expects every day in the range of `grid` to have its own cell, in order, showing the start
+    /// of that day, and the range to hold `days` of them.
+    private func expectEveryDayRoundTrips(
+        _ grid: MonthGrid, days: Int, sourceLocation: SourceLocation = #_sourceLocation
+    ) {
+        let calendar = grid.calendar
+        // Noon exists on every day of these zones, and adding days keeps it.
+        let firstNoon = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: grid.startDay)!
+        var previous: IndexPath?
+        var count = 0
+        while let noon = calendar.date(byAdding: .day, value: count, to: firstNoon),
+            calendar.startOfDay(for: noon) <= grid.endDay
+        {
+            let day = calendar.startOfDay(for: noon)
+            count += 1
+            guard let indexPath = grid.indexPath(for: noon) else {
+                Issue.record("no cell for \(noon)", sourceLocation: sourceLocation)
+                continue
+            }
+            #expect(grid.indexPath(for: day) == indexPath, "\(noon)", sourceLocation: sourceLocation)
+            #expect(
+                grid.content(at: indexPath) == .day(day, dayOfMonth: calendar.component(.day, from: noon)),
+                "\(noon)", sourceLocation: sourceLocation)
+            #expect(grid.date(at: indexPath) == day, "\(noon)", sourceLocation: sourceLocation)
+            #expect(!grid.isOutOfRange(indexPath), "\(noon)", sourceLocation: sourceLocation)
+            if let previous {
+                #expect(previous < indexPath, "\(noon) follows the day before", sourceLocation: sourceLocation)
+            }
+            previous = indexPath
+        }
+        #expect(count == days, sourceLocation: sourceLocation)
+        #expect(previous == grid.indexPath(for: grid.endDay), sourceLocation: sourceLocation)
+    }
+
+    @Test func aGridStartingAfterASkippedMidnightKeepsEveryDayInItsMonth() throws {
+        // Paraguay moved to summer time on 1 October 2023 at 00:00, so that month starts at 01:00.
+        let asuncion = calendar("America/Asuncion")
+        let october = asuncion.startOfDay(for: date(asuncion, 2023, 10, 1, hour: 12))
+        #expect(asuncion.component(.hour, from: october) == 1, "the month really starts at 01:00")
+        let grid = try #require(
+            MonthGrid(start: october, end: date(asuncion, 2023, 12, 31), calendar: asuncion, firstWeekday: 2))
+        #expect(grid.months.map(\.firstDate) == [october, date(asuncion, 2023, 11, 1), date(asuncion, 2023, 12, 1)])
+        #expect(grid.months.map(\.firstColumn) == [6, 2, 4], "a Sunday, a Wednesday and a Friday")
+        #expect(grid.indexPath(for: date(asuncion, 2023, 10, 15)) == IndexPath(item: 20, section: 0))
+        #expect(grid.indexPath(for: date(asuncion, 2023, 11, 15)) == IndexPath(item: 16, section: 1))
+        #expect(grid.indexPath(for: date(asuncion, 2023, 12, 31)) == IndexPath(item: 34, section: 2))
+        #expect(grid.date(at: IndexPath(item: 16, section: 1)) == date(asuncion, 2023, 11, 15))
+        #expect(!grid.isOutOfRange(IndexPath(item: 34, section: 2)), "the last day of the range")
+        #expect(grid.indexPath(for: date(asuncion, 2023, 9, 30, hour: 23)) == nil, "the day before the grid")
+        #expect(grid.indexPath(for: date(asuncion, 2024, 1, 1)) == nil, "the day after the grid")
+        expectEveryDayRoundTrips(grid, days: 92)
+    }
+
+    @Test func aMonthStartingAfterASkippedMidnightHandsOutTheStartOfEachDay() throws {
+        // October 2023 sits in the middle: its first day starts at 01:00 and the others at 00:00.
+        let asuncion = calendar("America/Asuncion")
+        let grid = try #require(
+            MonthGrid(
+                start: date(asuncion, 2023, 9, 1), end: date(asuncion, 2023, 11, 30), calendar: asuncion,
+                firstWeekday: 2))
+        let fifteenth = try #require(grid.indexPath(for: date(asuncion, 2023, 10, 15, hour: 12)))
+        #expect(grid.date(at: fifteenth) == date(asuncion, 2023, 10, 15))
+        #expect(grid.firstDayOfMonth(inSection: 1) == asuncion.startOfDay(for: date(asuncion, 2023, 10, 1, hour: 12)))
+        expectEveryDayRoundTrips(grid, days: 91)
+        // Two years with both changes of each: forward at 00:00 in October, back at 00:00 in March.
+        let years = try #require(
+            MonthGrid(
+                start: date(asuncion, 2022, 1, 1), end: date(asuncion, 2023, 12, 31), calendar: asuncion,
+                firstWeekday: 1))
+        expectEveryDayRoundTrips(years, days: 730)
+    }
+
+    @Test func selectionWorksInAGridStartingAfterASkippedMidnight() {
+        let asuncion = calendar("America/Asuncion")
+        let view = makeCalendar(
+            start: date(asuncion, 2023, 10, 1, hour: 12), end: date(asuncion, 2023, 12, 31), calendar: asuncion)
+        view.selectDate(date(asuncion, 2023, 11, 15, hour: 9))
+        #expect(view.selectedDates == [date(asuncion, 2023, 11, 15)], "not 15 October")
+        view.selectDate(date(asuncion, 2023, 12, 31, hour: 9))
+        #expect(view.selectedDates.last == date(asuncion, 2023, 12, 31), "the last day is in range")
+        #expect(view.selectedIndexPaths == [IndexPath(item: 16, section: 1), IndexPath(item: 34, section: 2)])
+        #expect(view.dateRange.upperBound == date(asuncion, 2023, 12, 31))
+    }
+
+    @Test func selectionWorksInAMonthStartingAfterASkippedMidnight() {
+        let asuncion = calendar("America/Asuncion")
+        let view = makeCalendar(
+            start: date(asuncion, 2023, 9, 1), end: date(asuncion, 2023, 11, 30), calendar: asuncion)
+        let fifteenth = date(asuncion, 2023, 10, 15)
+        view.selectDate(date(asuncion, 2023, 10, 15, hour: 15))
+        #expect(view.selectedDates == [fifteenth], "the start of the day, not 01:00")
+        view.clearAllSelectedDates()
+        view.setSelection([fifteenth])
+        #expect(view.selectedDates == [fifteenth])
+        view.selectRange(date(asuncion, 2023, 9, 29)...date(asuncion, 2023, 10, 2))
+        #expect(
+            view.selectedDates
+                == [29, 30].map { date(asuncion, 2023, 9, $0) }
+                + [1, 2].map { asuncion.startOfDay(for: date(asuncion, 2023, 10, $0, hour: 12)) })
+    }
+
     // MARK: Cell content
 
     @Test func cellContentCoversTheMonthAndItsNeighbours() throws {
@@ -193,6 +296,35 @@ struct EngineTests: CalendarFixture {
         #expect(index.count(at: try #require(grid.indexPath(for: date(utc, 2024, 2, 3)))) == 0)
     }
 
+    @Test func anEventEndingAtMidnightLeavesThatDayUnmarked() throws {
+        let utc = calendar("UTC")
+        let grid = try #require(
+            MonthGrid(start: date(utc, 2024, 1, 1), end: date(utc, 2024, 2, 29), calendar: utc, firstWeekday: 2))
+        let index = EventIndex(
+            events: [
+                CalendarEvent(
+                    title: "evening", startDate: date(utc, 2024, 1, 10, hour: 22), endDate: date(utc, 2024, 1, 11)),
+                CalendarEvent(
+                    title: "month", startDate: date(utc, 2024, 1, 30, hour: 22), endDate: date(utc, 2024, 2, 1)),
+                CalendarEvent(title: "no length", startDate: date(utc, 2024, 1, 20), endDate: date(utc, 2024, 1, 20)),
+                CalendarEvent(
+                    title: "a second", startDate: date(utc, 2024, 1, 24, hour: 22),
+                    endDate: date(utc, 2024, 1, 25).addingTimeInterval(1)),
+            ], grid: grid)
+        func titles(_ month: Int, _ day: Int) throws -> [String] {
+            index[try #require(grid.indexPath(for: date(utc, 2024, month, day)))].map(\.title)
+        }
+        #expect(try titles(1, 10) == ["evening"])
+        #expect(try titles(1, 11) == [], "the event ended as the day started")
+        #expect(try titles(1, 30) == ["month"])
+        #expect(try titles(1, 31) == ["month"])
+        #expect(try titles(2, 1) == [], "in the next month too")
+        #expect(try titles(1, 19) == [])
+        #expect(try titles(1, 20) == ["no length"], "the day an event begins on is always marked")
+        #expect(try titles(1, 21) == [])
+        #expect(try titles(1, 25) == ["a second"])
+    }
+
     @Test func anEventEndingJustAfterASkippedMidnightKeepsItsLastDay() throws {
         // Adding a day to 8 September 2024 in Santiago lands on 01:00, so a walk that does not
         // return to the start of each day reaches the 10th after this event has ended at 00:30.
@@ -213,6 +345,138 @@ struct EngineTests: CalendarFixture {
         }
         let after = try #require(grid.indexPath(for: date(santiago, 2024, 9, 11, hour: 12)))
         #expect(index[after].isEmpty)
+    }
+
+    /// The events on each cell, found the straightforward way: one question to the calendar per
+    /// event and day.
+    ///
+    /// It marks what ``EventIndex`` marks today, the first day of the grid for an event that ends
+    /// at its first midnight included (CalendarView-4qn.19).
+    private func eventsDayByDay(_ events: [CalendarEvent], in grid: MonthGrid) -> [IndexPath: [CalendarEvent]] {
+        let calendar = grid.calendar
+        let gridStart = grid.months[0].firstDate
+        let gridEnd = calendar.dateInterval(of: .month, for: grid.months[grid.months.count - 1].firstDate)!.end
+        var result: [IndexPath: [CalendarEvent]] = [:]
+        for event in events {
+            let eventEnd = max(event.startDate, event.endDate)
+            guard event.startDate < gridEnd, eventEnd >= gridStart else { continue }
+            var day = calendar.startOfDay(for: max(event.startDate, gridStart))
+            let last = min(eventEnd, gridEnd)
+            repeat {
+                if let indexPath = grid.indexPath(for: day) {
+                    result[indexPath, default: []].append(event)
+                }
+                day = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: day)!)
+            } while day < last
+        }
+        return result
+    }
+
+    /// Events around every edge of `grid`, and `count` more at made-up times, the same on every run.
+    private func eventsAroundTheEdges(of grid: MonthGrid, count: Int) -> [CalendarEvent] {
+        let calendar = grid.calendar
+        let gridStart = grid.months[0].firstDate
+        let gridEnd = calendar.dateInterval(of: .month, for: grid.months[grid.months.count - 1].firstDate)!.end
+        let span = gridEnd.timeIntervalSince(gridStart)
+        let middle = calendar.startOfDay(for: gridStart + span / 2)
+        let day: TimeInterval = 86_400
+        var intervals: [(Date, Date)] = [
+            (gridStart - 40 * day, gridEnd + 40 * day),  // everything
+            (gridStart - 3 * day, gridStart),  // ends at the first midnight
+            (gridStart - 3 * day, gridStart + 1),
+            (gridStart - 3 * day, gridStart - 1),  // just outside
+            (gridStart, gridStart),  // no length, at the first midnight
+            (middle, middle),  // no length, at a midnight
+            (middle - 3 * day, middle),  // ends at a midnight
+            (middle - 3 * day, middle + 0.5),  // and half a second after it
+            (middle + 3600, middle + 7200),
+            (middle + day, middle - 2 * day),  // the end before the start
+            (middle, gridEnd),  // ends at the last midnight
+            (middle, gridEnd - 1),
+            (gridEnd - 3600, gridEnd + 3 * day),  // starts in the last hour
+            (gridEnd, gridEnd + day),  // just outside
+            (gridEnd - day, gridEnd - day),
+        ]
+        // A linear congruential generator, so the events are the same on every run.
+        var state: UInt64 = 0x2545_F491_4F6C_DD1D
+        func random(_ bound: Double) -> Double {
+            state = state &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+            return Double(state >> 11) / Double(1 << 53) * bound
+        }
+        for number in 0..<count {
+            var start = gridStart - 40 * day + random(span + 80 * day)
+            let length = random([0, 600, 5 * 3600, 30 * 3600, 9 * day, 100 * day][number % 6])
+            if number % 4 == 1 { start = calendar.startOfDay(for: start) }
+            var end = start + length
+            if number % 4 == 2 { end = calendar.startOfDay(for: end) }
+            intervals.append((start, end))
+        }
+        return intervals.enumerated().map {
+            CalendarEvent(title: "\($0.offset)", startDate: $0.element.0, endDate: $0.element.1)
+        }
+    }
+
+    @Test func longEventsMarkTheDaysADayByDayWalkMarks() throws {
+        let santiago = calendar("America/Santiago")
+        let asuncion = calendar("America/Asuncion")
+        let athens = calendar("Europe/Athens")
+        let hebrew = calendar("UTC", identifier: .hebrew)
+        let grids = [
+            // Midnights skipped in the middle of a month, in both years.
+            MonthGrid(
+                start: date(santiago, 2024, 1, 1), end: date(santiago, 2025, 12, 31), calendar: santiago,
+                firstWeekday: 2),
+            // A month that starts at 01:00, and a day of 25 hours in March.
+            MonthGrid(
+                start: date(asuncion, 2023, 9, 10), end: date(asuncion, 2024, 4, 20), calendar: asuncion,
+                firstWeekday: 1),
+            MonthGrid(
+                start: date(athens, 2024, 2, 10), end: date(athens, 2024, 11, 5), calendar: athens, firstWeekday: 7),
+            // Thirteen months, of 29 and 30 days.
+            MonthGrid(
+                start: date(athens, 2023, 9, 16), end: date(athens, 2024, 10, 2), calendar: hebrew, firstWeekday: 1),
+            // One month.
+            MonthGrid(
+                start: date(athens, 2024, 2, 10), end: date(athens, 2024, 2, 10), calendar: athens, firstWeekday: 2),
+        ]
+        for grid in grids {
+            let grid = try #require(grid)
+            let zone = grid.calendar.timeZone.identifier
+            let events = eventsAroundTheEdges(of: grid, count: 240)
+            let index = EventIndex(events: events, grid: grid)
+            let expected = eventsDayByDay(events, in: grid)
+            #expect(!expected.isEmpty)
+            #expect(!index.isEmpty)
+            for section in 0..<grid.numberOfSections {
+                for item in 0..<MonthGrid.cellsPerMonth {
+                    let indexPath = IndexPath(item: item, section: section)
+                    let titles = index[indexPath].map(\.title)
+                    #expect(titles == (expected[indexPath] ?? []).map(\.title), "\(zone) \(indexPath)")
+                    #expect(index.count(at: indexPath) == titles.count, "\(zone) \(indexPath)")
+                }
+            }
+            #expect(index[IndexPath(item: 0, section: grid.numberOfSections)].isEmpty, "outside the grid")
+        }
+    }
+
+    @Test func eventsSpanningACenturyAreIndexedWithoutAskingTheCalendarForEveryDay() throws {
+        let utc = calendar("UTC")
+        let grid = try #require(
+            MonthGrid(start: date(utc, 2000, 1, 1), end: date(utc, 2099, 12, 31), calendar: utc, firstWeekday: 2))
+        let events = (0..<20).map {
+            CalendarEvent(
+                title: "\($0)", startDate: date(utc, 2000, 1, 1 + $0, hour: 9),
+                endDate: date(utc, 2099, 12, 31 - $0, hour: 9))
+        }
+        var index = EventIndex()
+        let elapsed = ContinuousClock().measure { index = EventIndex(events: events, grid: grid) }
+        // About 730,000 event days: a question to the calendar for each took more than seven seconds.
+        #expect(elapsed < .milliseconds(500), "took \(elapsed)")
+        #expect(index.count(at: try #require(grid.indexPath(for: date(utc, 2000, 1, 1)))) == 1)
+        #expect(index[try #require(grid.indexPath(for: date(utc, 2000, 1, 3)))].map(\.title) == ["0", "1", "2"])
+        #expect(index.count(at: try #require(grid.indexPath(for: date(utc, 2050, 6, 15)))) == 20)
+        #expect(index.count(at: try #require(grid.indexPath(for: date(utc, 2099, 12, 30)))) == 2)
+        #expect(index.count(at: try #require(grid.indexPath(for: date(utc, 2099, 12, 31)))) == 1)
     }
 
     @Test func eventsCompareByTitleAndDates() {
@@ -290,6 +554,132 @@ struct EngineTests: CalendarFixture {
         #expect(snapshot.eventIndex.isEmpty)
     }
 
+    // MARK: Fixed calendars
+
+    /// Moves the device to `zone`, as far as this process can tell.
+    ///
+    /// `TimeZone.autoupdatingCurrent` follows the system's zone, which `NSTimeZone.default` does not
+    /// change. Returns the way back.
+    private func moveDevice(to zone: String) -> () -> Void {
+        let previous = ProcessInfo.processInfo.environment["TZ"]
+        setenv("TZ", zone, 1)
+        NSTimeZone.resetSystemTimeZone()
+        return {
+            if let previous { setenv("TZ", previous, 1) } else { unsetenv("TZ") }
+            NSTimeZone.resetSystemTimeZone()
+        }
+    }
+
+    @Test func aFixedCalendarKeepsTheTimeZoneAndTheLocaleItHasNow() {
+        var custom = Calendar(identifier: .buddhist)
+        custom.timeZone = .autoupdatingCurrent
+        custom.locale = .autoupdatingCurrent
+        custom.firstWeekday = 5
+        custom.minimumDaysInFirstWeek = 6
+        let fixed = custom.fixed
+        #expect(fixed.timeZone != .autoupdatingCurrent)
+        #expect(fixed.timeZone.identifier == TimeZone.autoupdatingCurrent.identifier)
+        #expect(fixed.locale != .autoupdatingCurrent)
+        #expect(fixed.locale?.identifier == Locale.autoupdatingCurrent.identifier)
+        #expect(fixed.identifier == .buddhist)
+        #expect(fixed.firstWeekday == 5)
+        #expect(fixed.minimumDaysInFirstWeek == 6)
+        #expect(custom.fixed == fixed, "the same settings make the same calendar")
+
+        let athens = calendar("Europe/Athens", locale: "el_GR")
+        #expect(athens.fixed == athens, "a calendar with settings of its own is left alone")
+        #expect(Calendar.autoupdatingCurrent.fixed != Calendar.autoupdatingCurrent)
+        #expect(Calendar.autoupdatingCurrent.fixed.timeZone == Calendar.autoupdatingCurrent.timeZone)
+    }
+
+    @Test func aCalendarInTheDevicesTimeZoneShowsAMoveAsNewInputs() {
+        let moveBack = moveDevice(to: "America/Phoenix")
+        defer { moveBack() }
+        var custom = Calendar(identifier: .gregorian)
+        custom.timeZone = .autoupdatingCurrent
+        #expect(custom.timeZone.identifier == "America/Phoenix", "the calendar follows the device")
+        var style = CalendarView.Style()
+        style.calendar = custom
+        // Phoenix and Denver share their winter midnights, so the range covers the same days in
+        // both and only the calendar can say that the grid is stale.
+        let phoenix = calendar("America/Phoenix")
+        let start = date(phoenix, 2024, 1, 1)
+        let end = date(phoenix, 2024, 12, 31)
+        let before = CalendarSnapshot.Inputs(start: start, end: end, style: style, events: [])
+        #expect(before == CalendarSnapshot.Inputs(start: start, end: end, style: style, events: []))
+
+        _ = moveDevice(to: "America/Denver")
+        let after = CalendarSnapshot.Inputs(start: start, end: end, style: style, events: [])
+        #expect(after.startDay == before.startDay)
+        #expect(after.endDay == before.endDay)
+        #expect(after != before)
+        #expect(before.calendar.timeZone.identifier == "America/Phoenix", "fixed inputs stay where they were")
+        #expect(after.calendar.timeZone.identifier == "America/Denver")
+    }
+
+    @Test func aViewWithACalendarInTheDevicesTimeZoneFollowsAMove() {
+        let moveBack = moveDevice(to: "America/Phoenix")
+        defer { moveBack() }
+        var custom = Calendar(identifier: .gregorian)
+        custom.timeZone = .autoupdatingCurrent
+        let phoenix = calendar("America/Phoenix")
+        let denver = calendar("America/Denver")
+        let view = makeCalendar(start: date(phoenix, 2024, 1, 1), end: date(phoenix, 2024, 12, 31), calendar: custom)
+        view.selectDate(date(phoenix, 2024, 7, 4, hour: 12))
+        #expect(view.selectedDates == [date(phoenix, 2024, 7, 4)])
+
+        // The device moves, but the view has not heard of it yet: its dates stay those of its grid.
+        _ = moveDevice(to: "America/Denver")
+        #expect(view.layoutCalendar.timeZone.identifier == "America/Phoenix")
+        #expect(view.snapshot.grid?.calendar.startOfDay(for: date(denver, 2024, 7, 4)) == date(phoenix, 2024, 7, 3))
+
+        // The reload the significant time change notification brings, for this view alone.
+        view.reloadData()
+        #expect(view.layoutCalendar.timeZone.identifier == "America/Denver")
+        #expect(view.snapshot.grid?.firstDayOfMonth(inSection: 6) == date(denver, 2024, 7, 1))
+        #expect(view.selectedDates == [date(denver, 2024, 7, 4)], "the same day, at midnight in the new zone")
+        #expect(view.selectedIndexPaths == [view.indexPathForDate(date(denver, 2024, 7, 4))!])
+    }
+
+    // MARK: Delegate traffic
+
+    @Test func theDelegateIsAskedOncePerDayWhetherItCanBeSelected() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        var asked: [Date] = []
+        delegate(of: view).canSelect = {
+            asked.append($0)
+            return true
+        }
+        view.selectDate(date(2024, 1, 10, hour: 15))
+        #expect(asked == [date(2024, 1, 10)])
+
+        asked = []
+        let tapped = view.indexPathForDate(date(2024, 1, 11))!
+        #expect(view.collectionView(view.collectionView, shouldSelectItemAt: tapped))
+        view.collectionView(view.collectionView, didSelectItemAt: tapped)
+        #expect(asked == [date(2024, 1, 11)])
+        #expect(delegate(of: view).selected == [date(2024, 1, 10), date(2024, 1, 11)])
+
+        asked = []
+        view.deselectDate(date(2024, 1, 10, hour: 15))
+        view.selectDate(date(2024, 2, 1))
+        view.selectDate(date(2023, 12, 31))
+        #expect(asked == [], "deselecting asks nothing, and neither does a day outside the range")
+        #expect(view.selectedDates == [date(2024, 1, 11)])
+
+        view.setSelection([date(2024, 1, 3), date(2024, 1, 5)])
+        #expect(asked == [date(2024, 1, 3), date(2024, 1, 5)])
+
+        // The second end of a range is asked about as a tap, then with every day of the range.
+        view.selectionMode = .range
+        asked = []
+        view.selectDate(date(2024, 1, 8))
+        #expect(asked == [date(2024, 1, 8)])
+        asked = []
+        view.selectDate(date(2024, 1, 12))
+        #expect(asked == [date(2024, 1, 12)] + (8...12).map { date(2024, 1, $0) })
+    }
+
     // MARK: Data source traffic
 
     @Test func theDataSourceIsAskedOncePerReloadNotOncePerCell() {
@@ -341,6 +731,19 @@ struct EngineTests: CalendarFixture {
             #expect(view.dateFromIndexPath(view.indexPathForDate(day)!) == day, "\(day)")
             day = gregorian.date(byAdding: .day, value: 1, to: day)!
         }
+    }
+
+    @Test func aChineseLeapMonthKeepsEveryDayInOrder() throws {
+        // The Chinese year that began in January 2023 has a leap second month, so thirteen months.
+        let chinese = calendar("Asia/Shanghai", identifier: .chinese)
+        let gregorian = calendar("Asia/Shanghai")
+        let grid = try #require(
+            MonthGrid(
+                start: date(gregorian, 2023, 1, 22), end: date(gregorian, 2024, 2, 9), calendar: chinese,
+                firstWeekday: 2))
+        #expect(grid.numberOfSections == 13)
+        #expect(grid.months.map(\.firstDate) == grid.months.map { chinese.startOfDay(for: $0.firstDate) })
+        expectEveryDayRoundTrips(grid, days: 384)
     }
 
     // MARK: Today

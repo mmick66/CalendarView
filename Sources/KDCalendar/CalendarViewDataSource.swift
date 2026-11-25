@@ -12,6 +12,9 @@ public protocol CalendarViewDataSource: AnyObject {
     func endDate() -> Date
     /// A custom title for the header of `month`.
     ///
+    /// Asked when the calendar settles on a month and again after every reload, for the month
+    /// then displayed, so call ``CalendarView/reloadData()`` when the title changes.
+    ///
     /// - Parameter month: The first day of the month the header shows, in ``CalendarView/calendar``.
     /// - Returns: The title, or `nil` for the default localized month and year.
     func title(forMonth month: Date) -> String?

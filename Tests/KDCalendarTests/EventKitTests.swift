@@ -1,3 +1,4 @@
+import Combine
 import EventKit
 import Testing
 import UIKit
@@ -25,6 +26,8 @@ struct EventKitTests: CalendarFixture {
         /// finds an event saved while it was held.
         var readsStoreAfterHold = false
         var heldQueries: [CheckedContinuation<Void, Never>] = []
+        /// The notification ``reportChange()`` posts; `nil` makes this a store that reports nothing.
+        var changeNotification: Notification.Name? = Notification.Name("EventKitTests.FakeStore.changed")
 
         func requestFullAccess() async throws -> Bool {
             requests += 1
@@ -59,6 +62,39 @@ struct EventKitTests: CalendarFixture {
             if saveFails { throw StoreError() }
             stored.append(event)
         }
+
+        /// Posts the change notification, as a store does when its events change.
+        func reportChange() {
+            NotificationCenter.default.post(name: changeNotification!, object: self)
+        }
+    }
+
+    /// A store that implements only what 2.0 asked of one.
+    final class MinimalStore: CalendarEventStore {
+        var hasFullAccess = true
+        var queries = 0
+        func requestFullAccess() async throws -> Bool { true }
+        func events(from start: Date, to end: Date) async -> [CalendarEvent] {
+            queries += 1
+            return []
+        }
+        func save(_ event: CalendarEvent) throws {}
+    }
+
+    /// Stands in for the view an ``EventsLoader`` loads for.
+    final class FakeHost: EventsLoaderHost {
+        var events: [CalendarEvent] = []
+        var dateRange: ClosedRange<Date>
+        var calendar: Calendar
+        init(dateRange: ClosedRange<Date>, calendar: Calendar) {
+            self.dateRange = dateRange
+            self.calendar = calendar
+        }
+    }
+
+    /// The errors a completion handler was called with, one entry per call.
+    final class Completions {
+        var errors: [Error?] = []
     }
 
     /// Not reset between tests, which run side by side and only need their calendars to have a window.
@@ -76,6 +112,38 @@ struct EventKitTests: CalendarFixture {
         let view = makeCalendar(start: start, end: end)
         view.eventsManager = manager
         return view
+    }
+
+    /// A host for January 2024 that the test keeps alive, and its loader.
+    private func makeLoader() -> (loader: EventsLoader, host: FakeHost) {
+        let host = FakeHost(dateRange: date(2024, 1, 1)...date(2024, 1, 31), calendar: utc)
+        retained.objects.append(host)
+        return (EventsLoader(host: host), host)
+    }
+
+    /// A January 2024 calendar that has full access and answers store changes after `delay`.
+    private func makeReloadingCalendar(delay: Duration = .milliseconds(20)) -> CalendarView {
+        store.hasFullAccess = true
+        let view = makeCalendarWithStore(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        view.eventsLoader.storeChangeDelay = delay
+        view.reloadsEventsWhenStoreChanges = true
+        return view
+    }
+
+    /// Waits until `condition` holds, giving up after five seconds so that a missing call fails the
+    /// test rather than hangs it.
+    private func wait(until condition: () -> Bool) async {
+        for _ in 0..<1000 where !condition() {
+            try? await Task.sleep(for: .milliseconds(5))
+        }
+    }
+
+    /// Waits long enough for a reload that a store change scheduled to have started.
+    ///
+    /// The wait before a reload is 20 ms in these tests and ends on the main actor ahead of this
+    /// one, however busy the other suites keep it.
+    private func settle() async {
+        try? await Task.sleep(for: .milliseconds(200))
     }
 
     // MARK: EventsManager
@@ -161,6 +229,138 @@ struct EventKitTests: CalendarFixture {
             // EventKit's limit is four calendar years; the shortest such span is 1460 days.
             #expect(chunk.duration < 1460 * 24 * 60 * 60)
         }
+    }
+
+    // MARK: EventsLoader, without a view
+
+    @Test func theLoaderQueriesItsHostsRangeToTheEndOfTheLastDay() async throws {
+        store.stored = [event("first", date(2024, 1, 1)), event("last day", date(2024, 1, 31, hour: 18))]
+        let (loader, host) = makeLoader()
+        host.events = [event("stale", date(2024, 1, 5))]
+        try await loader.load(using: manager)
+        #expect(store.requests == 1, "the load asks for access")
+        #expect(store.queried.first?.0 == date(2024, 1, 1))
+        #expect(store.queried.first?.1 == date(2024, 2, 1))
+        #expect(host.events.map(\.title) == ["first", "last day"], "the load replaces the host's events")
+    }
+
+    @Test func theLoaderLetsTheLatestLoadWin() async throws {
+        store.hasFullAccess = true
+        store.holdsQueries = true
+        store.stored = [event("january", date(2024, 1, 10)), event("march", date(2024, 3, 10))]
+        let (loader, host) = makeLoader()
+
+        let first = Task { try await loader.load(using: manager) }
+        await store.waitForHeldQueries(1)
+        host.dateRange = date(2024, 3, 1)...date(2024, 3, 31)
+        let second = Task { try await loader.load(using: manager) }
+        await store.waitForHeldQueries(2)
+
+        store.release(1)
+        try await second.value
+        #expect(host.events.map(\.title) == ["march"])
+
+        store.release(0)
+        await #expect(throws: CancellationError.self) { try await first.value }
+        #expect(host.events.map(\.title) == ["march"], "the superseded load leaves the events alone")
+    }
+
+    @Test func aSupersededLoadThrowsEvenWhenItsQueryFinishesFirst() async throws {
+        store.hasFullAccess = true
+        store.holdsQueries = true
+        store.stored = [event("a", date(2024, 1, 10))]
+        let (loader, host) = makeLoader()
+
+        let first = Task { try await loader.load(using: manager) }
+        await store.waitForHeldQueries(1)
+        let second = Task { try await loader.load(using: manager) }
+        await store.waitForHeldQueries(2)
+
+        store.release(0)
+        await #expect(throws: CancellationError.self) { try await first.value }
+        #expect(host.events.isEmpty, "only the latest load assigns")
+        store.release(1)
+        try await second.value
+        #expect(host.events.map(\.title) == ["a"])
+    }
+
+    @Test func theLoaderKeepsTheEventsSavedWhileALoadRuns() async throws {
+        store.hasFullAccess = true
+        store.holdsQueries = true
+        store.stored = [event("a", date(2024, 1, 10))]
+        let (loader, host) = makeLoader()
+
+        let load = Task { try await loader.load(using: manager) }
+        await store.waitForHeldQueries(1)
+        try loader.save(event("missed", date(2024, 1, 12)), using: manager)
+        #expect(host.events.map(\.title) == ["missed"], "a saved event shows at once")
+        store.release(0)
+        try await load.value
+        #expect(host.events.map(\.title) == ["a", "missed"], "the query ran before the save")
+
+        store.readsStoreAfterHold = true
+        let next = Task { try await loader.load(using: manager) }
+        await store.waitForHeldQueries(2)
+        try loader.save(event("found", date(2024, 1, 14)), using: manager)
+        store.release(1)
+        try await next.value
+        #expect(host.events.map(\.title) == ["a", "missed", "found"], "an event the query found is not doubled")
+
+        store.holdsQueries = false
+        try loader.save(event("between", date(2024, 1, 16)), using: manager)
+        try await loader.load(using: manager)
+        #expect(
+            host.events.map(\.title) == ["a", "missed", "found", "between"],
+            "a save between loads is not kept twice"
+        )
+    }
+
+    @Test func aSaveBeforeASupersedingLoadIsLeftToThatLoadsQuery() async throws {
+        store.hasFullAccess = true
+        store.holdsQueries = true
+        let (loader, host) = makeLoader()
+
+        let first = Task { try await loader.load(using: manager) }
+        await store.waitForHeldQueries(1)
+        try loader.save(event("saved", date(2024, 1, 12)), using: manager)
+        let second = Task { try await loader.load(using: manager) }
+        await store.waitForHeldQueries(2)
+        store.release(0)
+        await #expect(throws: CancellationError.self) { try await first.value }
+        store.release(1)
+        try await second.value
+        #expect(host.events.map(\.title) == ["saved"], "the second query ran after the save")
+    }
+
+    @Test func aFailedLoadOrSaveLeavesTheHostsEventsAlone() async throws {
+        let (loader, host) = makeLoader()
+        host.events = [event("kept", date(2024, 1, 5))]
+        store.grantsAccess = false
+        await #expect(throws: EventsManagerError.authorization) { try await loader.load(using: manager) }
+        #expect(throws: EventsManagerError.authorization) {
+            try loader.save(event("refused", date(2024, 1, 6)), using: manager)
+        }
+        #expect(host.events.map(\.title) == ["kept"])
+
+        store.grantsAccess = true
+        try await loader.load(using: manager)
+        #expect(host.events.isEmpty, "the failed load left nothing behind for the next one to keep")
+    }
+
+    @Test func aLoadWhoseHostGoesAwayIsCancelled() async throws {
+        store.hasFullAccess = true
+        store.holdsQueries = true
+        var host: FakeHost? = FakeHost(dateRange: date(2024, 1, 1)...date(2024, 1, 31), calendar: utc)
+        weak var released: FakeHost?
+        released = host
+        let loader = EventsLoader(host: host!)
+
+        let load = Task { try await loader.load(using: manager) }
+        await store.waitForHeldQueries(1)
+        host = nil
+        #expect(released == nil, "a running load does not keep its host")
+        store.release(0)
+        await #expect(throws: CancellationError.self) { try await load.value }
     }
 
     // MARK: CalendarView integration
@@ -264,6 +464,26 @@ struct EventKitTests: CalendarFixture {
         #expect(view.events.map(\.title) == ["a"])
     }
 
+    @Test func completionFormReportsAViewReleasedBeforeTheLoadStartsAsCancelled() async {
+        store.hasFullAccess = true
+        let completions = Completions()
+        weak var released: CalendarView?
+        autoreleasepool {
+            let view = CalendarView(frame: CGRect(x: 0, y: 0, width: 350, height: 420))
+            view.eventsManager = manager
+            view.loadEvents { completions.errors.append($0) }
+            released = view
+        }
+        #expect(released == nil, "the call does not keep the view until its load starts")
+        #expect(completions.errors.isEmpty, "the load starts after the call returns")
+
+        await wait { !completions.errors.isEmpty }
+        await settle()
+        #expect(completions.errors.count == 1, "the handler is called exactly once")
+        #expect(completions.errors.first.map { $0 is CancellationError } == true)
+        #expect(store.queried.isEmpty, "no view is left to load for")
+    }
+
     @Test func anEventSavedDuringALoadSurvivesAQueryThatMissedIt() async throws {
         store.hasFullAccess = true
         store.holdsQueries = true
@@ -351,6 +571,262 @@ struct EventKitTests: CalendarFixture {
         #expect(view.eventsManager.store === EventsManager.shared.store)
         view.eventsManager = manager
         #expect(view.eventsManager.store === store)
+    }
+
+    // MARK: Store changes
+
+    @Test func storeChangesAreIgnoredByDefault() async throws {
+        store.hasFullAccess = true
+        let view = makeCalendarWithStore(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        view.eventsLoader.storeChangeDelay = .milliseconds(20)
+        #expect(view.reloadsEventsWhenStoreChanges == false)
+        try await view.loadEvents()
+        #expect(view.eventsLoader.storeObservation == nil, "nothing is observed")
+
+        store.stored = [event("new", date(2024, 1, 10))]
+        store.reportChange()
+        await settle()
+        #expect(store.queried.count == 1)
+        #expect(view.events.isEmpty)
+    }
+
+    @Test func aStoreChangeReloadsTheEventsOfAViewThatHasLoaded() async throws {
+        store.stored = [event("january", date(2024, 1, 10))]
+        let view = makeReloadingCalendar()
+        store.reportChange()
+        await settle()
+        #expect(store.queried.isEmpty, "a view that has not loaded has nothing to keep current")
+
+        try await view.loadEvents()
+        #expect(view.events.map(\.title) == ["january"])
+        store.stored.append(event("added elsewhere", date(2024, 1, 12)))
+        store.reportChange()
+        await wait { store.queried.count == 2 }
+        #expect(view.events.map(\.title) == ["january", "added elsewhere"])
+        #expect(view.snapshot.eventIndex.count(at: view.indexPathForDate(date(2024, 1, 12))!) == 1)
+
+        store.stored.append(event("march", date(2024, 3, 10)))
+        dataSource(of: view).start = date(2024, 3, 1)
+        dataSource(of: view).end = date(2024, 3, 31)
+        view.reloadData()
+        store.reportChange()
+        await wait { store.queried.count == 3 }
+        #expect(store.queried.last?.0 == date(2024, 3, 1), "the reload covers the range of the moment")
+        #expect(store.queried.last?.1 == date(2024, 4, 1))
+        #expect(view.events.map(\.title) == ["march"])
+        #expect(store.requests == 0)
+    }
+
+    @Test func aBurstOfStoreChangesStartsOneQuery() async throws {
+        store.stored = [event("a", date(2024, 1, 10))]
+        let view = makeReloadingCalendar(delay: .milliseconds(100))
+        try await view.loadEvents()
+
+        store.stored.append(event("b", date(2024, 1, 12)))
+        for _ in 0..<5 { store.reportChange() }
+        // Still inside the wait that the first change started.
+        try await Task.sleep(for: .milliseconds(5))
+        for _ in 0..<5 { store.reportChange() }
+        await wait { store.queried.count == 2 }
+        #expect(view.events.map(\.title) == ["a", "b"])
+        await settle()
+        #expect(store.queried.count == 2, "ten changes, one query")
+    }
+
+    @Test func storeChangesDuringAReloadAreAnsweredByOneMoreQuery() async throws {
+        store.stored = [event("a", date(2024, 1, 10))]
+        let view = makeReloadingCalendar()
+        try await view.loadEvents()
+
+        store.holdsQueries = true
+        store.reportChange()
+        await wait { store.heldQueries.count == 1 }
+        store.stored.append(event("late", date(2024, 1, 12)))
+        for _ in 0..<5 { store.reportChange() }
+        await settle()
+        #expect(store.queried.count == 2, "no query starts while the reload runs")
+
+        store.holdsQueries = false
+        store.release(0)
+        await wait { store.queried.count == 3 }
+        #expect(view.events.map(\.title) == ["a", "late"], "the query that missed the change is followed up")
+        await settle()
+        #expect(store.queried.count == 3, "five changes during the reload, one query after it")
+    }
+
+    @Test func aStoreChangeDuringALoadWaitsForItAndDoesNotSupersedeIt() async throws {
+        store.stored = [event("a", date(2024, 1, 10))]
+        let view = makeReloadingCalendar()
+        try await view.loadEvents()
+
+        store.holdsQueries = true
+        let load = Task { try await view.loadEvents() }
+        await wait { store.heldQueries.count == 1 }
+        store.stored.append(event("late", date(2024, 1, 12)))
+        store.reportChange()
+        await settle()
+        #expect(store.queried.count == 2, "the change waits for the load the app started")
+
+        store.holdsQueries = false
+        store.release(0)
+        try await load.value
+        #expect(view.events.map(\.title) == ["a"], "the app's load finished, with what its query found")
+        await wait { store.queried.count == 3 }
+        #expect(view.events.map(\.title) == ["a", "late"])
+    }
+
+    @Test func aLoadTheAppStartsAnswersTheStoreChangeBeforeIt() async throws {
+        store.stored = [event("a", date(2024, 1, 10))]
+        let view = makeReloadingCalendar()
+        try await view.loadEvents()
+
+        store.stored.append(event("b", date(2024, 1, 12)))
+        store.reportChange()
+        try await view.loadEvents()
+        #expect(view.events.map(\.title) == ["a", "b"])
+        await settle()
+        #expect(store.queried.count == 2, "the app's query ran after the change, so no reload follows")
+    }
+
+    @Test func aLoadTheAppStartsSupersedesAReload() async throws {
+        store.stored = [event("a", date(2024, 1, 10))]
+        let view = makeReloadingCalendar()
+        try await view.loadEvents()
+
+        store.holdsQueries = true
+        store.reportChange()
+        await wait { store.heldQueries.count == 1 }
+        let load = Task { try await view.loadEvents() }
+        await wait { store.heldQueries.count == 2 }
+        store.stored.append(event("b", date(2024, 1, 12)))
+        store.release(1)
+        try await load.value
+        #expect(view.events.map(\.title) == ["a"])
+        store.release(0)
+        await settle()
+        #expect(view.events.map(\.title) == ["a"], "the superseded reload leaves the events alone")
+        #expect(store.queried.count == 3)
+    }
+
+    @Test func aStoreChangeDoesNotAskForAccess() async throws {
+        store.stored = [event("a", date(2024, 1, 10))]
+        let view = makeReloadingCalendar()
+        try await view.loadEvents()
+
+        store.hasFullAccess = false
+        store.stored = []
+        store.reportChange()
+        await settle()
+        #expect(store.requests == 0)
+        #expect(store.queried.count == 1)
+        #expect(view.events.map(\.title) == ["a"], "without access the events stay as they are")
+
+        store.hasFullAccess = true
+        store.reportChange()
+        await wait { store.queried.count == 2 }
+        #expect(view.events.isEmpty)
+    }
+
+    @Test func turningTheReloadOffStopsObservingTheStore() async throws {
+        let view = makeReloadingCalendar()
+        try await view.loadEvents()
+        #expect(view.eventsLoader.storeObservation != nil)
+
+        store.reportChange()
+        view.reloadsEventsWhenStoreChanges = false
+        #expect(view.eventsLoader.storeObservation == nil)
+        store.reportChange()
+        await settle()
+        #expect(store.queried.count == 1, "the reload that was waiting is dropped with the observer")
+
+        view.reloadsEventsWhenStoreChanges = true
+        #expect(view.eventsLoader.storeObservation != nil, "the view has loaded, so it observes at once")
+        await settle()
+        #expect(store.queried.count == 1, "a change reported while it was off is not answered")
+        store.reportChange()
+        await wait { store.queried.count == 2 }
+        #expect(store.queried.count == 2)
+    }
+
+    @Test func theViewObservesTheStoreItLastLoadedFrom() async throws {
+        let view = makeReloadingCalendar()
+        try await view.loadEvents()
+        let other = FakeStore()
+        other.hasFullAccess = true
+        other.changeNotification = Notification.Name("EventKitTests.FakeStore.otherChanged")
+        view.eventsManager = EventsManager(store: other)
+        store.reportChange()
+        await wait { store.queried.count == 2 }
+        #expect(store.queried.count == 2)
+        #expect(other.queried.isEmpty, "the events shown are still the first store's")
+
+        try await view.loadEvents()
+        #expect(other.queried.count == 1)
+        store.reportChange()
+        await settle()
+        #expect(store.queried.count == 2, "the first store is no longer observed")
+        other.reportChange()
+        await wait { other.queried.count == 2 }
+        #expect(other.queried.count == 2)
+    }
+
+    @Test func aFailedLoadFromAnotherStoreLeavesAStoreChangeToBeAnswered() async throws {
+        let view = makeReloadingCalendar()
+        try await view.loadEvents()
+        let other = FakeStore()
+        other.grantsAccess = false
+        view.eventsManager = EventsManager(store: other)
+
+        store.stored = [event("new", date(2024, 1, 10))]
+        store.reportChange()
+        await #expect(throws: EventsManagerError.authorization) { try await view.loadEvents() }
+        await wait { store.queried.count == 2 }
+        #expect(view.events.map(\.title) == ["new"], "the events shown are the first store's, so its change counts")
+        #expect(other.queried.isEmpty)
+    }
+
+    @Test func noObserverIsLeftWhenTheViewGoesAway() async throws {
+        store.hasFullAccess = true
+        weak var released: CalendarView?
+        weak var observation: AnyCancellable?
+        do {
+            let view = CalendarView(frame: CGRect(x: 0, y: 0, width: 350, height: 420))
+            view.eventsManager = manager
+            view.eventsLoader.storeChangeDelay = .milliseconds(20)
+            view.reloadsEventsWhenStoreChanges = true
+            try await view.loadEvents()
+            released = view
+            observation = view.eventsLoader.storeObservation
+            #expect(observation != nil)
+            // A reload is waiting when the view goes.
+            store.reportChange()
+        }
+        await wait { released == nil && observation == nil }
+        #expect(released == nil, "observing does not keep the view")
+        #expect(observation == nil, "the observer is removed with the view")
+        store.reportChange()
+        await settle()
+        #expect(store.queried.count == 1)
+    }
+
+    @Test func aStoreThatReportsNothingIsNotObserved() async throws {
+        let silent = MinimalStore()
+        #expect(silent.changeNotification == nil, "the requirement has a default, so 2.0 stores still conform")
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        view.eventsManager = EventsManager(store: silent)
+        view.reloadsEventsWhenStoreChanges = true
+        try await view.loadEvents()
+        #expect(view.eventsLoader.storeObservation == nil)
+        #expect(silent.queries == 1)
+
+        store.changeNotification = nil
+        let quiet = makeReloadingCalendar()
+        try await quiet.loadEvents()
+        #expect(quiet.eventsLoader.storeObservation == nil)
+    }
+
+    @Test func theSystemStoreReportsEventKitsChangeNotification() {
+        #expect(ThreadRecordingStore().changeNotification == .EKEventStoreChanged)
     }
 
     @Test func theDeprecatedStoreParametersStillUseTheGivenStore() async throws {

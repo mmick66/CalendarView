@@ -26,6 +26,10 @@
 import UIKit
 
 /// The header of a ``CalendarView``: the month title above a row of weekday labels.
+///
+/// The header is as tall as ``CalendarView/Style/headerHeight`` says, and taller when its fonts
+/// need more room, as the default fonts do at the larger Dynamic Type sizes. The weekday labels
+/// show shorter names when the short ones do not fit their columns.
 open class CalendarHeaderView: UIView {
 
     private(set) var style: CalendarView.Style = .default
@@ -71,6 +75,12 @@ open class CalendarHeaderView: UIView {
             label.adjustsFontForContentSizeCategory = true
             weekdaysStack.addArrangedSubview(label)
         }
+        // A title or a weekday wider than its label gets smaller rather than cut short.
+        for label in dayLabels + [monthLabel] {
+            label.adjustsFontSizeToFitWidth = true
+            label.minimumScaleFactor = Metrics.minimumFontScale
+            label.baselineAdjustment = .alignCenters
+        }
         weekdaysStack.axis = .horizontal
         weekdaysStack.distribution = .fillEqually
         weekdaysStack.semanticContentAttribute = semanticContentAttribute
@@ -85,6 +95,18 @@ open class CalendarHeaderView: UIView {
             weekdaysStack.trailingAnchor.constraint(equalTo: trailingAnchor),
         ])
         updateStyle()
+
+        // The labels scale their fonts by themselves. The header then needs its layout again, to
+        // make room for them and to tell the calendar view that its height changed.
+        registerForTraitChanges([UITraitPreferredContentSizeCategory.self]) { (header: CalendarHeaderView, _) in
+            header.setNeedsLayout()
+        }
+    }
+
+    /// The header's proportions, which do not depend on the style.
+    private enum Metrics {
+        /// The smallest a label's font gets to fit its text, as a fraction of the style's font.
+        static let minimumFontScale: CGFloat = 0.5
     }
 
     /// The weekday labels follow the header's direction: a stack view mirrors with its own
@@ -112,19 +134,13 @@ open class CalendarHeaderView: UIView {
         monthLabel.textColor = style.headerTextColor
         monthLabel.backgroundColor = style.headerBackgroundColor
 
-        // Weekday symbols are indexed from Sunday; rotate so the first label is the first weekday.
-        let symbols = formatters.weekdaySymbols
-        let start = style.effectiveFirstWeekday - 1
-
-        for (i, label) in dayLabels.enumerated() {
-            let symbol = symbols.isEmpty ? "" : symbols[(start + i) % symbols.count]
+        let names = weekdays(from: formatters.weekdayNames)
+        for (label, name) in zip(dayLabels, names) {
             label.font = style.weekdaysFont
-            label.text =
-                style.weekdayCasing == .capitalized
-                ? symbol.capitalized(with: style.locale)
-                : symbol.uppercased(with: style.locale)
             label.textColor = style.weekdaysTextColor
             label.textAlignment = .center
+            // VoiceOver reads the day's name in full, whatever the label has room to show.
+            label.accessibilityLabel = name
         }
 
         backgroundColor = style.weekdaysBackgroundColor
@@ -132,6 +148,96 @@ open class CalendarHeaderView: UIView {
         monthTop.constant = style.headerTopMargin
         monthBottom.constant = -style.weekdaysTopMargin
         weekdaysBottom.constant = -style.weekdaysBottomMargin
-        weekdaysHeight.constant = style.weekdaysHeight
+        fitWeekdays()
+        setNeedsLayout()
+    }
+
+    // MARK: - Fitting the fonts
+
+    /// The height the header needs for its style and its fonts.
+    ///
+    /// This is ``CalendarView/Style/headerHeight`` while the month title and the weekday labels
+    /// have room for a line of their fonts, and that much more when they do not.
+    ///
+    /// The calendar view sizes the header with it, and lays out again when it changes.
+    var fittingHeight: CGFloat {
+        let extra = growth
+        return style.headerHeight + extra.month + extra.weekdays
+    }
+
+    /// How much taller than the style says the month title and the weekday labels have to be to
+    /// show a line of their fonts.
+    ///
+    /// A part the style gives no height stays without one, and so does all of a header whose
+    /// height is zero: a style can still hide them.
+    private var growth: (month: CGFloat, weekdays: CGFloat) {
+        guard style.headerHeight > 0 else { return (0, 0) }
+        func growth(of height: CGFloat, for font: UIFont) -> CGFloat {
+            height > 0 ? max(0, ceil(font.lineHeight) - height) : 0
+        }
+        let fonts = scaledFonts
+        let margins = style.headerTopMargin + style.weekdaysTopMargin + style.weekdaysBottomMargin
+        let monthHeight = style.headerHeight - margins - style.weekdaysHeight
+        return (growth(of: monthHeight, for: fonts.month), growth(of: style.weekdaysHeight, for: fonts.weekdays))
+    }
+
+    /// The fonts the labels draw with: the style's, scaled for the content size category.
+    ///
+    /// The labels do the scaling, so this brings their traits up to date first.
+    private var scaledFonts: (month: UIFont, weekdays: UIFont) {
+        monthLabel.updateTraitsIfNeeded()
+        dayLabels.forEach { $0.updateTraitsIfNeeded() }
+        return (monthLabel.font ?? style.headerFont, dayLabels.first?.font ?? style.weekdaysFont)
+    }
+
+    /// The weekday `symbols`, given Sunday first, in the order of the labels.
+    private func weekdays(from symbols: [String]) -> [String] {
+        guard !symbols.isEmpty else { return dayLabels.map { _ in "" } }
+        // Weekday symbols are indexed from Sunday; rotate so the first label is the first weekday.
+        let start = style.effectiveFirstWeekday - 1
+        return dayLabels.indices.map { symbols[(start + $0) % symbols.count] }
+    }
+
+    /// The text of the weekday labels for `symbols`, given Sunday first: in the order of the
+    /// labels and in the style's letter case.
+    private func weekdayTexts(from symbols: [String]) -> [String] {
+        weekdays(from: symbols).map { symbol in
+            style.weekdayCasing == .capitalized
+                ? symbol.capitalized(with: style.locale)
+                : symbol.uppercased(with: style.locale)
+        }
+    }
+
+    /// Gives the weekday labels the height their font needs and the names their columns have
+    /// room for: the short ones, such as "Mon", or the shortest, such as "M".
+    private func fitWeekdays() {
+        let height = style.weekdaysHeight + growth.weekdays
+        if weekdaysHeight.constant != height {
+            weekdaysHeight.constant = height
+        }
+
+        var texts = weekdayTexts(from: formatters.weekdaySymbols)
+        let font = scaledFonts.weekdays
+        let columnWidth = bounds.width / CGFloat(dayLabels.count)
+        let fits = texts.allSatisfy { ceil(($0 as NSString).size(withAttributes: [.font: font]).width) <= columnWidth }
+        // Before the header has a width there is nothing to fit the names to.
+        if !fits, columnWidth > 0, !formatters.narrowWeekdaySymbols.isEmpty {
+            texts = weekdayTexts(from: formatters.narrowWeekdaySymbols)
+        }
+        for (label, text) in zip(dayLabels, texts) where label.text != text {
+            label.text = text
+        }
+    }
+
+    /// Fits the weekday labels to the header's width and to the fonts as they are now.
+    ///
+    /// When the fonts have changed the height the header needs, as a new content size category
+    /// does, the superview, the calendar view, is asked to lay out again and resize the header.
+    open override func layoutSubviews() {
+        fitWeekdays()
+        super.layoutSubviews()
+        if abs(fittingHeight - bounds.height) > 0.5 {
+            superview?.setNeedsLayout()
+        }
     }
 }

@@ -266,6 +266,45 @@ struct ScrollingTests: CalendarFixture {
         #expect(delegate(of: view).longPressed.count == 2, "a press outside the grid is ignored")
     }
 
+    @Test func longPressReportsDaysThatCannotBeTapped() throws {
+        // Deliberate: apps add an event to any day with a long press, whether it can be selected
+        // or not.
+        let view = makeCalendar(start: date(2024, 1, 10), end: date(2024, 1, 20))
+        view.style.showAdjacentDays = true
+        view.layoutIfNeeded()
+        let gesture = FakeLongPress()
+
+        // 5 January is before the start: no tap, no highlight, but a long press.
+        let early = IndexPath(item: 4, section: 0)
+        #expect(view.isOutOfRange(early))
+        #expect(view.collectionView(view.collectionView, shouldSelectItemAt: early) == false)
+        #expect(view.collectionView(view.collectionView, shouldHighlightItemAt: early) == false)
+        gesture.point = try #require(cell(view, early)).center
+        view.handleLongPress(gesture: gesture)
+        #expect(delegate(of: view).longPressed.map(\.0) == [date(2024, 1, 5)])
+
+        // 25 January is after the end.
+        gesture.point = try #require(cell(view, IndexPath(item: 24, section: 0))).center
+        view.handleLongPress(gesture: gesture)
+        #expect(delegate(of: view).longPressed.map(\.0) == [date(2024, 1, 5), date(2024, 1, 25)])
+
+        // 15 January is in range, but the delegate refuses it.
+        delegate(of: view).canSelect = { _ in false }
+        let refused = IndexPath(item: 14, section: 0)
+        #expect(view.collectionView(view.collectionView, shouldSelectItemAt: refused) == false)
+        gesture.point = try #require(cell(view, refused)).center
+        view.handleLongPress(gesture: gesture)
+        #expect(delegate(of: view).longPressed.last?.0 == date(2024, 1, 15))
+        #expect(view.selectedDates == [], "a long press selects nothing")
+
+        // 1 February, shown after January's days, is not a day of the month on screen.
+        let adjacent = try #require(cell(view, IndexPath(item: 31, section: 0)))
+        #expect(adjacent.configuration.isAdjacent)
+        gesture.point = adjacent.center
+        view.handleLongPress(gesture: gesture)
+        #expect(delegate(of: view).longPressed.count == 3, "the neighbouring months' days are not reported")
+    }
+
     // MARK: Right to left
 
     @Test func rightToLeftLayoutMirrorsTheGridUnlessForcedLeftToRight() throws {
@@ -326,6 +365,93 @@ struct ScrollingTests: CalendarFixture {
         view.layoutIfNeeded()
         #expect(view.collectionView.contentOffset.x == 0, "the displayed month stays on screen")
         #expect(view.displayDate == date(2024, 1, 1))
+    }
+
+    @Test func rightToLeftDoesNotDependOnTheOrderOfAssignment() throws {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 3, 31))
+        let width = view.collectionView.bounds.width
+        // The flag first, the direction second: the other tests set them the other way round.
+        view.forceLtr = false
+        view.semanticContentAttribute = .forceRightToLeft
+        view.layoutIfNeeded()
+        #expect(view.collectionView.effectiveUserInterfaceLayoutDirection == .rightToLeft)
+        #expect(view.headerView.effectiveUserInterfaceLayoutDirection == .rightToLeft)
+        #expect(view.displayDate == date(2024, 1, 1))
+        #expect(view.collectionView.contentOffset.x == 2 * width, "the displayed month stays on screen")
+        #expect(try #require(cell(view, IndexPath(item: 0, section: 0))).frame.maxX == 3 * width)
+        #expect(view.headerView.dayLabels.first!.frame.minX > view.headerView.dayLabels.last!.frame.minX)
+
+        view.semanticContentAttribute = .forceLeftToRight
+        view.layoutIfNeeded()
+        #expect(view.collectionView.effectiveUserInterfaceLayoutDirection == .leftToRight)
+        #expect(view.collectionView.contentOffset.x == 0)
+        #expect(cell(view, IndexPath(item: 0, section: 0))?.frame.minX == 0)
+        #expect(delegate(of: view).scrolledTo == [date(2024, 1, 1)], "flipping is not scrolling")
+    }
+
+    @Test func rightToLeftFollowsTheLayoutDirectionTrait() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 3, 31))
+        let width = view.collectionView.bounds.width
+        view.forceLtr = false
+        view.setDisplayDate(date(2024, 3, 1))
+        view.layoutIfNeeded()
+        #expect(view.collectionView.contentOffset.x == 2 * width)
+
+        // As when the app's language, or a parent's trait override, turns right to left.
+        view.traitOverrides.layoutDirection = .rightToLeft
+        view.layoutIfNeeded()
+        #expect(view.collectionView.effectiveUserInterfaceLayoutDirection == .rightToLeft)
+        #expect(view.displayDate == date(2024, 3, 1))
+        #expect(view.collectionView.contentOffset.x == 0, "March, the last month, is the first page")
+        #expect(cell(view, IndexPath(item: 0, section: 2))?.frame.maxX == width)
+
+        view.traitOverrides.layoutDirection = .leftToRight
+        view.layoutIfNeeded()
+        #expect(view.collectionView.effectiveUserInterfaceLayoutDirection == .leftToRight)
+        #expect(view.collectionView.contentOffset.x == 2 * width)
+
+        // A view that forces left to right ignores the trait.
+        view.forceLtr = true
+        view.traitOverrides.layoutDirection = .rightToLeft
+        view.layoutIfNeeded()
+        #expect(view.collectionView.effectiveUserInterfaceLayoutDirection == .leftToRight)
+    }
+
+    @Test func rightToLeftFollowsTheViewIntoAnotherHierarchy() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 3, 31))
+        let width = view.collectionView.bounds.width
+        view.forceLtr = false
+        view.layoutIfNeeded()
+        #expect(view.collectionView.effectiveUserInterfaceLayoutDirection == .leftToRight)
+
+        let container = UIView(frame: Self.window.bounds)
+        container.traitOverrides.layoutDirection = .rightToLeft
+        Self.window.addSubview(container)
+        container.addSubview(view)
+        view.layoutIfNeeded()
+        #expect(view.collectionView.effectiveUserInterfaceLayoutDirection == .rightToLeft)
+        #expect(view.displayDate == date(2024, 1, 1))
+        #expect(view.collectionView.contentOffset.x == 2 * width)
+    }
+
+    @Test func aCalendarThatStartsRightToLeftDisplaysItsFirstMonth() {
+        let view = CalendarView(frame: CGRect(x: 0, y: 0, width: 350, height: 420))
+        view.forceLtr = false
+        view.semanticContentAttribute = .forceRightToLeft
+        view.style = makeStyle()
+        let dataSource = FixedDataSource(start: date(2024, 1, 1), end: date(2024, 3, 31))
+        let delegate = RecordingDelegate()
+        retained.objects.append(dataSource)
+        retained.objects.append(delegate)
+        view.dataSource = dataSource
+        view.delegate = delegate
+        Self.window.addSubview(view)
+        view.layoutIfNeeded()
+        #expect(view.displayDate == date(2024, 1, 1), "the first month, although it is the last page")
+        #expect(view.headerView.monthLabel.text == "January 2024")
+        #expect(view.collectionView.contentOffset.x == 2 * view.collectionView.bounds.width)
+        #expect(delegate.scrolledTo == [date(2024, 1, 1)])
+        #expect(cell(view, IndexPath(item: 0, section: 0))?.configuration.day == 1)
     }
 
     // MARK: Appearance

@@ -46,6 +46,18 @@ public protocol CalendarEventStore: AnyObject {
     func events(from start: Date, to end: Date) async -> [CalendarEvent]
     /// Saves a new event to the default calendar.
     func save(_ event: CalendarEvent) throws
+    /// The notification the store posts, with itself as the object, each time its events change,
+    /// or `nil` when it posts none.
+    ///
+    /// A calendar view whose `reloadsEventsWhenStoreChanges` is `true` observes it to keep its
+    /// events current. The store may post it on any thread. The default implementation returns
+    /// `nil`; `EKEventStore` returns `EKEventStoreChanged`.
+    var changeNotification: Notification.Name? { get }
+}
+
+extension CalendarEventStore {
+    /// No notification: the store does not report its changes.
+    public var changeNotification: Notification.Name? { nil }
 }
 
 extension TimeInterval {
@@ -135,6 +147,14 @@ extension EKEventStore: CalendarEventStore {
         event.endDate = calendarEvent.endDate
         event.calendar = defaultCalendarForNewEvents
         try save(event, span: .thisEvent)
+    }
+
+    /// `EKEventStoreChanged`, which EventKit posts when the calendar database changes.
+    ///
+    /// EventKit posts it for the changes made in other apps, and may post it for the events this
+    /// app saves as well.
+    public var changeNotification: Notification.Name? {
+        .EKEventStoreChanged
     }
 }
 
@@ -241,9 +261,7 @@ extension EventsManager {
 
 // MARK: - CalendarView integration
 
-@MainActor private var eventsManagerKey: UInt8 = 0
-@MainActor private var eventsLoadKey: UInt8 = 0
-@MainActor private var eventsSavedDuringLoadKey: UInt8 = 0
+@MainActor private var eventsLoaderKey: UInt8 = 0
 
 extension CalendarView {
 
@@ -252,8 +270,32 @@ extension CalendarView {
     ///
     /// Assign a manager around another ``CalendarEventStore`` to test without calendar access.
     public var eventsManager: EventsManager {
-        get { objc_getAssociatedObject(self, &eventsManagerKey) as? EventsManager ?? .shared }
-        set { objc_setAssociatedObject(self, &eventsManagerKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+        get { eventsLoader.manager ?? .shared }
+        set { eventsLoader.manager = newValue }
+    }
+
+    /// Whether the view loads its events again when the store they came from reports a change;
+    /// `false` by default.
+    ///
+    /// Set it to `true` to keep the events current while the user edits their calendar in another
+    /// app. From its latest successful ``loadEvents()`` on, the view observes the
+    /// ``CalendarEventStore/changeNotification`` of the store that load read, and answers a change
+    /// as ``loadEvents()`` would: with the events of the same store over the data source's range
+    /// at that moment, which replace `events`.
+    ///
+    /// - The view waits a moment before it loads, and changes reported during the wait or while a
+    ///   load runs are answered together, so a burst of changes starts one query, not one each.
+    /// - A change reported while a load the app started is running waits for it to finish and
+    ///   never supersedes it; a load the app starts supersedes one that answers a change.
+    /// - The view does not ask for access on a change. Without full access `events` stay as they
+    ///   are, and ``loadEvents()`` says why.
+    /// - A store whose ``CalendarEventStore/changeNotification`` is `nil` reports nothing, and the
+    ///   property has no effect.
+    ///
+    /// The view stops observing when the property is set to `false` and when the view goes away.
+    public var reloadsEventsWhenStoreChanges: Bool {
+        get { eventsLoader.reloadsWhenStoreChanges }
+        set { eventsLoader.reloadsWhenStoreChanges = newValue }
     }
 
     /// Loads the events from the system calendar that fall inside the data source's range and
@@ -276,8 +318,10 @@ extension CalendarView {
 
     /// Completion-handler form of ``loadEvents()``.
     ///
-    /// The handler runs on the main actor with `nil` on success or the error ``loadEvents()``
-    /// threw, which is `CancellationError` when a later load superseded this one.
+    /// The handler runs once, on the main actor, with `nil` on success or the error
+    /// ``loadEvents()`` threw, which is `CancellationError` when a later load superseded this one.
+    /// The load starts after the call returns and does not keep the view alive until then: when the
+    /// view is gone before it starts, the handler gets `CancellationError`.
     public func loadEvents(onComplete: (@MainActor (_ error: Error?) -> Void)? = nil) {
         loadEvents(using: eventsManager, onComplete: onComplete)
     }
@@ -300,47 +344,25 @@ extension CalendarView {
         addEvent(title, date: startDate, duration: hours, using: eventsManager)
     }
 
-    /// Counts the loads started on this view, so that a load can tell whether a later one has
-    /// superseded it.
-    private var eventsLoad: Int {
-        get { objc_getAssociatedObject(self, &eventsLoadKey) as? Int ?? 0 }
-        set { objc_setAssociatedObject(self, &eventsLoadKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
-    }
-
-    /// The events saved since the latest load started, or `nil` when no load is running.
+    /// The view's manager and the state of its loads, made when first needed.
     ///
-    /// The load's query may have run before they were saved, so it keeps the ones its result lacks.
-    private var eventsSavedDuringLoad: [CalendarEvent]? {
-        get { objc_getAssociatedObject(self, &eventsSavedDuringLoadKey) as? [CalendarEvent] }
-        set {
-            objc_setAssociatedObject(self, &eventsSavedDuringLoadKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-        }
+    /// The one object the bridge associates with the view, which releases it when it goes away.
+    var eventsLoader: EventsLoader {
+        if let loader = objc_getAssociatedObject(self, &eventsLoaderKey) as? EventsLoader { return loader }
+        let loader = EventsLoader(host: self)
+        objc_setAssociatedObject(self, &eventsLoaderKey, loader, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        return loader
     }
 
     private func loadEvents(using manager: EventsManager) async throws {
-        eventsLoad += 1
-        let load = eventsLoad
-        // A save before this point is in the store when the query runs; a later one may not be.
-        eventsSavedDuringLoad = []
-        defer {
-            if load == eventsLoad { eventsSavedDuringLoad = nil }
-        }
-        let range = dateRange
-        guard let end = calendar.date(byAdding: .day, value: 1, to: range.upperBound) else { return }
-        let events = try await manager.load(from: range.lowerBound, to: end)
-        // Queries can finish out of order; only the latest load may assign its events.
-        guard load == eventsLoad else { throw CancellationError() }
-        var missing = eventsSavedDuringLoad ?? []
-        for event in events {
-            if let index = missing.firstIndex(of: event) { missing.remove(at: index) }
-        }
-        self.events = events + missing
+        try await eventsLoader.load(using: manager)
     }
 
     private func loadEvents(using manager: EventsManager, onComplete: (@MainActor (_ error: Error?) -> Void)?) {
         Task { [weak self] in
-            guard let self else { return }
             do {
+                // The handler is owed a call even when there is no view left to load for.
+                guard let self else { throw CancellationError() }
                 try await loadEvents(using: manager)
                 onComplete?(nil)
             } catch {
@@ -350,9 +372,7 @@ extension CalendarView {
     }
 
     private func saveEvent(_ event: CalendarEvent, using manager: EventsManager) throws {
-        try manager.save(event)
-        events.append(event)
-        eventsSavedDuringLoad?.append(event)
+        try eventsLoader.save(event, using: manager)
     }
 
     private func addEvent(

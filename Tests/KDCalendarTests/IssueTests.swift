@@ -142,6 +142,28 @@ struct IssueTests: CalendarFixture {
         #expect(view.multipleSelectionEnable == true)
     }
 
+    @Test func issue32_multipleSelectionEnableLeavesAModeThatAlreadyHoldsSeveralDays() {
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        view.selectionMode = .range
+        tap(view, date(2024, 1, 8))
+        tap(view, date(2024, 1, 10))
+        // Reading the flag and writing it back changes nothing.
+        view.multipleSelectionEnable = view.multipleSelectionEnable
+        #expect(view.selectionMode == .range)
+        view.multipleSelectionEnable = true
+        #expect(view.selectionMode == .range)
+        #expect(view.selectedDates == days(date(2024, 1, 8), date(2024, 1, 10)))
+        #expect(delegate(of: view).deselected == [])
+
+        view.multipleSelectionEnable = false
+        #expect(view.selectionMode == .single)
+        #expect(view.selectedDates == [date(2024, 1, 10)])
+        view.multipleSelectionEnable = true
+        #expect(view.selectionMode == .multiple, "from single, several days means multiple")
+        view.multipleSelectionEnable = true
+        #expect(view.selectionMode == .multiple)
+    }
+
     // MARK: #136 and #122 per-date styles
 
     @Test func issue136_aDelegateCanStyleOneDay() {

@@ -34,12 +34,42 @@ extension CalendarView {
     ///
     /// The default colours are dynamic system colours, so a calendar follows dark mode without
     /// any work. The default fonts scale with Dynamic Type; a custom font is used as given.
+    ///
+    /// ## Comparing styles
+    ///
+    /// Two styles are equal when every property is. ``KDCalendarView`` counts on it: an update of
+    /// the SwiftUI view hands the calendar its style, which reloads the calendar, only when that
+    /// style differs from the one the calendar has.
+    ///
+    /// Colours decide most comparisons, and `UIColor` compares a colour made with
+    /// `UIColor { traits in ... }` by identity: two such colours are equal only when they are
+    /// the same object, whatever their closures return. A style built in a SwiftUI `body` with a
+    /// new `UIColor { traits in ... }` each time therefore never equals the one before it, and
+    /// every update of the view reloads the calendar.
+    ///
+    /// Make a dynamic colour once and keep it, in a `static let` for instance, rather than where
+    /// the style is built. The default style shares one such colour for this reason. System
+    /// colours such as `UIColor.label` and colours with fixed components compare by value and
+    /// need no such care.
+    ///
+    /// ```swift
+    /// extension UIColor {
+    ///     // Made once: every style that uses it compares equal.
+    ///     static let dayBackground = UIColor { traits in
+    ///         traits.userInterfaceStyle == .dark ? .darkGray : .lightGray
+    ///     }
+    /// }
+    ///
+    /// var style = CalendarView.Style()
+    /// style.cellColorDefault = .dayBackground
+    /// ```
     public struct Style: Sendable, Equatable {
 
         /// The out-of-the-box style.
         public static let `default` = Style()
 
-        /// One shared dynamic colour, so two default styles compare equal.
+        /// One shared dynamic colour, so two default styles compare equal: `UIColor` compares a
+        /// colour made from a closure by identity.
         private static let defaultCellColor = UIColor { traits in
             traits.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.1) : UIColor(white: 0.0, alpha: 0.1)
         }
@@ -135,6 +165,9 @@ extension CalendarView {
         // MARK: Header
 
         /// The total height of the header, month title and weekday labels included.
+        ///
+        /// The header is taller than this when its fonts need more room, as the default fonts do
+        /// at the larger Dynamic Type sizes. A header given no height at all is left without one.
         public var headerHeight: CGFloat = 80.0
         /// The space above the month title.
         public var headerTopMargin: CGFloat = 5.0
@@ -152,6 +185,8 @@ extension CalendarView {
         /// The space below the weekday labels.
         public var weekdaysBottomMargin: CGFloat = 5.0
         /// The height of the weekday labels.
+        ///
+        /// The labels are taller than this when a line of ``weekdaysFont`` needs more room.
         public var weekdaysHeight: CGFloat = 35.0
         /// The colour of the weekday labels.
         public var weekdaysTextColor = UIColor.secondaryLabel
@@ -186,8 +221,24 @@ extension CalendarView {
         public var cellBorderWidth = CGFloat(0.0)
         /// The font of the day numbers.
         ///
-        /// Scales with Dynamic Type by default.
+        /// Scales with Dynamic Type by default. A cell too small for the font shows its number
+        /// smaller rather than clipped.
         public var cellFont = UIFontMetrics(forTextStyle: .body).scaledFont(for: UIFont.systemFont(ofSize: 17))
+
+        // MARK: Days outside the range or the month
+
+        /// The colour of the day number, not of the cell behind it, for days before the data
+        /// source's start date or after its end date.
+        ///
+        /// A text colour despite its name, like ``cellTextColorDefault``; such a day keeps the
+        /// background of an ordinary day, ``cellColorDefault``.
+        public var cellColorOutOfRange = UIColor.tertiaryLabel
+        /// The colour of the day number, not of the cell behind it, for the neighbouring months'
+        /// days shown when ``showAdjacentDays`` is on.
+        ///
+        /// A text colour despite its name, like ``cellTextColorDefault``; such a day has no
+        /// background.
+        public var cellColorAdjacent = UIColor.quaternaryLabel
 
         // MARK: Today
 
@@ -195,10 +246,6 @@ extension CalendarView {
         public var cellTextColorToday = UIColor.secondaryLabel
         /// The background of today.
         public var cellColorToday = UIColor(red: 254.0 / 255.0, green: 73.0 / 255.0, blue: 64.0 / 255.0, alpha: 0.3)
-        /// The text colour of days before the data source's start date or after its end date.
-        public var cellColorOutOfRange = UIColor.tertiaryLabel
-        /// The text colour of the neighbouring months' days when ``showAdjacentDays`` is on.
-        public var cellColorAdjacent = UIColor.quaternaryLabel
 
         // MARK: Selection
 
@@ -220,9 +267,11 @@ extension CalendarView {
 
         // MARK: Locale and calendar
 
-        /// The locale for the month title and weekday labels.
+        /// The locale for the month title, the weekday labels and what VoiceOver reads for a day.
         ///
-        /// Defaults to the user's locale, following it when it changes.
+        /// Defaults to the user's locale, following it when it changes. VoiceOver reads a day's
+        /// date in this locale, and "Today" and the number of events in the same language when
+        /// the library is localized in it; otherwise those words are in the app's language.
         public var locale = Locale.autoupdatingCurrent
 
         /// The calendar, and with it the time zone, every date is interpreted in.

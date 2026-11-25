@@ -1,12 +1,15 @@
 import KDCalendar
 import SwiftUI
 
-/// The SwiftUI wrapper with a two-way selection binding, the three selection modes and a month
-/// title driven by the scroll callback.
+/// The SwiftUI wrapper with its two bindings, the selection and the month on screen, and the
+/// three selection modes.
+///
+/// The title reads the month binding, which the calendar sets as the user swipes, and "Today"
+/// assigns it, which scrolls the calendar back however far the user went.
 struct SwiftUIDemoView: View {
 
     @State private var selection: [Date] = []
-    @State private var month: Date = Date()
+    @State private var month = Date()
     @State private var mode: CalendarView.SelectionMode = .range
 
     private let range: ClosedRange<Date> = {
@@ -33,8 +36,7 @@ struct SwiftUIDemoView: View {
                     .calendarStyle(style)
                     .selectionMode(mode)
                     .events(SampleEvents.around())
-                    .displayDate(Date())
-                    .onScrollToMonth { month = $0 }
+                    .displayedMonth($month)
                     .aspectRatio(1, contentMode: .fit)
 
                 Picker("Selection", selection: $mode) {
@@ -69,6 +71,13 @@ struct SwiftUIDemoView: View {
             .padding(.horizontal)
             .navigationTitle(month.formatted(.dateTime.month(.wide).year()))
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Today") {
+                        withAnimation { month = Date() }
+                    }
+                }
+            }
         }
     }
 }

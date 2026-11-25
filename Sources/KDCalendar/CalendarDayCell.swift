@@ -34,6 +34,8 @@ struct DayCellConfiguration: Equatable {
     var date: Date?
     var isToday = false
     var isOutOfRange = false
+    /// Whether a tap may select the day: it is in range and the delegate's `canSelectDate` lets it.
+    var isSelectable = true
     /// A day of the previous or next month, shown only as context for the grid.
     var isAdjacent = false
     var isWeekend = false
@@ -83,7 +85,9 @@ struct DayCellConfiguration: Equatable {
 
         var traits: UIAccessibilityTraits = .button
         if isSelected { traits.insert(.selected) }
-        if isOutOfRange || isAdjacent { traits.insert(.notEnabled) }
+        // A day that cannot be selected is a dimmed button to VoiceOver, whether the range or the
+        // delegate refuses it. A selected day stays enabled: activating it deselects it.
+        if isOutOfRange || isAdjacent || (!isSelectable && !isSelected) { traits.insert(.notEnabled) }
 
         return Appearance(
             textColor: textColor,
@@ -158,8 +162,19 @@ open class CalendarDayCell: UICollectionViewCell {
         addSubview(dotsView)
 
         textLabel.adjustsFontForContentSizeCategory = true
+        // fitDayNumber() sizes the font for two digits. Should a font draw a number wider than
+        // that, the label shrinks it, and clips it before it would replace it with an ellipsis.
+        textLabel.adjustsFontSizeToFitWidth = true
+        textLabel.minimumScaleFactor = Metrics.minimumFontScale
+        textLabel.baselineAdjustment = .alignCenters
+        textLabel.lineBreakMode = .byClipping
         dotsView.isHidden = true
         applyStyle()
+
+        // A larger text size may no longer fit the cell: size the day number again.
+        registerForTraitChanges([UITraitPreferredContentSizeCategory.self]) { (cell: CalendarDayCell, _) in
+            cell.setNeedsLayout()
+        }
 
         // Border colours are CGColors, which do not follow appearance changes on their own:
         // reapply them whenever a trait a dynamic colour may depend on changes (style, contrast, level...).
@@ -177,6 +192,12 @@ open class CalendarDayCell: UICollectionViewCell {
         static let dotDiameterRatio: CGFloat = 0.08
         /// The distance from the cell's bottom edge to the dot's centre, in dot diameters.
         static let dotBottomOffset: CGFloat = 2.5
+        /// The day number every cell's font is fitted to, so that all the numbers of a month come
+        /// out the same size.
+        static let widestDayNumber = "00"
+        /// How far the label may shrink a day number wider than ``widestDayNumber``, as a
+        /// fraction of the fitted font.
+        static let minimumFontScale: CGFloat = 0.5
     }
 
     override open func layoutSubviews() {
@@ -195,12 +216,36 @@ open class CalendarDayCell: UICollectionViewCell {
             y: bounds.height - Metrics.dotBottomOffset * dotDiameter
         )
         dotsView.layer.cornerRadius = dotDiameter / 2
+
+        fitDayNumber()
+    }
+
+    /// Gives the day number the style's font, made smaller when the cell has no room for it.
+    ///
+    /// With Dynamic Type the font can outgrow the cell, most of all at the accessibility sizes. A
+    /// smaller number is still read; a clipped one is not. The font shrinks until two digits fit
+    /// the label in width and a line fits it in height.
+    private func fitDayNumber() {
+        // The label scales the style's font for its own content size category.
+        textLabel.updateTraitsIfNeeded()
+        textLabel.font = style.cellFont
+        let available = textLabel.bounds.size
+        guard let font = textLabel.font, available.width > 0, available.height > 0 else { return }
+
+        let width = (Metrics.widestDayNumber as NSString).size(withAttributes: [.font: font]).width
+        let height = font.lineHeight
+        guard width > 0, height > 0 else { return }
+        let scale = min(available.width / width, available.height / height)
+        if scale < 1 {
+            // Rounded down, so that the smaller font fits for certain.
+            textLabel.font = font.withSize(max(1, floor(font.pointSize * scale)))
+        }
     }
 
     private func applyStyle() {
         let appearance = configuration.appearance(isSelected: isSelected)
         dotsView.backgroundColor = style.cellEventColor
-        textLabel.font = style.cellFont
+        fitDayNumber()
         textLabel.textColor = appearance.textColor
         dayBackgroundView.backgroundColor = appearance.backgroundColor
         dayBackgroundView.layer.borderColor = appearance.borderColor.resolvedColor(with: traitCollection).cgColor

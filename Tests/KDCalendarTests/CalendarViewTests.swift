@@ -1,3 +1,4 @@
+import Combine
 import Testing
 import UIKit
 
@@ -183,6 +184,128 @@ struct CalendarViewTests: CalendarFixture {
         #expect(cell(view, indexPath)?.configuration.day == local.component(.day, from: now))
     }
 
+    /// Stands in for the view's wake-up timer: records what was scheduled and fires by hand.
+    @MainActor
+    final class WakeUps {
+        /// Every date a wake-up was asked for, in order.
+        var scheduled: [Date] = []
+        /// The wake-ups that have neither fired nor been called off, by their place in `scheduled`.
+        var pending: [Int: (date: Date, action: @MainActor () -> Void)] = [:]
+
+        func install(in view: CalendarView) {
+            view.scheduleWakeUp = { [self] date, action in
+                let index = scheduled.count
+                scheduled.append(date)
+                pending[index] = (date, action)
+                return AnyCancellable { self.pending[index] = nil }
+            }
+        }
+
+        /// The dates still waited for.
+        var pendingDates: [Date] { pending.values.map(\.date).sorted() }
+
+        /// Fires the one pending wake-up, as its timer would.
+        func fire() {
+            guard pending.count == 1, let (index, wakeUp) = pending.first else {
+                Issue.record("expected one pending wake-up, found \(pending.count)")
+                return
+            }
+            pending[index] = nil
+            wakeUp.action()
+        }
+    }
+
+    /// A clock the test moves.
+    final class Clock {
+        var now: Date
+        init(_ now: Date) { self.now = now }
+    }
+
+    @Test func theTodayMarkerMovesAtMidnightInTheStyleCalendar() throws {
+        // The system announces a new day at the device's midnight, which is hours away from
+        // midnight in a style calendar of another time zone. The view wakes itself up for that.
+        let view = makeCalendar(start: date(2024, 1, 1), end: date(2024, 1, 31))
+        let clock = Clock(date(2024, 1, 10, hour: 22))
+        let wakeUps = WakeUps()
+        view.now = { clock.now }
+        wakeUps.install(in: view)
+        view.reloadData()
+        view.layoutIfNeeded()
+        let tenth = try #require(view.indexPathForDate(date(2024, 1, 10)))
+        let eleventh = try #require(view.indexPathForDate(date(2024, 1, 11)))
+        #expect(cell(view, tenth)?.configuration.isToday == true)
+        #expect(wakeUps.pendingDates == [date(2024, 1, 11)], "midnight in UTC, the style's calendar")
+
+        view.reloadData()
+        view.events = [CalendarEvent(title: "a", startDate: date(2024, 1, 3), endDate: date(2024, 1, 3, hour: 1))]
+        #expect(wakeUps.scheduled.count == 1, "a reload on the same day keeps the wake-up")
+
+        // Midnight comes.
+        clock.now = date(2024, 1, 11)
+        wakeUps.fire()
+        view.layoutIfNeeded()
+        #expect(cell(view, tenth)?.configuration.isToday == false)
+        #expect(cell(view, eleventh)?.configuration.isToday == true)
+        #expect(wakeUps.pendingDates == [date(2024, 1, 12)], "and the next midnight is awaited")
+
+        // A wake-up that comes early changes nothing and waits for the same midnight again.
+        clock.now = date(2024, 1, 11, hour: 23)
+        wakeUps.fire()
+        view.layoutIfNeeded()
+        #expect(cell(view, eleventh)?.configuration.isToday == true)
+        #expect(wakeUps.pendingDates == [date(2024, 1, 12)])
+        #expect(wakeUps.scheduled.count == 3)
+
+        // A calendar in another time zone has another midnight: 23:00 UTC is 08:00 in Tokyo.
+        var tokyo = utc
+        tokyo.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+        view.style.calendar = tokyo
+        #expect(wakeUps.pendingDates == [date(2024, 1, 12, hour: 15)], "midnight in Tokyo; the old one is called off")
+    }
+
+    @Test func theWakeUpForTheNextDayEndsWithTheView() {
+        let wakeUps = WakeUps()
+        weak var released: CalendarView?
+        autoreleasepool {
+            let view = CalendarView(frame: CGRect(x: 0, y: 0, width: 350, height: 420))
+            wakeUps.install(in: view)
+            view.reloadData()
+            released = view
+        }
+        #expect(wakeUps.scheduled.count == 1)
+        #expect(released == nil, "the wake-up does not keep the view alive")
+        #expect(wakeUps.pending.isEmpty, "and nothing is left running")
+    }
+
+    @Test func theTimerWakeUpFiresOnceUnlessCancelled() async throws {
+        let fired = Clock(.distantPast)
+        var count = 0
+        var cancelledCount = 0
+        let wakeUp = CalendarView.timerWakeUp(at: Date().addingTimeInterval(0.05)) {
+            count += 1
+            fired.now = Date()
+        }
+        let cancelled = CalendarView.timerWakeUp(at: Date().addingTimeInterval(0.05)) { cancelledCount += 1 }
+        cancelled.cancel()
+        for _ in 0..<100 where count == 0 {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        try await Task.sleep(for: .milliseconds(100))
+        #expect(count == 1)
+        #expect(cancelledCount == 0)
+        wakeUp.cancel()
+
+        // The timer goes by the clock, so a moment that has passed, as it has when the device
+        // slept through it, is not waited for again.
+        var lateCount = 0
+        let late = CalendarView.timerWakeUp(at: Date().addingTimeInterval(-3600)) { lateCount += 1 }
+        for _ in 0..<100 where lateCount == 0 {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        #expect(lateCount == 1)
+        late.cancel()
+    }
+
     @Test func theDefaultCalendarAndLocaleFollowTheUsersSettings() {
         #expect(CalendarView.Style().calendar == Calendar.autoupdatingCurrent)
         #expect(CalendarView.Style().locale == Locale.autoupdatingCurrent)
@@ -340,9 +463,10 @@ struct CalendarViewTests: CalendarFixture {
         #expect(reused.configuration.eventsCount == 0)
         #expect(reused.configuration.day == nil)
         #expect(reused.isHidden == false)
-        // An out-of-range cell is fully configured, so a flag can never survive on it.
-        let outOfRange =
-            view.collectionView(view.collectionView, cellForItemAt: IndexPath(item: 2, section: 0)) as! CalendarDayCell
+        // An out-of-range cell is fully configured, so a flag can never survive on it. The cell is
+        // the one the collection view asked for: a cell dequeued behind its back is never handed
+        // to it, which UIKit raises an exception for at the next reload.
+        let outOfRange = cell(view, IndexPath(item: 2, section: 0))!
         #expect(outOfRange.configuration.isOutOfRange == true)
         #expect(outOfRange.configuration.isToday == false)
         #expect(outOfRange.textLabel.textColor == view.style.cellColorOutOfRange)
@@ -480,9 +604,23 @@ struct CalendarViewTests: CalendarFixture {
         let legacy = LegacyHeaderDataSource(start: date(2024, 1, 15), end: date(2024, 3, 10))
         retained.objects.append(legacy)
         view.dataSource = legacy
+        #expect(view.headerView.monthLabel.text == "Legacy", "a new data source retitles the month on screen")
         view.setDisplayDate(date(2024, 2, 10))
         #expect(view.headerView.monthLabel.text == "Legacy")
-        #expect(legacy.headerDates == [date(2024, 2, 1)])
+        #expect(legacy.headerDates == [date(2024, 1, 1), date(2024, 2, 1)])
+    }
+
+    @Test(arguments: [
+        ("es_ES", "Enero de 2024"), ("pt_BR", "Janeiro de 2024"), ("ca_ES", "Gener del 2024"),
+        ("fr_FR", "Janvier 2024"), ("de_DE", "Januar 2024"), ("ru_RU", "Январь 2024\u{202F}г."),
+        ("en_US", "January 2024"), ("tr_TR", "Ocak 2024"), ("ja_JP", "2024年1月"),
+        // Georgian keeps its capitals for text set all in capitals: the title stays as it is.
+        ("ka_GE", "იანვარი, 2024"),
+    ])
+    func monthTitlesCapitaliseOnlyTheirFirstLetter(locale: String, title: String) {
+        // Capitalising every word gave "Enero De 2024".
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10), locale: Locale(identifier: locale))
+        #expect(view.headerView.monthLabel.text == title)
     }
 
     @Test func nonGregorianCalendarsUseTheirOwnMonthNames() {
@@ -511,7 +649,7 @@ struct CalendarViewTests: CalendarFixture {
         view.style.weekdayCasing = .uppercase
         #expect(view.formatters.monthTitle !== formatters.monthTitle, "a new style builds new ones")
         #expect(view.headerView.formatters.monthTitle === view.formatters.monthTitle, "the header shares them")
-        #expect(view.headerView.dayLabels.first?.text == "MO.")
+        #expect(view.headerView.dayLabels.first?.text == "MO", "the stand-alone name: \"Mo.\" belongs inside a date")
     }
 
     @Test func setDisplayDateOutsideTheRangeIsIgnored() {
@@ -955,6 +1093,117 @@ struct CalendarViewTests: CalendarFixture {
         view.setSelection([])
         #expect(view.selectedDates == [])
         #expect(view.collectionView.indexPathsForSelectedItems == [])
+    }
+
+    // MARK: Reloading
+
+    @Test func settingAPropertyToAnEqualValueDoesNotReload() {
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
+        let source = dataSource(of: view)
+        let event = CalendarEvent(title: "a", startDate: date(2024, 1, 20), endDate: date(2024, 1, 20, hour: 1))
+        source.calls = 0
+        let sameStyle = view.style
+        view.style = sameStyle
+        view.events = []
+        view.marksWeekends = true
+        view.direction = .horizontal
+        #expect(source.calls == 0, "nothing changed, so the data source is not asked")
+
+        // A new value reloads at once: the start and the end are asked for.
+        view.style.cellShape = .round
+        #expect(source.calls == 2)
+        view.events = [event]
+        #expect(source.calls == 4)
+        #expect(view.snapshot.eventIndex.count(at: view.indexPathForDate(date(2024, 1, 20))!) == 1)
+        view.events = [event]
+        #expect(source.calls == 4)
+        view.marksWeekends = false
+        #expect(source.calls == 6)
+        view.direction = .vertical
+        #expect(source.calls == 8)
+        #expect(view.flowLayout.scrollDirection == .vertical)
+
+        // A data source is an object whose answers change, so assigning it always reloads.
+        view.dataSource = source
+        #expect(source.calls == 10)
+    }
+
+    @Test func aBatchOfChangesReloadsOnce() {
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
+        let source = dataSource(of: view)
+        let event = CalendarEvent(title: "a", startDate: date(2024, 1, 20), endDate: date(2024, 1, 20, hour: 1))
+        view.selectDate(date(2024, 1, 20))
+        source.calls = 0
+        let titles = source.titledMonths.count
+
+        view.performBatchUpdate {
+            view.style.firstWeekday = .sunday
+            view.style.locale = Locale(identifier: "de_DE")
+            view.marksWeekends = false
+            view.direction = .vertical
+            view.events = [event]
+            view.performBatchUpdate {
+                source.end = date(2024, 5, 1)
+                view.reloadData()
+            }
+            #expect(source.calls == 0, "a nested batch joins the outer one")
+            #expect(view.numberOfSections(in: view.collectionView) == 3, "the grid of before the batch")
+            #expect(view.getCachedSectionInfo(0)?.firstDay == 0)
+            #expect(view.style.firstWeekday == .sunday, "the properties themselves are set at once")
+        }
+
+        #expect(source.calls == 2, "one reload for all the changes: the start and the end, once")
+        #expect(source.titledMonths.count == titles + 1, "and one reconciliation")
+        #expect(view.numberOfSections(in: view.collectionView) == 5)
+        #expect(view.getCachedSectionInfo(0)?.firstDay == 1)
+        #expect(view.flowLayout.scrollDirection == .vertical)
+        #expect(view.headerView.monthLabel.text == "Januar 2024")
+        #expect(view.headerView.dayLabels.first?.text == "So", "the stand-alone name, as a column heading")
+        let selected = view.indexPathForDate(date(2024, 1, 20))!
+        #expect(view.snapshot.eventIndex.count(at: selected) == 1)
+        #expect(view.collectionView.indexPathsForSelectedItems == [selected])
+        view.layoutIfNeeded()
+        #expect(cell(view, selected)?.configuration.isWeekend == false)
+        #expect(delegate(of: view).scrolledTo == [date(2024, 1, 1)])
+
+        // Outside a batch every change still reloads at once.
+        view.marksWeekends = true
+        #expect(source.calls == 4)
+        // A batch that changes nothing the grid shows does not reload.
+        view.performBatchUpdate {
+            view.enableDeselection = false
+            view.marksWeekends = true
+        }
+        #expect(source.calls == 4)
+    }
+
+    @Test func aDisplayDateSetInsideABatchFindsTheNewRange() {
+        let view = makeCalendar(start: date(2024, 1, 15), end: date(2024, 3, 10))
+        let source = dataSource(of: view)
+        source.calls = 0
+        view.performBatchUpdate {
+            view.marksWeekends = false
+            source.end = date(2024, 6, 30)
+            view.reloadData()
+            // May is only in the new range, so the reload cannot wait for the end of the batch.
+            view.setDisplayDate(date(2024, 5, 10))
+            #expect(view.displayDate == date(2024, 5, 1))
+        }
+        #expect(source.calls == 2, "still one reload")
+        view.layoutIfNeeded()
+        #expect(view.displayDate == date(2024, 5, 1))
+        #expect(view.headerView.monthLabel.text == "May 2024")
+        #expect(view.collectionView.contentOffset.x == 4 * view.collectionView.bounds.width)
+        #expect(delegate(of: view).scrolledTo == [date(2024, 1, 1), date(2024, 5, 1)])
+
+        // The same goes for the next month.
+        view.performBatchUpdate {
+            source.start = date(2024, 5, 1)
+            view.reloadData()
+            view.goToNextMonth()
+        }
+        #expect(view.displayDate == date(2024, 6, 1))
+        #expect(view.numberOfSections(in: view.collectionView) == 2)
     }
 
     // MARK: Style and references

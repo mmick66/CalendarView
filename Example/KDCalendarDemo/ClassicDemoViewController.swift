@@ -61,6 +61,8 @@ final class ClassicDemoViewController: UIViewController {
         if DemoArguments.usesSampleEvents {
             calendarView.events = SampleEvents.around(today, calendar: calendarView.calendar)
         } else {
+            // Keeps the dots current while the events change in another app.
+            calendarView.reloadsEventsWhenStoreChanges = true
             calendarView.loadEvents { [weak self] error in
                 guard let self, error != nil else { return }
                 let message = "The calendar could not load system events. It is possibly a problem with permissions."

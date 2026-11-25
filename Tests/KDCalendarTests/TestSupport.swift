@@ -23,6 +23,13 @@ extension UTCDates {
     func date(_ year: Int, _ month: Int, _ day: Int, hour: Int = 0) -> Date {
         utc.date(from: DateComponents(year: year, month: month, day: day, hour: hour))!
     }
+
+    /// A Gregorian calendar in the time zone `identifier`, such as "Europe/Athens".
+    func gregorian(in identifier: String) -> Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: identifier)!
+        return calendar
+    }
 }
 
 /// Lays out calendars in a window for a suite.
@@ -67,6 +74,26 @@ final class FixedDataSource: CalendarViewDataSource {
         titledMonths.append(month)
         return header
     }
+}
+
+/// Counts the view's calls for the start or the end on their way to `base`, a data source the
+/// test did not make, such as the coordinator of the SwiftUI wrapper.
+final class CountingDataSource: CalendarViewDataSource {
+    let base: any CalendarViewDataSource
+    /// How many times the view asked for the start or the end.
+    var calls = 0
+    init(_ base: any CalendarViewDataSource) {
+        self.base = base
+    }
+    func startDate() -> Date {
+        calls += 1
+        return base.startDate()
+    }
+    func endDate() -> Date {
+        calls += 1
+        return base.endDate()
+    }
+    func title(forMonth month: Date) -> String? { base.title(forMonth: month) }
 }
 
 /// Records every delegate callback; `canSelect` and `styleForDate` answer the view's questions.

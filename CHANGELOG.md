@@ -11,6 +11,26 @@ All notable changes to KDCalendar are documented here. The format follows
 - `CalendarViewDataSource.title(forMonth:)`, which receives the first day of the
   month the header shows. Its default returns `headerString(_:)`, so existing
   data sources keep their titles.
+- `KDCalendarView.displayedMonth(_:)`, a two-way binding to the month on screen.
+  The calendar sets it to the first day of each month it settles on, and
+  assigning a date scrolls to its month, animated inside `withAnimation`, even
+  when the user has swiped away from that month. A month outside the range is
+  set back to the month on screen.
+- `KDCalendarView.mirrorsInRightToLeftLayouts(_:)`. A SwiftUI calendar can now
+  mirror in a right-to-left layout, following the layout direction of the
+  SwiftUI environment. It is off by default, as before.
+- `CalendarView.reloadsEventsWhenStoreChanges` (KDCalendarEventKit), off by
+  default. When on, a view that has loaded events loads them again after its
+  store reports a change, such as an edit in the Calendar app. Changes reported
+  close together or during a load start one query, and a reload never asks for
+  calendar access.
+- `CalendarEventStore.changeNotification`, the notification a store posts when
+  its events change. It defaults to `nil`, so existing stores still conform;
+  `EKEventStore` returns `EKEventStoreChanged`.
+- Localisations of the VoiceOver strings in Catalan, Czech, Danish, Dutch,
+  Finnish, French, German, Greek, Hungarian, Indonesian, Italian, Japanese,
+  Korean, Norwegian Bokmål, Polish, Portuguese, Romanian, Russian, Spanish,
+  Swedish, Turkish, Ukrainian and Simplified and Traditional Chinese.
 
 ### Changed
 
@@ -25,6 +45,46 @@ All notable changes to KDCalendar are documented here. The format follows
   that way. The closures of the SwiftUI modifiers and of
   `loadEvents(onComplete:)` name their parameters, such as
   `onLongPress(_ action: (_ date: Date, _ events: [CalendarEvent]) -> Void)`.
+
+- `didScrollToMonth` is also sent when a reload leaves the calendar on another
+  month. `didDeselectDate` for days a reload drops arrives once the view shows
+  the whole reload.
+- Setting `style`, `events`, `marksWeekends` or `direction` to the value it
+  already has no longer reloads. Styles compare by value, and a colour made
+  with `UIColor { traits in ... }` equals only itself: the documentation of
+  `CalendarView.Style` explains how to create such colours once, so that a
+  style built in a SwiftUI `body` does not reload the calendar on every update.
+- The delegate's `canSelectDate`, and the `KDCalendarView.canSelect(_:)`
+  predicate, are asked for each day as it is drawn as well as for taps and
+  selections in code, and again for the days on screen at the layout that
+  follows a change of the selection, so that VoiceOver knows which days are
+  refused. Keep them quick and free of side effects, and call `reloadData()`
+  when the answers change for another reason than the selection.
+- `Style.headerHeight` and `Style.weekdaysHeight` are minimums: the header is
+  taller when its fonts need more room.
+- The weekday labels use the stand-alone weekday symbols, as column headings
+  do: "Mo" rather than "Mo." in German.
+- Setting `events` no longer asks the calendar about every day of every event.
+  Twenty events spanning a 100-year range took about 7 seconds to index and now
+  take well under 0.2 seconds.
+- A `KDCalendarView` is set up with one reload, and an update that changes
+  several modifier values at once (style, range, direction, weekend marking,
+  events) reloads the calendar once instead of once per value. An update sets
+  on the calendar only the values that changed since the last one, where it
+  used to set `allowsDeselection` and `scrollEnabled` every time.
+- `KDCalendarView.displayDate(_:)` treats `nil` as no request, so a date that
+  follows `nil` scrolls again, even to the same month as before.
+- The log message for an invalid data source range shows its dates instead of
+  `<private>`.
+- The documentation says more: `calendar(_:didLongPressDate:withEvents:)`
+  states that a long press is reported for days that cannot be selected, such
+  as days out of range; `CalendarEvent` and its `endDate` say which days an
+  event marks (an event that ends exactly at midnight does not mark the day
+  that starts then, and an event with no length still marks its day); and
+  `KDCalendarView.range` says that its ends are moments, read as days in the
+  style's calendar at each reload.
+- The EventKit bridge keeps a view's manager and load state in one object
+  instead of three associated objects. No behaviour change.
 
 ### Deprecated
 
@@ -60,6 +120,72 @@ All notable changes to KDCalendar are documented here. The format follows
   the one shown. The view now computes every date in the calendar its grid is
   laid out in until the reload moves the grid, the selection and the month
   titles to the new time zone together.
+- After `reloadData()`, or any change that reloads, the calendar stays on the
+  month it displayed, wherever the new range puts it, and moves to the nearest
+  month when that month is no longer in range. `displayDate`, the title and the
+  scroll position now agree, and `goToNextMonth()` and `goToPreviousMonth()`
+  keep working after the range changes. Before, a range that gained earlier
+  months showed another month under the old title.
+- Assigning a data source after the first layout displays a month of its range
+  with the right title.
+- A time zone change keeps the displayed month, with `displayDate` on the first
+  day of that month in the new zone.
+- The header title follows a new `style.locale`, and the data source's
+  `title(forMonth:)` is asked again after every reload.
+- A vertical calendar stays on its month when the header changes height, with
+  the text size or with `Style.headerHeight`.
+- Month titles capitalise only their first letter: "Enero de 2024", not "Enero
+  De 2024". A title that starts with the year is left as the locale writes it,
+  such as "2024. január".
+- The month title names the era in calendars that need one to name a year: a
+  Japanese calendar shows "January Reiwa 6" rather than "January 6", and a
+  Chinese calendar the year it started in.
+- The right-to-left layout no longer depends on setting `forceLtr` after
+  `semanticContentAttribute`, and follows later changes of the view's layout
+  direction.
+- A calendar that is right to left from its first layout opens on its first
+  month, not its last.
+- The today marker moves at midnight in `style.calendar`, also when that
+  calendar is in another time zone than the device, and also when the device
+  slept until then.
+- A month whose first day has no midnight no longer breaks the grid (for
+  example October 2023 in `America/Asuncion`, where daylight saving time starts
+  at 00:00 on the 1st). Its days were handed out at 01:00 instead of the start
+  of the day, days of later months resolved to the cells of the month before
+  (`selectDate` selected a day a month early), and the last day of the range
+  was out of range.
+- Setting `multipleSelectionEnable` to `true` leaves `.range` mode alone
+  instead of switching it to `.multiple`; only `.single` becomes `.multiple`,
+  and `false` still means `.single`.
+- A custom `Style.calendar` whose time zone is `TimeZone.autoupdatingCurrent`,
+  or whose locale is `Locale.autoupdatingCurrent`, now follows a change of the
+  device's settings at the next reload, as `Calendar.autoupdatingCurrent` does.
+  Until then the grid's dates and the selection no longer drift to the new time
+  zone.
+- The header grows to fit its fonts at the larger Dynamic Type sizes instead of
+  clipping the month title and the weekday labels.
+- Weekday labels show one-letter names when the short ones do not fit their
+  columns, and day numbers shrink to fit their cells, instead of truncating or
+  clipping.
+- VoiceOver reads "Today" and the number of events in the language of
+  `Style.locale`, the language the date is read in, rather than in the app's
+  language. In a language the library has no strings for, the words are the
+  app's and the count now takes its plural form by that language's rules, not
+  the device's.
+- Days the delegate's `canSelectDate` refuses are announced as dimmed buttons
+  by VoiceOver, like days out of range.
+- VoiceOver reads the weekday labels as full weekday names.
+- `KDCalendarView.displayDate(_:)` compared instants, so `.displayDate(Date())`
+  scrolled back to the current month every time the body ran, undoing the
+  user's swipes. It now scrolls only when the value moves to another month. The
+  demo and the README example bind the month with `displayedMonth(_:)` instead.
+- A `KDCalendarView` selection no longer shifts by a day after the device, or
+  the style's calendar, moves to another time zone. The selection binding now
+  follows the view to the new zone's midnights, where it used to keep the old
+  instants and select the day before on the next update.
+- `loadEvents(onComplete:)` never called its handler when the view was released
+  before the load started. The handler is now always called exactly once, with
+  `CancellationError` in that case.
 
 ## [2.1.0] - 2026-09-30
 
