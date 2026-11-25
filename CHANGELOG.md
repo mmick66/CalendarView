@@ -6,6 +6,8 @@ All notable changes to KDCalendar are documented here. The format follows
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-11-25
+
 ### Added
 
 - `CalendarViewDataSource.title(forMonth:)`, which receives the first day of the
